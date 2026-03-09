@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do echo:*)",
+      "Bash(git:*)",
+      "Bash(uv pip:*)",
+      "Bash(VIRTUAL_ENV=/c/Users/justi/Documents/money-maker/venv uv pip:*)",
+      "Bash(VIRTUAL_ENV=/c/Users/justi/Documents/money-maker/venv /c/Users/justi/Documents/money-maker/venv/Scripts/python:*)",
+      "Bash(python3:*)",
+      "Bash(xxd:*)",
+      "Bash(pip show:*)",
+      "Bash(pip list:*)",
+      "Bash(VIRTUAL_ENV=./venv uv pip:*)",
+      "Bash(VIRTUAL_ENV=./venv python:*)",
+      "Bash(VIRTUAL_ENV=./venv ./venv/Scripts/python:*)",
+      "Bash(./venv/Scripts/python:*)",
+      "Bash(/c/Users/justi/Documents/money-maker/venv/Scripts/pytest.exe:*)",
+      "Skill(gsd:resume-work)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(VIRTUAL_ENV=./venv ./venv/Scripts/python.exe:*)"
+    ]
+  }
+}
