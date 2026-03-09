@@ -27,14 +27,26 @@ class SportsConfig:
     def __init__(self):
         data = _load_toml("sports.toml").get("sports", {})
         self.books: list[str] = data.get("books", ["fanduel", "draftkings", "betmgm"])
-        self.sports: list[str] = data.get("sports", ["basketball", "football", "tennis"])
+        self.enabled_sports: list[str] = data.get("sports", ["basketball", "football", "tennis"])
         self.leagues: list[str] = data.get("leagues", ["nba", "nfl", "atp"])
         self.min_ev_threshold: float = data.get("min_ev_threshold", 0.05)
 
 
+class ExchangeConfig:
+    def __init__(self):
+        data = _load_toml("exchanges.toml").get("exchanges", {})
+        self.default: str = data.get("default", "binance")
+        self.sandbox: bool = data.get("sandbox", True)
+
+
+_terminal_toml = _load_toml("settings.toml").get("terminal", {})
+
+
 class Settings(BaseSettings):
-    paper_mode: bool = True
-    active_verticals: list[str] = ["stocks", "crypto", "sports"]
+    paper_mode: bool = _terminal_toml.get("paper_mode", True)
+    active_verticals: list[str] = _terminal_toml.get(
+        "active_verticals", ["stocks", "crypto", "sports"]
+    )
 
     alpha_vantage_api_key: str = ""
     fred_api_key: str = ""
@@ -42,7 +54,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = ""
     aws_s3_bucket: str = "alpha-terminal-data"
 
-    exchange_name: str = "binance"
+    exchange_name: str = ""
     exchange_api_key: str = ""
     exchange_api_secret: str = ""
 

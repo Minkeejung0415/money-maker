@@ -18,4 +18,4 @@ def test_risk_config_has_limits():
 def test_sports_config_has_books():
     sc = SportsConfig()
     assert len(sc.books) > 0
-    assert len(sc.sports) > 0
+    assert len(sc.enabled_sports) > 0
