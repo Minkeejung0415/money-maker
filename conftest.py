@@ -9,6 +9,7 @@ _ROOT = Path(__file__).parent
 # the installed (editable) versions take precedence over the bare repo dirs.
 _SHADOWED_PACKAGES = {
     "ccxt": _ROOT / "ccxt" / "python",
+    "freqtrade": _ROOT / "freqtrade",
 }
 
 for pkg_name, pkg_path in _SHADOWED_PACKAGES.items():
