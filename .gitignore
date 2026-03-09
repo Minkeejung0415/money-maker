@@ -48,7 +48,7 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # Data (large files go here, not in git)
-data/
+/data/
 *.parquet
-data/**/*.csv
+/data/**/*.csv
 *.json.gz
