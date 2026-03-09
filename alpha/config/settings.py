@@ -1,0 +1,49 @@
+from __future__ import annotations
+import tomllib
+from pathlib import Path
+from pydantic_settings import BaseSettings
+
+CONFIG_DIR = Path(__file__).parent
+
+
+def _load_toml(name: str) -> dict:
+    path = CONFIG_DIR / name
+    if path.exists():
+        with open(path, "rb") as f:
+            return tomllib.load(f)
+    return {}
+
+
+class RiskConfig:
+    def __init__(self):
+        data = _load_toml("risk.toml").get("risk", {})
+        self.max_drawdown_pct: float = data.get("max_drawdown_pct", 0.15)
+        self.kelly_fraction: float = data.get("kelly_fraction", 0.25)
+        self.max_cross_asset_exposure_pct: float = data.get("max_cross_asset_exposure_pct", 0.80)
+        self.circuit_breaker_daily_loss_pct: float = data.get("circuit_breaker_daily_loss_pct", 0.05)
+
+
+class SportsConfig:
+    def __init__(self):
+        data = _load_toml("sports.toml").get("sports", {})
+        self.books: list[str] = data.get("books", ["fanduel", "draftkings", "betmgm"])
+        self.sports: list[str] = data.get("sports", ["basketball", "football", "tennis"])
+        self.leagues: list[str] = data.get("leagues", ["nba", "nfl", "atp"])
+        self.min_ev_threshold: float = data.get("min_ev_threshold", 0.05)
+
+
+class Settings(BaseSettings):
+    paper_mode: bool = True
+    active_verticals: list[str] = ["stocks", "crypto", "sports"]
+
+    alpha_vantage_api_key: str = ""
+    fred_api_key: str = ""
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_s3_bucket: str = "alpha-terminal-data"
+
+    exchange_name: str = "binance"
+    exchange_api_key: str = ""
+    exchange_api_secret: str = ""
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

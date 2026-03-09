@@ -1,0 +1,5 @@
+[sports]
+books = ["fanduel", "draftkings", "betmgm", "caesars"]
+sports = ["basketball", "football", "tennis", "baseball"]
+leagues = ["nba", "nfl", "atp", "mlb"]
+min_ev_threshold = 0.05

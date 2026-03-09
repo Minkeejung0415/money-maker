@@ -1,0 +1,5 @@
+[risk]
+max_drawdown_pct = 0.15
+kelly_fraction = 0.25
+max_cross_asset_exposure_pct = 0.80
+circuit_breaker_daily_loss_pct = 0.05

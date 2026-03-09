@@ -1,0 +1,4 @@
+[terminal]
+paper_mode = true
+active_verticals = ["stocks", "crypto", "sports"]
+log_level = "INFO"
