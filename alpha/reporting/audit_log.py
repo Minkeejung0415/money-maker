@@ -6,6 +6,7 @@ All trades, signals, and risk events are permanently recorded.
 import json
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
 
 CREATE_TABLE = """
@@ -22,7 +23,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 class AuditLog:
     def __init__(self, db_path: str = "data/audit.db"):
-        self._conn = sqlite3.connect(db_path)
+        path = Path(db_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._conn = sqlite3.connect(str(path))
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(CREATE_TABLE)
         self._conn.commit()

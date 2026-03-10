@@ -4,6 +4,7 @@ applies macro filter + risk layer, and coordinates execution.
 """
 import logging
 from alpha.config.settings import Settings
+from alpha.reporting.audit_log import AuditLog
 from alpha.signals.macro_filter import MacroFilter
 from alpha.risk.position_sizer import PositionSizer
 from alpha.risk.drawdown import DrawdownMonitor
@@ -24,6 +25,7 @@ class Orchestrator:
         self.position_sizer = PositionSizer(total_capital=total_capital)
         self.drawdown_monitor = DrawdownMonitor(peak_capital=total_capital)
         self.exposure_limiter = ExposureLimiter(total_capital=total_capital)
+        self.audit_log = AuditLog()
         logger.info(f"Orchestrator initialized with verticals: {self.verticals}")
 
     def get_effective_scalar(self, current_capital: float, macro_scalar: float) -> float:
@@ -78,15 +80,127 @@ class Orchestrator:
 
     def _run_stocks(self, position_scalar: float) -> dict:
         """Run stocks engine (data fetching wired in Milestone 6)."""
+        from alpha.engines.stocks.engine import StockEngine
+        from alpha.execution.broker import AlpacaBroker
+
         logger.info(f"Stocks engine: scalar={position_scalar}")
-        return {"vertical": "stocks", "scalar": position_scalar, "positions": {}}
+
+        engine = StockEngine(
+            av_api_key=self.settings.alpha_vantage_api_key,
+            fred_api_key=self.settings.fred_api_key,
+        )
+        # Universe construction is handled upstream in Milestone 6. For now, assume
+        # `run_universe` is wired there and returns weights directly.
+        # Here we simply translate weights into dollar positions.
+        # Placeholder: empty universe until data ingestion is fully wired.
+        universe_rows: dict[str, list[dict]] = {}
+        engine_result = engine.run_universe(universe_rows, position_scalar=position_scalar)
+        weights = engine_result.get("weights", {})
+        positions = self.position_sizer.scale_weights("stocks", weights, position_scalar)
+
+        orders: list[dict] = []
+        if self.settings.execution_enabled and positions:
+            broker = AlpacaBroker()
+            for symbol, dollar_amt in positions.items():
+                if dollar_amt > 0:
+                    order = broker.submit_order(symbol, dollar_amt, "buy")
+                    orders.append(order)
+                    try:
+                        self.audit_log.append(
+                            event_type="order",
+                            vertical="stocks",
+                            symbol=symbol,
+                            details=order,
+                        )
+                    except Exception:
+                        logger.error("Failed to append stock order to audit log", exc_info=True)
+
+        return {
+            "vertical": "stocks",
+            "scalar": position_scalar,
+            "positions": positions,
+            "orders": orders,
+        }
 
     def _run_crypto(self, position_scalar: float) -> dict:
         """Run crypto engine (data fetching wired in Milestone 6)."""
+        from alpha.engines.crypto.engine import CryptoEngine
+        from alpha.execution.exchange import CryptoExecutor
+
         logger.info(f"Crypto engine: scalar={position_scalar}")
-        return {"vertical": "crypto", "scalar": position_scalar, "positions": {}}
+
+        engine = CryptoEngine()
+        universe_rows: dict[str, list[dict]] = {}
+        engine_result = engine.run_universe(universe_rows, position_scalar=position_scalar)
+        weights = engine_result.get("weights", {})
+        positions = self.position_sizer.scale_weights("crypto", weights, position_scalar)
+
+        orders: list[dict] = []
+        if self.settings.execution_enabled and positions:
+            executor = CryptoExecutor()
+            for symbol, dollar_amt in positions.items():
+                if dollar_amt > 0:
+                    order = executor.submit_order(symbol, "buy", dollar_amt)
+                    orders.append(order)
+                    try:
+                        self.audit_log.append(
+                            event_type="order",
+                            vertical="crypto",
+                            symbol=symbol,
+                            details=order,
+                        )
+                    except Exception:
+                        logger.error("Failed to append crypto order to audit log", exc_info=True)
+
+        return {
+            "vertical": "crypto",
+            "scalar": position_scalar,
+            "positions": positions,
+            "orders": orders,
+        }
 
     def _run_sports(self, position_scalar: float) -> dict:
         """Run sports engine (data fetching wired in Milestone 6)."""
+        from alpha.engines.sports.engine import SportsEngine
+        from alpha.execution.sportsbook import SportsbookExecutor
+
         logger.info(f"Sports engine: scalar={position_scalar}")
-        return {"vertical": "sports", "scalar": position_scalar, "bets": []}
+
+        engine = SportsEngine()
+        games: list[dict] = []
+        engine_result = engine.run(games, position_scalar=position_scalar)
+        bets = engine_result.get("bets", [])
+
+        placed_bets: list[dict] = []
+        if self.settings.execution_enabled and bets:
+            sportsbook = SportsbookExecutor(paper=self.settings.paper_mode)
+            for bet in bets:
+                stake = float(bet.get("stake", 0.0))
+                if stake <= 0:
+                    continue
+                event_id = str(bet.get("event_id", ""))
+                selection = str(bet.get("bet_side", ""))
+                odds = int(bet.get("american_odds", 0))
+                placed = sportsbook.place_bet(
+                    event_id=event_id,
+                    selection=selection,
+                    stake_usd=stake,
+                    odds=odds,
+                )
+                placed_bets.append(placed)
+                try:
+                    self.audit_log.append(
+                        event_type="bet",
+                        vertical="sports",
+                        symbol=event_id,
+                        details=placed,
+                    )
+                except Exception:
+                    logger.error("Failed to append sports bet to audit log", exc_info=True)
+
+        return {
+            "vertical": "sports",
+            "scalar": position_scalar,
+            "bets": bets,
+            "orders": placed_bets,
+        }

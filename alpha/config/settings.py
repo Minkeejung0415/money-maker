@@ -58,4 +58,7 @@ class Settings(BaseSettings):
     exchange_api_key: str = ""
     exchange_api_secret: str = ""
 
+    # Execution is opt-in to avoid side effects in tests and local runs.
+    execution_enabled: bool = _terminal_toml.get("execution_enabled", False)
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
