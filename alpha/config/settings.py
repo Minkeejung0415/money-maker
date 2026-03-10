@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = ""
     aws_s3_bucket: str = "alpha-terminal-data"
 
+    # Alpaca (stocks) — use paper-api.alpaca.markets for paper, api.alpaca.markets for live
+    alpaca_api_key: str = ""
+    alpaca_api_secret: str = ""
+    alpaca_base_url: str = "https://paper-api.alpaca.markets"
+
+    # Crypto exchange via ccxt
     exchange_name: str = ""
     exchange_api_key: str = ""
     exchange_api_secret: str = ""

@@ -17,7 +17,7 @@ All code lives in `alpha/`. Cloned repos are read-only pip dependencies.
 
 ## Current State
 
-**125/125 tests passing** as of last session.
+**142/142 tests passing** as of last session.
 
 | Milestone | Status | Key Files |
 |---|---|---|
@@ -27,23 +27,17 @@ All code lives in `alpha/`. Cloned repos are read-only pip dependencies.
 | M4 Sports Engine | ✅ DONE | `alpha/engines/sports/` — ev_calculator, kelly, nba_model, engine |
 | M5 Risk Layer | ✅ DONE | `alpha/risk/` — position_sizer, drawdown, exposure (wired into orchestrator) |
 | M6 Reporting | ✅ DONE | `alpha/reporting/` — pnl_tracker, audit_log, dashboard (plotly) |
-| M7 Execution | ⏳ NEXT | `alpha/execution/` — broker, exchange, sportsbook |
+| M7 Execution | ✅ DONE | `alpha/execution/` — broker, exchange, sportsbook (paper modes) + scripts |
 
 ---
 
-## Next Task: Milestone 7 — Execution Layer
+## All Milestones Complete — Next Steps (Optional Enhancements)
 
-**Files to create:**
-1. `alpha/execution/broker.py` — stock broker (Alpaca paper trading API)
-   - `tests/unit/execution/test_broker.py`
-2. `alpha/execution/exchange.py` — crypto execution via ccxt (paper/sandbox mode)
-   - `tests/unit/execution/test_exchange_execution.py`
-3. `alpha/execution/sportsbook.py` — sportsbook API stub (paper mode)
-   - `tests/unit/execution/test_sportsbook.py`
-
-**After M7:**
-- `scripts/daily_scan.py` — morning cron: refresh all signals, write to SQLite
-- `scripts/backtest_runner.py` — run backtests, output P&L report
+- Live API key wiring (Alpaca, exchange sandbox credentials in `.env`)
+- `scripts/daily_scan.py` — schedule via cron/Task Scheduler for production
+- `scripts/backtest_runner.py` — extend with multi-strategy comparison output
+- Dashboard: serve via `uvicorn` or Streamlit for live monitoring
+- Deploy: Docker + cloud (Render, Railway, EC2)
 
 ---
 
@@ -56,10 +50,11 @@ All code lives in `alpha/`. Cloned repos are read-only pip dependencies.
 # 2. Check where we are
 git log --oneline -8
 
-# 3. Start M7 Task 1
-# Create tests/unit/execution/__init__.py + test_broker.py
-# Create alpha/execution/broker.py
-# Run tests, commit, move to next task
+# 3. Run daily scan script manually
+./venv/Scripts/python.exe scripts/daily_scan.py
+
+# 4. Run backtest
+./venv/Scripts/python.exe scripts/backtest_runner.py
 ```
 
 ---

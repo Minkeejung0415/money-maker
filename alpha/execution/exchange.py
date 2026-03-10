@@ -13,9 +13,20 @@ logger = logging.getLogger(__name__)
 class CryptoExecutor:
     """Execute crypto orders via a ccxt exchange instance."""
 
-    def __init__(self, exchange_id: str = "binance", paper: bool = True) -> None:
+    def __init__(
+        self,
+        exchange_id: str = "binance",
+        paper: bool = True,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+    ) -> None:
         exchange_cls = getattr(ccxt, exchange_id)
-        self.exchange = exchange_cls()
+        creds: dict[str, str] = {}
+        if api_key:
+            creds["apiKey"] = api_key
+        if api_secret:
+            creds["secret"] = api_secret
+        self.exchange = exchange_cls(creds) if creds else exchange_cls()
 
         if paper:
             # Not all exchanges implement sandbox; be defensive.
