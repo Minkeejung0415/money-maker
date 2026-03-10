@@ -56,7 +56,7 @@ class OddsAPIClient:
                 _ODDS_API_URL,
                 params={
                     "apiKey": self.api_key,
-                    "regions": "us",
+                    "regions": "us,eu,uk",
                     "markets": "h2h",
                     "oddsFormat": "american",
                 },

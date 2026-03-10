@@ -17,7 +17,10 @@
       "Bash(/c/Users/justi/Documents/money-maker/venv/Scripts/pytest.exe:*)",
       "Skill(gsd:resume-work)",
       "Bash(./venv/Scripts/python.exe:*)",
-      "Bash(VIRTUAL_ENV=./venv ./venv/Scripts/python.exe:*)"
+      "Bash(VIRTUAL_ENV=./venv ./venv/Scripts/python.exe:*)",
+      "Bash(cd \"C:\\\\Users\\\\justi\\\\Documents\\\\money-maker\" && VIRTUAL_ENV=./venv ./venv/Scripts/python.exe -c \"\nimport sys, logging\nlogging.basicConfig\\(level=logging.DEBUG\\)\nsys.path.insert\\(0, '.'\\)\nsys.path.insert\\(0, 'NBA-Machine-Learning-Sports-Betting'\\)\n\nfrom alpha.engines.sports.nba_model import NBAModel\nmodel = NBAModel\\(\\)\nprint\\('XGBoost loaded:', model._xgb_models_loaded\\)\nprint\\('Calibrator:', model._xgb_ml_calibrator\\)\n\ngame = {'home_team': 'Boston Celtics', 'away_team': 'San Antonio Spurs', 'home_odds': -154, 'away_odds': 130, 'league': 'nba'}\nresult = model.predict\\(game\\)\nprint\\('Result:', result\\)\nbet = model.evaluate_bet\\(game\\)\nprint\\('Bet:', bet\\)\n\" 2>&1 | grep -v \"^DEBUG\\\\|^INFO\")",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

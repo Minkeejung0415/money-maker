@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Elo regression factor: blend market-implied prob with 0.5
 # 0.0 = trust market fully, 1.0 = always predict 50/50
-MARKET_BLEND = 0.15
+MARKET_BLEND = 0.0
 
 # Maps common Odds-API name variations -> exact team_index_current keys
 TEAM_NAME_MAP: dict[str, str] = {
@@ -132,6 +132,12 @@ _MODEL_DIR = _NBA_ML_DIR / "Models" / "XGBoost_Models"
 _TEAMS_DB = _NBA_ML_DIR / "Data" / "TeamData.sqlite"
 _ACCURACY_RE = re.compile(r"XGBoost_(\d+(?:\.\d+)?)%_")
 
+# Schedule CSVs used to compute days-rest features
+_SCHEDULE_CSVS = [
+    _NBA_ML_DIR / "Data" / "nba-2025-UTC.csv",
+    _NBA_ML_DIR / "Data" / "nba-2024-UTC.csv",
+]
+
 
 class NBAModel:
     def __init__(self, min_edge: float = 0.04, kelly_fraction: float = 0.25):
@@ -142,6 +148,10 @@ class NBAModel:
         self._xgb_ml = None
         self._xgb_ml_calibrator = None
         self._xgb_models_loaded: bool = False
+
+        # Injury impact cache — loaded once per run
+        self._injury_impact: dict = {}
+        self._injury_loaded: bool = False
 
         self._load_xgb_models()
 
@@ -347,7 +357,11 @@ class NBAModel:
             self._xgb_ml = booster
 
             cal_path = ml_path.with_name(f"{ml_path.stem}_calibration.pkl")
-            self._xgb_ml_calibrator = joblib.load(cal_path) if cal_path.exists() else None
+            try:
+                self._xgb_ml_calibrator = joblib.load(cal_path) if cal_path.exists() else None
+            except Exception as cal_exc:
+                logger.debug("Calibrator load skipped (using raw booster): %s", cal_exc)
+                self._xgb_ml_calibrator = None
 
             self._xgb_models_loaded = True
             logger.info("Loaded XGBoost ML model: %s", ml_path.name)
@@ -391,6 +405,9 @@ class NBAModel:
             logger.debug("No team data in TeamData.sqlite — using market-implied")
             return None
 
+        # Adjust team stats for today's injuries/inactive players
+        team_df = self._apply_injury_adjustment(team_df, home_team, away_team)
+
         index_map = self._get_team_index_map()
         if index_map is None:
             return None
@@ -403,10 +420,19 @@ class NBAModel:
             )
             return None
 
-        # Convert Series → single-row DataFrame; drop ID / date columns
+        # Convert Series → single-row DataFrame; drop string columns
         X = game_series.to_frame().T
-        drop_cols = [c for c in X.columns if "TEAM_ID" in c or "Date" in c]
+        drop_cols = [c for c in X.columns if "TEAM_ID" in c or "Date" in c or "TEAM_NAME" in c]
         X = X.drop(columns=drop_cols, errors="ignore")
+        # Coerce all columns to numeric, drop anything that won't convert
+        import pandas as pd  # noqa: PLC0415
+        X = X.apply(pd.to_numeric, errors="coerce")
+        X = X.dropna(axis=1, how="all")
+
+        # Inject days-rest features (missing from live team stats but in training data)
+        home_rest, away_rest = self._get_days_rest(home_team, away_team)
+        X["Days-Rest-Home"] = float(home_rest)
+        X["Days-Rest-Away"] = float(away_rest)
 
         # Align columns to model's expected feature order
         fn = getattr(self._xgb_ml, "feature_names", None)
@@ -428,7 +454,12 @@ class NBAModel:
         else:
             dmat = xgb.DMatrix(X)
             raw = self._xgb_ml.predict(dmat)
-            home_prob = float(raw[0])
+            # Handle both binary (1D) and softprob (2D) output
+            row = raw[0]
+            if hasattr(row, "__len__"):
+                home_prob = float(row[1])  # class 1 = home win
+            else:
+                home_prob = float(row)
 
         home_prob = max(0.0, min(1.0, home_prob))
         return home_prob, 1.0 - home_prob
@@ -469,6 +500,108 @@ class NBAModel:
         except Exception as exc:
             logger.debug("Failed to load team data from SQLite: %s", exc)
             return None
+
+    def _get_days_rest(self, home_team: str, away_team: str) -> tuple[int, int]:
+        """
+        Calculate days since each team last played using the season schedule CSV.
+        Clamped to [1, 9] matching the training data convention. Defaults to 2
+        if the schedule cannot be parsed.
+        """
+        try:
+            import pandas as pd  # noqa: PLC0415
+
+            frames = []
+            for csv_path in _SCHEDULE_CSVS:
+                if csv_path.exists():
+                    frames.append(pd.read_csv(csv_path))
+            if not frames:
+                return 2, 2
+
+            sched = pd.concat(frames, ignore_index=True)
+            sched["_dt"] = pd.to_datetime(sched["Date"], dayfirst=True, errors="coerce")
+            sched = sched.dropna(subset=["_dt"]).sort_values("_dt")
+
+            today = datetime.today().date()
+            past = sched[sched["_dt"].dt.date < today]
+
+            def last_played(team: str) -> datetime | None:
+                mask = (past["Home Team"] == team) | (past["Away Team"] == team)
+                rows = past[mask]
+                if rows.empty:
+                    return None
+                return rows["_dt"].max()
+
+            def clamp(days: int) -> int:
+                return max(1, min(days, 9))
+
+            home_last = last_played(home_team)
+            away_last = last_played(away_team)
+            today_dt = datetime.today()
+
+            home_rest = clamp((today_dt - home_last).days) if home_last is not None else 2
+            away_rest = clamp((today_dt - away_last).days) if away_last is not None else 2
+            return home_rest, away_rest
+        except Exception as exc:
+            logger.debug("Days-rest calculation failed, using default: %s", exc)
+            return 2, 2
+
+    def _load_injuries(self) -> None:
+        """Fetch today's injury impact (once per model instance)."""
+        if self._injury_loaded:
+            return
+        self._injury_loaded = True
+        try:
+            from alpha.data.ingestion.nba_injuries import get_team_injury_impact  # noqa: PLC0415
+            self._injury_impact = get_team_injury_impact()
+            if self._injury_impact:
+                logger.info("Injury data loaded for: %s", list(self._injury_impact.keys()))
+            else:
+                logger.info("No injury data found (all players active or games not yet listed)")
+        except Exception as exc:
+            logger.warning("Injury load failed: %s", exc)
+            self._injury_impact = {}
+
+    def _apply_injury_adjustment(self, team_df, home_team: str, away_team: str):
+        """
+        Subtract injured players' per-game stats from their team's season averages.
+        Returns a modified copy of team_df.
+        """
+        import pandas as pd  # noqa: PLC0415
+
+        df = team_df.copy()
+        self._load_injuries()
+
+        stat_cols = {
+            "pts_lost": "PTS",
+            "reb_lost": "REB",
+            "ast_lost": "AST",
+        }
+
+        for team_name in (home_team, away_team):
+            impact = self._injury_impact.get(team_name)
+            if not impact:
+                continue
+
+            # Find the row for this team
+            mask = df["TEAM_NAME"] == team_name
+            if not mask.any():
+                continue
+
+            for impact_key, col in stat_cols.items():
+                lost = impact.get(impact_key, 0.0)
+                if lost > 0 and col in df.columns:
+                    df.loc[mask, col] = (df.loc[mask, col] - lost).clip(lower=0)
+
+            logger.info(
+                "%s injuries: %s out — PTS lost %.1f, REB lost %.1f, AST lost %.1f",
+                team_name,
+                [p["name"] for p in impact["out"]],
+                impact["pts_lost"],
+                impact["reb_lost"],
+                impact["ast_lost"],
+            )
+
+        return df
 
     def _get_team_index_map(self) -> dict | None:
         """Load team_index_current from the NBA-ML repo Utils."""
