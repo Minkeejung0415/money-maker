@@ -24,6 +24,108 @@ logger = logging.getLogger(__name__)
 # 0.0 = trust market fully, 1.0 = always predict 50/50
 MARKET_BLEND = 0.15
 
+# Maps common Odds-API name variations -> exact team_index_current keys
+TEAM_NAME_MAP: dict[str, str] = {
+    # Lakers
+    "LA Lakers": "Los Angeles Lakers",
+    "L.A. Lakers": "Los Angeles Lakers",
+    "LAL": "Los Angeles Lakers",
+    # Clippers
+    "LA Clippers": "Los Angeles Clippers",
+    "L.A. Clippers": "Los Angeles Clippers",
+    "LAC": "Los Angeles Clippers",
+    # Warriors
+    "GS Warriors": "Golden State Warriors",
+    "Golden St. Warriors": "Golden State Warriors",
+    "Golden St Warriors": "Golden State Warriors",
+    "GSW": "Golden State Warriors",
+    # Knicks
+    "NY Knicks": "New York Knicks",
+    "New York": "New York Knicks",
+    "NYK": "New York Knicks",
+    # Nets
+    "BK Nets": "Brooklyn Nets",
+    "BKN": "Brooklyn Nets",
+    # Oklahoma City
+    "OKC Thunder": "Oklahoma City Thunder",
+    "OKC": "Oklahoma City Thunder",
+    "Oklahoma City": "Oklahoma City Thunder",
+    # San Antonio
+    "SA Spurs": "San Antonio Spurs",
+    "SAS": "San Antonio Spurs",
+    # New Orleans
+    "NO Pelicans": "New Orleans Pelicans",
+    "New Orleans": "New Orleans Pelicans",
+    "NOP": "New Orleans Pelicans",
+    "NOLA Pelicans": "New Orleans Pelicans",
+    # Minnesota
+    "Minnesota": "Minnesota Timberwolves",
+    "MIN": "Minnesota Timberwolves",
+    # Charlotte
+    "Charlotte": "Charlotte Hornets",
+    "CHA": "Charlotte Hornets",
+    # Memphis
+    "Memphis": "Memphis Grizzlies",
+    "MEM": "Memphis Grizzlies",
+    # Portland
+    "Portland": "Portland Trail Blazers",
+    "POR": "Portland Trail Blazers",
+    # Sacramento
+    "Sacramento": "Sacramento Kings",
+    "SAC": "Sacramento Kings",
+    # Utah
+    "Utah": "Utah Jazz",
+    "UTA": "Utah Jazz",
+    # Washington
+    "Washington": "Washington Wizards",
+    "WAS": "Washington Wizards",
+    # Toronto
+    "Toronto": "Toronto Raptors",
+    "TOR": "Toronto Raptors",
+    # Philadelphia
+    "Philadelphia": "Philadelphia 76ers",
+    "PHI": "Philadelphia 76ers",
+    # Phoenix
+    "Phoenix": "Phoenix Suns",
+    "PHX": "Phoenix Suns",
+    # Orlando
+    "Orlando": "Orlando Magic",
+    "ORL": "Orlando Magic",
+    # Indiana
+    "Indiana": "Indiana Pacers",
+    "IND": "Indiana Pacers",
+    # Houston
+    "Houston": "Houston Rockets",
+    "HOU": "Houston Rockets",
+    # Detroit
+    "Detroit": "Detroit Pistons",
+    "DET": "Detroit Pistons",
+    # Denver
+    "Denver": "Denver Nuggets",
+    "DEN": "Denver Nuggets",
+    # Dallas
+    "Dallas": "Dallas Mavericks",
+    "DAL": "Dallas Mavericks",
+    # Cleveland
+    "Cleveland": "Cleveland Cavaliers",
+    "CLE": "Cleveland Cavaliers",
+    # Chicago
+    "Chicago": "Chicago Bulls",
+    "CHI": "Chicago Bulls",
+    # Boston
+    "Boston": "Boston Celtics",
+    "BOS": "Boston Celtics",
+    # Atlanta
+    "Atlanta": "Atlanta Hawks",
+    "ATL": "Atlanta Hawks",
+    # Milwaukee
+    "Milwaukee": "Milwaukee Bucks",
+    "MIL": "Milwaukee Bucks",
+    # Miami
+    "Miami": "Miami Heat",
+    "MIA": "Miami Heat",
+}
+
 # Paths relative to the working directory (where the CLI is launched from)
 _NBA_ML_DIR = Path("NBA-Machine-Learning-Sports-Betting")
 _MODEL_DIR = _NBA_ML_DIR / "Models" / "XGBoost_Models"
@@ -77,6 +179,50 @@ class NBAModel:
             return False
 
     # ------------------------------------------------------------------
+    # Public: team name normalization
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _normalize_team(name: str) -> str:
+        """
+        Map a raw team name to the exact key used in team_index_current.
+
+        Resolution order:
+        1. Exact match in TEAM_NAME_MAP
+        2. Case-insensitive substring match against known canonical names
+        3. Return the original name unchanged
+        """
+        if name in TEAM_NAME_MAP:
+            return TEAM_NAME_MAP[name]
+
+        # Try case-insensitive lookup in the explicit map
+        name_lower = name.lower()
+        for raw, canonical in TEAM_NAME_MAP.items():
+            if raw.lower() == name_lower:
+                return canonical
+
+        # Substring match against canonical names (e.g. "Celtics" -> "Boston Celtics")
+        _CANONICAL_NAMES = {
+            "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets",
+            "Charlotte Hornets", "Chicago Bulls", "Cleveland Cavaliers",
+            "Dallas Mavericks", "Denver Nuggets", "Detroit Pistons",
+            "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
+            "Los Angeles Clippers", "Los Angeles Lakers", "Memphis Grizzlies",
+            "Miami Heat", "Milwaukee Bucks", "Minnesota Timberwolves",
+            "New Orleans Pelicans", "New York Knicks", "Oklahoma City Thunder",
+            "Orlando Magic", "Philadelphia 76ers", "Phoenix Suns",
+            "Portland Trail Blazers", "Sacramento Kings", "San Antonio Spurs",
+            "Toronto Raptors", "Utah Jazz", "Washington Wizards",
+        }
+        for canonical in _CANONICAL_NAMES:
+            if name_lower == canonical.lower():
+                return canonical
+            if name_lower in canonical.lower() or canonical.lower() in name_lower:
+                return canonical
+
+        return name
+
+    # ------------------------------------------------------------------
     # Public: predict / evaluate
     # ------------------------------------------------------------------
 
@@ -87,8 +233,8 @@ class NBAModel:
         Tries the XGBoost 68.9 % model first; falls back to
         market-implied probabilities blended toward 50/50 on any failure.
         """
-        home_team = game.get("home_team", "")
-        away_team = game.get("away_team", "")
+        home_team = self._normalize_team(game.get("home_team", ""))
+        away_team = self._normalize_team(game.get("away_team", ""))
 
         if self._xgb_models_loaded:
             try:

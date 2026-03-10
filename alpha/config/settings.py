@@ -32,6 +32,22 @@ class SportsConfig:
         self.min_ev_threshold: float = data.get("min_ev_threshold", 0.05)
 
 
+class StocksConfig:
+    def __init__(self):
+        data = _load_toml("settings.toml").get("stocks", {})
+        self.watchlist: list[str] = data.get(
+            "watchlist", ["AAPL", "MSFT", "NVDA"]
+        )
+
+
+class CryptoConfig:
+    def __init__(self):
+        data = _load_toml("settings.toml").get("crypto", {})
+        self.pairs: list[str] = data.get(
+            "pairs", ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+        )
+
+
 class ExchangeConfig:
     def __init__(self):
         data = _load_toml("exchanges.toml").get("exchanges", {})
@@ -50,6 +66,7 @@ class Settings(BaseSettings):
 
     alpha_vantage_api_key: str = ""
     fred_api_key: str = ""
+    odds_api_key: str = ""
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     aws_s3_bucket: str = "alpha-terminal-data"

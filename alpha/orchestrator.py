@@ -85,15 +85,37 @@ class Orchestrator:
 
         logger.info(f"Stocks engine: scalar={position_scalar}")
 
+        from alpha.data.ingestion.alpha_vantage import AlphaVantageClient  # noqa: PLC0415
+        from alpha.config.settings import StocksConfig  # noqa: PLC0415
+        import time  # noqa: PLC0415
+
         engine = StockEngine(
             av_api_key=self.settings.alpha_vantage_api_key,
             fred_api_key=self.settings.fred_api_key,
         )
-        # Universe construction is handled upstream in Milestone 6. For now, assume
-        # `run_universe` is wired there and returns weights directly.
-        # Here we simply translate weights into dollar positions.
-        # Placeholder: empty universe until data ingestion is fully wired.
+
+        stocks_cfg = StocksConfig()
+        client = AlphaVantageClient(api_key=self.settings.alpha_vantage_api_key)
         universe_rows: dict[str, list[dict]] = {}
+        for i, symbol in enumerate(stocks_cfg.watchlist):
+            try:
+                rows = client.fetch_daily(symbol, outputsize="compact")
+                if rows:
+                    universe_rows[symbol] = rows
+            except Exception as e:
+                logger.warning(f"Failed to fetch {symbol}: {e}")
+            # Alpha Vantage free tier: 25 calls/day. Sleep 12 s between calls.
+            if i < len(stocks_cfg.watchlist) - 1:
+                time.sleep(12)
+
+        if not universe_rows:
+            logger.warning("No stock data fetched — stocks vertical skipped")
+            return {
+                "vertical": "stocks",
+                "scalar": position_scalar,
+                "positions": {},
+                "orders": [],
+            }
         engine_result = engine.run_universe(universe_rows, position_scalar=position_scalar)
         weights = engine_result.get("weights", {})
         positions = self.position_sizer.scale_weights("stocks", weights, position_scalar)
@@ -129,8 +151,28 @@ class Orchestrator:
 
         logger.info(f"Crypto engine: scalar={position_scalar}")
 
+        from alpha.data.ingestion.crypto_feeds import fetch_ohlcv  # noqa: PLC0415
+        from alpha.config.settings import CryptoConfig  # noqa: PLC0415
+
         engine = CryptoEngine()
+        crypto_cfg = CryptoConfig()
         universe_rows: dict[str, list[dict]] = {}
+        for pair in crypto_cfg.pairs:
+            try:
+                rows = fetch_ohlcv(pair, exchange_id="binance", timeframe="1d", limit=100)
+                if rows:
+                    universe_rows[pair] = rows
+            except Exception as e:
+                logger.warning(f"Failed to fetch {pair}: {e}")
+
+        if not universe_rows:
+            logger.warning("No crypto data fetched — crypto vertical skipped")
+            return {
+                "vertical": "crypto",
+                "scalar": position_scalar,
+                "positions": {},
+                "orders": [],
+            }
         engine_result = engine.run_universe(universe_rows, position_scalar=position_scalar)
         weights = engine_result.get("weights", {})
         positions = self.position_sizer.scale_weights("crypto", weights, position_scalar)
@@ -166,8 +208,19 @@ class Orchestrator:
 
         logger.info(f"Sports engine: scalar={position_scalar}")
 
+        from alpha.data.ingestion.odds_api import OddsAPIClient  # noqa: PLC0415
+
         engine = SportsEngine()
-        games: list[dict] = []
+        client = OddsAPIClient(api_key=self.settings.odds_api_key)
+        games = client.fetch_nba_games()
+        if not games:
+            logger.warning("No NBA games fetched — sports vertical skipped")
+            return {
+                "vertical": "sports",
+                "scalar": position_scalar,
+                "bets": [],
+                "orders": [],
+            }
         engine_result = engine.run(games, position_scalar=position_scalar)
         bets = engine_result.get("bets", [])
 

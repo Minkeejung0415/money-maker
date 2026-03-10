@@ -3,6 +3,39 @@ import ccxt
 from alpha.config.settings import Settings
 
 
+def fetch_ohlcv(
+    symbol: str,
+    exchange_id: str = "binance",
+    timeframe: str = "1d",
+    limit: int = 100,
+) -> list[dict]:
+    """
+    Convenience function: fetch OHLCV rows for *symbol* from a public exchange
+    endpoint (no API key required for market data on most exchanges).
+
+    Returns rows with keys: symbol, date, open, high, low, close, volume, asset_type.
+    """
+    ExchangeClass = getattr(ccxt, exchange_id)
+    exchange = ExchangeClass({"enableRateLimit": True})
+    raw = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+    rows = []
+    for candle in raw:
+        ts_ms, open_, high, low, close, vol = candle
+        rows.append({
+            "symbol": symbol,
+            "date": datetime.fromtimestamp(
+                ts_ms / 1000, tz=timezone.utc
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+            "open": open_,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": vol,
+            "asset_type": "crypto",
+        })
+    return rows
+
+
 class CryptoFeedClient:
     def __init__(
         self,

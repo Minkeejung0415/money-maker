@@ -152,3 +152,50 @@ def test_predict_valid_after_refresh_stats_fails():
     assert "home_win_prob" in result
     assert "away_win_prob" in result
     assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# Fix 7: Team name normalization tests
+# ---------------------------------------------------------------------------
+
+def test_normalize_team_la_lakers():
+    assert NBAModel._normalize_team("LA Lakers") == "Los Angeles Lakers"
+
+
+def test_normalize_team_gs_warriors():
+    assert NBAModel._normalize_team("GS Warriors") == "Golden State Warriors"
+
+
+def test_normalize_team_ny_knicks():
+    assert NBAModel._normalize_team("NY Knicks") == "New York Knicks"
+
+
+def test_normalize_team_exact_match():
+    """A canonical name should be returned unchanged."""
+    assert NBAModel._normalize_team("Boston Celtics") == "Boston Celtics"
+
+
+def test_normalize_team_unknown_no_crash():
+    """An unrecognized name must be returned as-is without raising."""
+    result = NBAModel._normalize_team("unknown team xyz")
+    assert result == "unknown team xyz"
+
+
+def test_normalize_team_case_insensitive_map():
+    """Lowercase variant of a mapped name should still resolve."""
+    assert NBAModel._normalize_team("la lakers") == "Los Angeles Lakers"
+
+
+def test_predict_normalizes_team_names():
+    """predict() should internally normalize team names before building features."""
+    model = NBAModel()
+    model._xgb_models_loaded = False
+    game = {
+        "home_team": "LA Lakers",
+        "away_team": "GS Warriors",
+        "home_odds": -150,
+        "away_odds": +130,
+    }
+    result = model.predict(game)
+    assert "home_win_prob" in result
+    assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
