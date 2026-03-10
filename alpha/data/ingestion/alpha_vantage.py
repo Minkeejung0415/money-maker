@@ -41,3 +41,25 @@ class AlphaVantageClient:
         resp = requests.get(url)
         resp.raise_for_status()
         return resp.json()
+
+    def get_fundamentals(self, symbol: str) -> dict | None:
+        """
+        Fetch key fundamentals for *symbol* from the AV OVERVIEW endpoint.
+
+        Returns a dict with keys: pe_ratio, eps, profit_margin.
+        Returns None silently on any failure (no API key, network error,
+        missing/non-numeric fields, etc.).
+        """
+        if not self.api_key:
+            return None
+        try:
+            url = self._build_url("OVERVIEW", symbol=symbol)
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+            pe = float(data["PERatio"])
+            eps = float(data["EPS"])
+            margin = float(data["ProfitMargin"])
+            return {"pe_ratio": pe, "eps": eps, "profit_margin": margin}
+        except Exception:
+            return None

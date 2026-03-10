@@ -46,3 +46,51 @@ def test_fetch_returns_rows(mock_get):
     client = AlphaVantageClient(api_key="TEST")
     rows = client.fetch_daily("AAPL")
     assert len(rows) == 1
+
+
+# ---------------------------------------------------------------------------
+# get_fundamentals tests
+# ---------------------------------------------------------------------------
+
+@patch("alpha.data.ingestion.alpha_vantage.requests.get")
+def test_get_fundamentals_pass(mock_get):
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {
+        "PERatio": "20.5",
+        "EPS": "5.00",
+        "ProfitMargin": "0.15",
+    }
+    mock_get.return_value = mock_resp
+    client = AlphaVantageClient(api_key="TEST")
+    result = client.get_fundamentals("AAPL")
+    assert result is not None
+    assert result["pe_ratio"] == pytest.approx(20.5)
+    assert result["eps"] == pytest.approx(5.0)
+    assert result["profit_margin"] == pytest.approx(0.15)
+
+
+def test_get_fundamentals_no_api_key():
+    """Returns None when no API key is set."""
+    client = AlphaVantageClient(api_key=None)
+    # Monkeypatch Settings to avoid reading env
+    client.api_key = None
+    result = client.get_fundamentals("AAPL")
+    assert result is None
+
+
+@patch("alpha.data.ingestion.alpha_vantage.requests.get")
+def test_get_fundamentals_missing_key_returns_none(mock_get):
+    """Missing/non-numeric field in API response returns None."""
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"PERatio": "None", "EPS": "N/A", "ProfitMargin": "0.10"}
+    mock_get.return_value = mock_resp
+    client = AlphaVantageClient(api_key="TEST")
+    result = client.get_fundamentals("BAD")
+    assert result is None
+
+
+@patch("alpha.data.ingestion.alpha_vantage.requests.get", side_effect=ConnectionError("offline"))
+def test_get_fundamentals_network_error_returns_none(mock_get):
+    client = AlphaVantageClient(api_key="TEST")
+    result = client.get_fundamentals("AAPL")
+    assert result is None
