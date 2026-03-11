@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 import pytest
-from alpha.engines.sports.nba_model import NBAModel
+from alpha.engines.sports.nba_model import NBAModel, MAX_XGB_CONF
 
 
 _GAME = {
@@ -198,6 +198,52 @@ def test_predict_normalizes_team_names():
     }
     result = model.predict(game)
     assert "home_win_prob" in result
+    assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# XGBoost confidence cap tests
+# ---------------------------------------------------------------------------
+
+def test_xgb_confidence_cap_fires_on_heavy_favorite():
+    """
+    When XGBoost returns >MAX_XGB_CONF for the home team, predict() must
+    cap it to MAX_XGB_CONF before the credibility filter runs.
+    """
+    model = NBAModel()
+    model._xgb_models_loaded = True
+    model._team_stats_cache = {}  # empty → credibility filter is a no-op
+
+    with patch.object(model, "_predict_xgb", return_value=(0.90, 0.10)):
+        result = model.predict(_GAME)
+
+    assert result["home_win_prob"] <= MAX_XGB_CONF + 1e-6
+    assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
+
+
+def test_xgb_confidence_cap_fires_on_heavy_away_favorite():
+    """Same cap applies when away team is the heavy favorite."""
+    model = NBAModel()
+    model._xgb_models_loaded = True
+    model._team_stats_cache = {}
+
+    with patch.object(model, "_predict_xgb", return_value=(0.08, 0.92)):
+        result = model.predict(_GAME)
+
+    assert result["away_win_prob"] <= MAX_XGB_CONF + 1e-6
+    assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
+
+
+def test_xgb_confidence_cap_not_triggered_for_normal_prediction():
+    """A normal 65/35 split should pass through unchanged."""
+    model = NBAModel()
+    model._xgb_models_loaded = True
+    model._team_stats_cache = {}
+
+    with patch.object(model, "_predict_xgb", return_value=(0.65, 0.35)):
+        result = model.predict(_GAME)
+
+    assert abs(result["home_win_prob"] - 0.65) < 0.02
     assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
 
 

@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 # 0.0 = trust market fully, 1.0 = always predict 50/50
 MARKET_BLEND = 0.0
 
+# XGBoost confidence cap: model is 68.9% accurate, so no single-game
+# prediction should claim more than this probability.  Prevents outlier
+# XGBoost outputs (e.g. 85-90%) from becoming "most prominent" picks.
+MAX_XGB_CONF = 0.73
+
 # Maps common Odds-API name variations -> exact team_index_current keys
 TEAM_NAME_MAP: dict[str, str] = {
     # Lakers
@@ -251,6 +256,14 @@ class NBAModel:
                 probs = self._predict_xgb(home_team, away_team)
                 if probs is not None:
                     home_prob, away_prob = probs
+                    # Cap before credibility filter: XGBoost is 68.9% accurate
+                    # so anything above MAX_XGB_CONF is likely overfit confidence.
+                    if home_prob > MAX_XGB_CONF:
+                        home_prob = MAX_XGB_CONF
+                        away_prob = 1.0 - MAX_XGB_CONF
+                    elif away_prob > MAX_XGB_CONF:
+                        away_prob = MAX_XGB_CONF
+                        home_prob = 1.0 - MAX_XGB_CONF
                     home_prob, away_prob = self._credibility_filter(
                         home_team, away_team, home_prob, away_prob, game
                     )

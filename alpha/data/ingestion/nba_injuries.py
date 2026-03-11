@@ -22,6 +22,22 @@ import requests
 logger = logging.getLogger(__name__)
 
 _NBA_CDN = "https://cdn.nba.com/static/json/liveData"
+_ESPN_API = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
+
+# ESPN internal team IDs (stable, used for their injury endpoint)
+_ESPN_TEAM_IDS: dict[str, int] = {
+    "Atlanta Hawks": 1,        "Boston Celtics": 2,        "Brooklyn Nets": 17,
+    "Charlotte Hornets": 30,   "Chicago Bulls": 4,         "Cleveland Cavaliers": 5,
+    "Dallas Mavericks": 6,     "Denver Nuggets": 7,        "Detroit Pistons": 8,
+    "Golden State Warriors": 9,"Houston Rockets": 10,      "Indiana Pacers": 11,
+    "Los Angeles Clippers": 12,"Los Angeles Lakers": 13,   "Memphis Grizzlies": 29,
+    "Miami Heat": 14,          "Milwaukee Bucks": 15,      "Minnesota Timberwolves": 16,
+    "New Orleans Pelicans": 3, "New York Knicks": 18,      "Oklahoma City Thunder": 25,
+    "Orlando Magic": 19,       "Philadelphia 76ers": 20,   "Phoenix Suns": 21,
+    "Portland Trail Blazers": 22,"Sacramento Kings": 23,   "San Antonio Spurs": 24,
+    "Toronto Raptors": 28,     "Utah Jazz": 26,            "Washington Wizards": 27,
+}
+
 _TRICODE_TO_FULL: dict[str, str] = {
     "ATL": "Atlanta Hawks",        "BOS": "Boston Celtics",
     "BKN": "Brooklyn Nets",        "CHA": "Charlotte Hornets",
@@ -120,6 +136,32 @@ def get_player_stats_map(season: str = "2025-26") -> dict[str, dict]:
         return {}
 
 
+def get_espn_out_players(team_name: str) -> list[str]:
+    """
+    Return list of player names confirmed OUT for *team_name* via ESPN's
+    pre-game injury report.  Available hours before tip, unlike NBA CDN
+    boxscore which only populates close to tip-off.
+
+    Only returns players with status exactly "Out" (not Questionable/DTD).
+    Returns [] on any failure (never raises).
+    """
+    espn_id = _ESPN_TEAM_IDS.get(team_name)
+    if espn_id is None:
+        return []
+    data = _get(f"{_ESPN_API}/teams/{espn_id}/injuries")
+    if not data:
+        return []
+    out_players: list[str] = []
+    for injury in data.get("injuries", []):
+        status = injury.get("status", "")
+        if status.lower() == "out":
+            athlete = injury.get("athlete", {})
+            name = athlete.get("displayName", "")
+            if name:
+                out_players.append(name)
+    return out_players
+
+
 def get_team_injury_impact(season: str = "2025-26") -> dict[str, dict]:
     """
     Main entry point. Returns per-team injury impact dict:
@@ -149,6 +191,16 @@ def get_team_injury_impact(season: str = "2025-26") -> dict[str, dict]:
 
     for game in game_ids:
         inactive_map = get_inactive_players(game["game_id"])
+
+        # Supplement with ESPN pre-game injury report for teams where the
+        # NBA CDN boxscore hasn't populated the inactive list yet (too early).
+        for team_name in (game["home"], game["away"]):
+            if team_name not in inactive_map:
+                espn_out = get_espn_out_players(team_name)
+                if espn_out:
+                    logger.debug("ESPN injury fallback for %s: %s", team_name, espn_out)
+                    inactive_map[team_name] = espn_out
+
         for team_name, inactive_players in inactive_map.items():
             out_details = []
             for name in inactive_players:
