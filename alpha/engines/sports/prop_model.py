@@ -20,7 +20,10 @@ Returns None if < 5 qualifying games are available.
 from __future__ import annotations
 
 import logging
+import pickle
 import time
+from datetime import date
+from pathlib import Path
 from statistics import mean, stdev
 from typing import Any
 
@@ -38,14 +41,18 @@ _MARKET_COL: dict[str, str] = {
 
 _MIN_MINUTES: int = 20
 _MIN_GAMES: int = 5
-_NBA_API_SLEEP: float = 0.6
-_LEAGUE_AVG_DEF_RTG: float = 112.0  # approximate 2024-25 season average
+_NBA_API_SLEEP: float = 0.3          # reduced from 0.6 — nba_api handles this fine
+_LEAGUE_AVG_DEF_RTG: float = 112.0
+_CACHE_DIR: Path = Path("data/.prop_cache")
 
 
 class PropModel:
     def __init__(self, season: str = "2024-25"):
         self._season = season
         self._def_rtg_cache: dict[str, float] | None = None
+        # In-memory cache for this run (player_name -> rows)
+        self._log_cache: dict[str, list[dict]] = {}
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Public API
@@ -188,9 +195,25 @@ class PropModel:
 
     def _fetch_game_logs(self, player_name: str) -> list[dict] | None:
         """
-        Fetch recent game logs for a player.  Returns list of dicts with
-        stat columns, or None on any failure.
+        Fetch recent game logs for a player. Caches to disk (same-day TTL)
+        and in memory — repeat calls for the same player are instant.
         """
+        # 1. In-memory cache (within same run)
+        if player_name in self._log_cache:
+            return self._log_cache[player_name]
+
+        # 2. Disk cache (same-day TTL)
+        cache_file = _CACHE_DIR / f"{player_name.replace(' ', '_')}_{date.today()}.pkl"
+        if cache_file.exists():
+            try:
+                with open(cache_file, "rb") as f:
+                    rows = pickle.load(f)
+                self._log_cache[player_name] = rows
+                return rows
+            except Exception:
+                pass  # corrupt cache — refetch
+
+        # 3. Live fetch from nba_api
         try:
             from nba_api.stats.static import players as nba_players  # noqa: PLC0415
             from nba_api.stats.endpoints.playergamelogs import PlayerGameLogs  # noqa: PLC0415
@@ -228,6 +251,13 @@ class PropModel:
                     entry["MIN_float"] = 0.0
                 rows.append(entry)
 
+            # Save to disk + memory cache
+            try:
+                with open(cache_file, "wb") as f:
+                    pickle.dump(rows, f)
+            except Exception:
+                pass
+            self._log_cache[player_name] = rows
             return rows
         except Exception as exc:
             logger.warning("nba_api game logs failed for %s: %s", player_name, exc)

@@ -199,3 +199,106 @@ def test_predict_normalizes_team_names():
     result = model.predict(game)
     assert "home_win_prob" in result
     assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# Credibility filter tests
+# ---------------------------------------------------------------------------
+
+def _make_model_with_stats(stats: dict) -> NBAModel:
+    """Return a model with a pre-loaded _team_stats_cache."""
+    model = NBAModel()
+    model._team_stats_cache = stats
+    return model
+
+
+_UNDERDOG_GAME = {
+    "home_team": "Los Angeles Lakers",
+    "away_team": "Brooklyn Nets",
+    "home_odds": -110,
+    "away_odds": +600,   # big underdog, decimal ~7.0
+}
+
+
+def test_credibility_filter_no_op_for_good_teams():
+    """Filter should not change probs when both teams have solid records."""
+    model = _make_model_with_stats({
+        "Los Angeles Lakers": {"w_pct": 0.60, "wins": 45, "gp": 75},
+        "Boston Celtics": {"w_pct": 0.65, "wins": 49, "gp": 75},
+    })
+    game = {**_GAME, "home_odds": -150, "away_odds": +130}
+    # Probs that don't diverge enough from market to trigger artifact check
+    hp, ap = model._credibility_filter(
+        "Los Angeles Lakers", "Boston Celtics", 0.62, 0.38, game
+    )
+    assert abs(hp + ap - 1.0) < 1e-6
+    # Should be close to input (no filter triggered)
+    assert abs(hp - 0.62) < 0.02
+
+
+def test_credibility_filter_win_rate_cap():
+    """W_PCT < 0.25 should pull the model's away prob down toward market-implied."""
+    model = _make_model_with_stats({
+        "Los Angeles Lakers": {"w_pct": 0.60, "wins": 45, "gp": 75},
+        "Brooklyn Nets": {"w_pct": 0.15, "wins": 10, "gp": 65},
+    })
+    # Model gives Brooklyn 0.35, but market (~0.21 for +600) should cap it
+    raw_away = 0.35
+    hp, ap = model._credibility_filter(
+        "Los Angeles Lakers", "Brooklyn Nets", 0.65, raw_away, _UNDERDOG_GAME
+    )
+    assert abs(hp + ap - 1.0) < 1e-6
+    # Filter should have reduced the away prob from raw input
+    assert ap < raw_away
+
+
+def test_credibility_filter_tanking_discount():
+    """W < 20 and GP > 50 should blend model 50% toward market."""
+    model = _make_model_with_stats({
+        "Los Angeles Lakers": {"w_pct": 0.60, "wins": 45, "gp": 75},
+        "Brooklyn Nets": {"w_pct": 0.20, "wins": 15, "gp": 75},
+    })
+    market = model._market_implied_predict(_UNDERDOG_GAME)
+    raw_away = 0.30
+    hp, ap = model._credibility_filter(
+        "Los Angeles Lakers", "Brooklyn Nets", 0.70, raw_away, _UNDERDOG_GAME
+    )
+    assert abs(hp + ap - 1.0) < 1e-6
+    # After tanking discount + re-normalize, away prob should be < raw input
+    assert ap < raw_away + 1e-6
+
+
+def test_credibility_filter_big_underdog_artifact():
+    """Model that gives >15% boost to a +600 underdog should be pulled back toward market."""
+    model = _make_model_with_stats({
+        "Los Angeles Lakers": {"w_pct": 0.60, "wins": 45, "gp": 75},
+        "Brooklyn Nets": {"w_pct": 0.50, "wins": 38, "gp": 75},
+    })
+    # Market implies ~0.21 for +600 away; model says 0.40 — diff 0.19 > 0.15 threshold
+    raw_away = 0.40
+    hp, ap = model._credibility_filter(
+        "Los Angeles Lakers", "Brooklyn Nets", 0.60, raw_away, _UNDERDOG_GAME
+    )
+    assert abs(hp + ap - 1.0) < 1e-6
+    # Artifact check should have pulled away prob significantly below the raw model input
+    assert ap < raw_away - 0.05
+
+
+def test_credibility_filter_probs_always_sum_to_one():
+    """Output probs must always sum to 1.0 regardless of which filters fire."""
+    model = _make_model_with_stats({
+        "Los Angeles Lakers": {"w_pct": 0.10, "wins": 5, "gp": 60},
+        "Brooklyn Nets": {"w_pct": 0.10, "wins": 5, "gp": 60},
+    })
+    hp, ap = model._credibility_filter(
+        "Los Angeles Lakers", "Brooklyn Nets", 0.85, 0.15, _UNDERDOG_GAME
+    )
+    assert abs(hp + ap - 1.0) < 1e-6
+
+
+def test_credibility_filter_no_sqlite_data_is_safe():
+    """Filter must not raise when team stats are unavailable (empty cache)."""
+    model = _make_model_with_stats({})  # no data at all
+    game = {**_GAME, "home_odds": -150, "away_odds": +130}
+    hp, ap = model._credibility_filter("Los Angeles Lakers", "Boston Celtics", 0.62, 0.38, game)
+    assert abs(hp + ap - 1.0) < 1e-6

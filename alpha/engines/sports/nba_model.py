@@ -251,6 +251,9 @@ class NBAModel:
                 probs = self._predict_xgb(home_team, away_team)
                 if probs is not None:
                     home_prob, away_prob = probs
+                    home_prob, away_prob = self._credibility_filter(
+                        home_team, away_team, home_prob, away_prob, game
+                    )
                     return {
                         "home_team": home_team,
                         "away_team": away_team,
@@ -644,3 +647,112 @@ class NBAModel:
         except Exception as exc:
             logger.debug("build_game_features failed: %s", exc)
             return None
+
+    # ------------------------------------------------------------------
+    # Internal: credibility filter (model artifact prevention)
+    # ------------------------------------------------------------------
+
+    def _get_team_stats_summary(self) -> dict[str, dict]:
+        """
+        Load W_PCT, W (wins), and GP from the latest TeamData.sqlite snapshot.
+        Returns {team_name: {"w_pct": float, "wins": int, "gp": int}}.
+        Result is cached on self after first call.
+        """
+        if hasattr(self, "_team_stats_cache"):
+            return self._team_stats_cache
+
+        result: dict[str, dict] = {}
+        try:
+            team_df = self._get_latest_team_df()
+            if team_df is not None and "TEAM_NAME" in team_df.columns:
+                for _, row in team_df.iterrows():
+                    name = row.get("TEAM_NAME", "")
+                    if not name:
+                        continue
+                    result[name] = {
+                        "w_pct": float(row.get("W_PCT", 0.5) or 0.5),
+                        "wins": int(row.get("W", 20) or 20),
+                        "gp": int(row.get("GP", 40) or 40),
+                    }
+        except Exception as exc:
+            logger.debug("Team stats summary failed: %s", exc)
+
+        self._team_stats_cache = result
+        return result
+
+    def _credibility_filter(
+        self,
+        home_team: str,
+        away_team: str,
+        home_prob: float,
+        away_prob: float,
+        game: dict,
+    ) -> tuple[float, float]:
+        """
+        Dampen XGBoost predictions that diverge from market on bad or tanking teams.
+
+        Three checks per team (applied in order):
+          1. Tanking discount: W < 20 and GP > 50 → blend 50% toward market-implied
+          2. Win-rate cap: W_PCT < 0.25 → cap model prob at market-implied
+          3. Big-underdog artifact: decimal odds > 4.0 AND |model - market| > 0.15
+             → revert to market-implied
+
+        Returns adjusted (home_prob, away_prob), re-normalized to sum to 1.0.
+        """
+        market = self._market_implied_predict(game)
+        mkt_home = market["home_win_prob"]
+        mkt_away = market["away_win_prob"]
+
+        team_stats = self._get_team_stats_summary()
+
+        home_adj, away_adj = home_prob, away_prob
+
+        for team, odds_key in [(home_team, "home_odds"), (away_team, "away_odds")]:
+            is_home = team == home_team
+            model_p = home_prob if is_home else away_prob
+            mkt_p = mkt_home if is_home else mkt_away
+            adj = model_p
+
+            stats = team_stats.get(team, {})
+            w_pct = stats.get("w_pct", 0.5)
+            wins = stats.get("wins", 20)
+            gp = stats.get("gp", 40)
+
+            decimal_odds = self.ev_calc.american_to_decimal(game.get(odds_key, -110))
+
+            # Check 1: tanking discount
+            if wins < 20 and gp > 50:
+                adj = 0.5 * adj + 0.5 * mkt_p
+                logger.debug(
+                    "Tanking discount: %s (%dW/%dGP) model=%.3f -> %.3f",
+                    team, wins, gp, model_p, adj,
+                )
+
+            # Check 2: win-rate cap
+            if w_pct < 0.25 and adj > mkt_p:
+                logger.debug(
+                    "Win-rate cap: %s W_PCT=%.3f model=%.3f capped at market=%.3f",
+                    team, w_pct, adj, mkt_p,
+                )
+                adj = mkt_p
+
+            # Check 3: big-underdog artifact
+            if decimal_odds > 4.0 and abs(adj - mkt_p) > 0.15:
+                logger.debug(
+                    "Model artifact: %s odds=%.2f model=%.3f market=%.3f — reverting",
+                    team, decimal_odds, adj, mkt_p,
+                )
+                adj = mkt_p
+
+            if is_home:
+                home_adj = adj
+            else:
+                away_adj = adj
+
+        # Re-normalize so probs sum to 1.0
+        total = home_adj + away_adj
+        if total > 0:
+            home_adj /= total
+            away_adj /= total
+
+        return home_adj, away_adj

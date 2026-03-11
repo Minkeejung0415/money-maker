@@ -117,20 +117,20 @@ class PlayerPropsClient:
                     continue
 
                 outcomes = market.get("outcomes", [])
-                # Group outcomes by player name
+                # API format: name="Over"/"Under", description=player name
                 player_outcomes: dict[str, list[dict]] = {}
                 for outcome in outcomes:
-                    player = outcome.get("name", "")
+                    player = outcome.get("description", "")
                     if player:
                         player_outcomes.setdefault(player, []).append(outcome)
 
                 for player, player_outs in player_outcomes.items():
                     over_out = next(
-                        (o for o in player_outs if o.get("description", "").lower() == "over"),
+                        (o for o in player_outs if o.get("name", "").lower() == "over"),
                         None,
                     )
                     under_out = next(
-                        (o for o in player_outs if o.get("description", "").lower() == "under"),
+                        (o for o in player_outs if o.get("name", "").lower() == "under"),
                         None,
                     )
                     if over_out is None or under_out is None:

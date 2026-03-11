@@ -19,10 +19,10 @@ FAKE_RESPONSE = {
                 {
                     "key": "player_points",
                     "outcomes": [
-                        {"name": "LeBron James", "description": "Over",  "price": -115, "point": 27.5},
-                        {"name": "LeBron James", "description": "Under", "price": -105, "point": 27.5},
-                        {"name": "Anthony Davis", "description": "Over",  "price": -110, "point": 24.5},
-                        {"name": "Anthony Davis", "description": "Under", "price": -110, "point": 24.5},
+                        {"name": "Over",  "description": "LeBron James", "price": -115, "point": 27.5},
+                        {"name": "Under", "description": "LeBron James", "price": -105, "point": 27.5},
+                        {"name": "Over",  "description": "Anthony Davis", "price": -110, "point": 24.5},
+                        {"name": "Under", "description": "Anthony Davis", "price": -110, "point": 24.5},
                     ],
                 }
             ],
@@ -38,8 +38,8 @@ FAKE_RESPONSE_TWO_BOOKS = {
                 {
                     "key": "player_points",
                     "outcomes": [
-                        {"name": "LeBron James", "description": "Over",  "price": -115, "point": 27.5},
-                        {"name": "LeBron James", "description": "Under", "price": -105, "point": 27.5},
+                        {"name": "Over",  "description": "LeBron James", "price": -115, "point": 27.5},
+                        {"name": "Under", "description": "LeBron James", "price": -105, "point": 27.5},
                     ],
                 }
             ],
@@ -50,8 +50,8 @@ FAKE_RESPONSE_TWO_BOOKS = {
                 {
                     "key": "player_points",
                     "outcomes": [
-                        {"name": "LeBron James", "description": "Over",  "price": -105, "point": 27.5},
-                        {"name": "LeBron James", "description": "Under", "price": -115, "point": 27.5},
+                        {"name": "Over",  "description": "LeBron James", "price": -105, "point": 27.5},
+                        {"name": "Under", "description": "LeBron James", "price": -115, "point": 27.5},
                     ],
                 }
             ],
@@ -67,15 +67,15 @@ FAKE_RESPONSE_UNSUPPORTED_MARKET = {
                 {
                     "key": "player_points",
                     "outcomes": [
-                        {"name": "LeBron James", "description": "Over",  "price": -110, "point": 27.5},
-                        {"name": "LeBron James", "description": "Under", "price": -110, "point": 27.5},
+                        {"name": "Over",  "description": "LeBron James", "price": -110, "point": 27.5},
+                        {"name": "Under", "description": "LeBron James", "price": -110, "point": 27.5},
                     ],
                 },
                 {
                     "key": "player_steals",   # not supported
                     "outcomes": [
-                        {"name": "LeBron James", "description": "Over",  "price": -120, "point": 1.5},
-                        {"name": "LeBron James", "description": "Under", "price": +100, "point": 1.5},
+                        {"name": "Over",  "description": "LeBron James", "price": -120, "point": 1.5},
+                        {"name": "Under", "description": "LeBron James", "price": +100, "point": 1.5},
                     ],
                 },
             ],

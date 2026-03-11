@@ -354,9 +354,9 @@ class SGPBuilder:
         home_dec = _EV_CALC.american_to_decimal(home_odds)
         away_dec = _EV_CALC.american_to_decimal(away_odds)
 
-        # Use market-implied win prob as stand-in model prob for ML
-        home_prob = _EV_CALC.implied_prob(home_dec)
-        away_prob = _EV_CALC.implied_prob(away_dec)
+        # Prefer NBAModel probabilities; fall back to market-implied
+        home_prob = game.get("home_model_prob") or _EV_CALC.implied_prob(home_dec)
+        away_prob = game.get("away_model_prob") or _EV_CALC.implied_prob(away_dec)
 
         # Pick the better expected value side
         home_ev = _EV_CALC.expected_value(home_prob, home_dec)

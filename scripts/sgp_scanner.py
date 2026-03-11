@@ -149,6 +149,14 @@ def main() -> None:
         sys.exit(0)
     print(f"    Found {len(games)} game(s)")
 
+    # Enrich games with NBAModel win probabilities so SGPBuilder has real model_prob
+    from alpha.engines.sports.nba_model import NBAModel
+    nba_model = NBAModel()
+    for game in games:
+        pred = nba_model.predict(game)
+        game["home_model_prob"] = pred["home_win_prob"]
+        game["away_model_prob"] = pred["away_win_prob"]
+
     # ── Step 2: Fetch props (skip for classic parlay) ────────────────────
     prop_legs_raw: list[dict] = []
     if sgp_mode != SGPMode.CLASSIC_PARLAY:
@@ -165,13 +173,21 @@ def main() -> None:
     skipped_low_conf = 0
 
     if sgp_mode != SGPMode.CLASSIC_PARLAY and prop_legs_raw:
-        print(f"[3/6] Running prop model for {len(prop_legs_raw)} props (nba_api — may be slow)...")
+        unique_players = len({r["player"] for r in prop_legs_raw if r.get("market") in markets})
+        print(f"[3/6] Running prop model — {unique_players} players to fetch (cached players are instant)...")
         model = PropModel()
+        seen_players: set[str] = set()
+        done = 0
         for raw in prop_legs_raw:
             if raw.get("market") not in markets:
                 continue
+            player = raw["player"]
+            if player not in seen_players:
+                seen_players.add(player)
+                done += 1
+                print(f"\r    Fetching: {done}/{unique_players} players ({player[:30]})    ", end="", flush=True)
             # Determine opponent team
-            opponent = raw.get("away_team", "")  # prop player is typically home
+            opponent = raw.get("away_team", "")
             result = model.predict_prop(
                 player_name=raw["player"],
                 market=raw["market"],
@@ -203,6 +219,7 @@ def main() -> None:
                 confidence=conf,
             ))
 
+        print()  # newline after progress
         print(f"    Scored {len(scored_legs)} legs  "
               f"({skipped_insufficient} skipped: insufficient data, "
               f"{skipped_low_conf} skipped: low confidence)")
