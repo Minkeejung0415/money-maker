@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     alpha_vantage_api_key: str = ""
     fred_api_key: str = ""
     odds_api_key: str = ""
+    football_api_key: str = ""  # football-data.org (EPL + UCL)
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     aws_s3_bucket: str = "alpha-terminal-data"

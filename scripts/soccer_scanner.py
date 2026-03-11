@@ -2,24 +2,31 @@
 Soccer Scanner — EPL + UCL Same-Game Parlay / bet generator.
 
 Orchestrates the full pipeline:
-  [1/6] Fetch today's soccer games (OddsAPIClient)
-  [2/6] Fetch player prop lines (Soccer props via Odds API)
+  [1/6] Fetch today's soccer games (football-data.org via FootballDataClient)
+  [2/6] Fetch player prop lines (no free source — props skipped)
   [3/6] Run prop model (SoccerPropModel)
   [4/6] Apply static correlation table
   [5/6] Run optional validation
   [6/6] Build and rank SGP combinations (SoccerSGPBuilder)
 
+Data sources:
+  Games  : football-data.org (FOOTBALL_API_KEY in .env — free tier covers EPL + UCL)
+  Stats  : Understat (EPL player xG/shots/assists — free, no key needed)
+  Props  : No free odds source available — props mode will return 0 legs.
+           Use --mode parlay for moneyline parlays.
+
+NOTE: The Odds API (ODDS_API_KEY) is reserved for NBA only and is NOT used here.
+
 Usage:
-  python scripts/soccer_scanner.py --mode props --league epl
+  python scripts/soccer_scanner.py --mode parlay --league epl
   python scripts/soccer_scanner.py --mode parlay --league all
-  python scripts/soccer_scanner.py --mode sgp --min-edge 0.03
+  python scripts/soccer_scanner.py --mode props --league epl   # 0 prop lines (no source)
 """
 from __future__ import annotations
 
 import argparse
 import io
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -40,16 +47,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("soccer_scanner")
 
-# Odds API sport keys for soccer
-_SPORT_KEY_MAP = {
-    "epl": "soccer_england_league1",
-    "ucl": "soccer_uefa_champs_league",
-}
-
-# The Odds API soccer prop markets
 _SOCCER_PROP_MARKETS = {
     "player_shots",
-    "player_goals",
+    "player_shots_on_target",
     "player_assists",
 }
 
@@ -64,22 +64,25 @@ def _parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Modes:
-  props    -- Pure player prop parlay (2-4 legs, same game)
-  sgp      -- Moneyline + player props (same game)
-  mixed    -- Any combination of ML and props (same game)
-  parlay   -- Classic multi-game moneyline parlay (independent legs)
+  props    -- Player prop parlay (no prop lines currently — 0 legs)
+  sgp      -- Moneyline + player props (no prop lines currently)
+  mixed    -- Any combination of ML and props
+  parlay   -- Classic multi-game moneyline parlay (recommended)
+
+Data sources:
+  Games : football-data.org (requires FOOTBALL_API_KEY in .env)
+  Stats : Understat (EPL only — free, no key needed)
 
 Examples:
-  python scripts/soccer_scanner.py --mode props --league epl
+  python scripts/soccer_scanner.py --mode parlay --league epl
   python scripts/soccer_scanner.py --mode parlay --league all
-  python scripts/soccer_scanner.py --mode sgp --min-edge 0.03 --no-corr
         """,
     )
     parser.add_argument(
         "--mode",
         choices=["props", "sgp", "mixed", "parlay"],
-        default="props",
-        help="Parlay mode (default: props)",
+        default="parlay",
+        help="Parlay mode (default: parlay)",
     )
     parser.add_argument(
         "--league",
@@ -127,7 +130,7 @@ Examples:
 def main() -> None:
     args = _parse_args()
 
-    from alpha.data.ingestion.odds_api import OddsAPIClient
+    from alpha.data.ingestion.football_data_client import FootballDataClient
     from alpha.engines.sports.soccer_model import SoccerModel
     from alpha.engines.sports.soccer_prop_model import SoccerPropModel
     from alpha.engines.sports.soccer_sgp_builder import SoccerSGPBuilder, SGPMode, PropLeg
@@ -145,19 +148,16 @@ def main() -> None:
     )
 
     # ── Step 1: Fetch games ──────────────────────────────────────────────
-    print("[1/6] Fetching today's soccer games...")
-    odds_client = OddsAPIClient()
-    if not odds_client.is_configured():
-        print("  ODDS_API_KEY not set. Exiting.")
+    print("[1/6] Fetching today's soccer games (football-data.org)...")
+    fd_client = FootballDataClient()
+    if not fd_client.is_configured():
+        print("  FOOTBALL_API_KEY not set. Add it to .env and retry.")
         sys.exit(0)
 
     all_games: list[dict] = []
     for league_key in leagues_to_scan:
-        sport_key = _SPORT_KEY_MAP.get(league_key, f"soccer_{league_key}")
         try:
-            games = odds_client.fetch_games(sport_key=sport_key)
-            for g in games:
-                g["league"] = league_key
+            games = fd_client.fetch_today_games(league_key)
             all_games.extend(games)
         except Exception as exc:
             logger.warning("Could not fetch games for %s: %s", league_key, exc)
@@ -176,21 +176,19 @@ def main() -> None:
         game["draw_prob"] = pred.get("draw_prob", 0.25)
 
     if args.validate:
-        print(f"    Model source: {soccer_model._xgb_models_loaded and 'xgboost' or 'market_implied'}")
+        src = "XGBoost (ProphitBet)" if soccer_model._xgb_models_loaded else "market-implied"
+        print(f"    Model source: {src}")
 
     # ── Step 2: Fetch props ──────────────────────────────────────────────
     prop_legs_raw: list[dict] = []
     if sgp_mode != SGPMode.CLASSIC_PARLAY:
-        print("[2/6] Fetching soccer player prop lines...")
-        prop_legs_raw = _fetch_soccer_props(odds_client, all_games, leagues_to_scan)
-        print(f"    Fetched {len(prop_legs_raw)} prop lines")
+        print("[2/6] Soccer prop lines — no free source available.")
+        print("      (Props require a dedicated odds API. Use --mode parlay for ML parlays.)")
     else:
         print("[2/6] Skipping prop lines (classic parlay mode)")
 
     # ── Step 3: Run prop model ───────────────────────────────────────────
     scored_legs: list[PropLeg] = []
-    skipped_insufficient = 0
-    skipped_low_conf = 0
 
     if sgp_mode != SGPMode.CLASSIC_PARLAY and prop_legs_raw:
         print(f"[3/6] Running soccer prop model — {len(prop_legs_raw)} props...")
@@ -198,7 +196,6 @@ def main() -> None:
         for raw in prop_legs_raw:
             if raw.get("market") not in _SOCCER_PROP_MARKETS:
                 continue
-
             result = prop_model.predict_prop(
                 player_name=raw["player"],
                 market=raw["market"],
@@ -206,17 +203,12 @@ def main() -> None:
                 over_odds=raw.get("over_odds", -110),
             )
             if result is None:
-                skipped_insufficient += 1
                 continue
-
             conf = result.get("confidence", "LOW")
             if args.confidence == "HIGH" and conf != "HIGH":
-                skipped_low_conf += 1
                 continue
             if args.confidence == "MEDIUM" and conf == "LOW":
-                skipped_low_conf += 1
                 continue
-
             scored_legs.append(PropLeg(
                 player=raw["player"],
                 market=raw["market"],
@@ -228,11 +220,9 @@ def main() -> None:
                 away_team=raw["away_team"],
                 confidence=conf,
             ))
-
-        print(f"    Scored {len(scored_legs)} legs "
-              f"({skipped_insufficient} insufficient, {skipped_low_conf} low confidence)")
+        print(f"    Scored {len(scored_legs)} legs")
     else:
-        print("[3/6] Skipping prop model (classic parlay mode)")
+        print("[3/6] Skipping prop model (no prop lines or classic parlay mode)")
 
     # ── Step 4: Correlation (static table) ──────────────────────────────
     if not args.no_corr and sgp_mode != SGPMode.CLASSIC_PARLAY:
@@ -242,7 +232,8 @@ def main() -> None:
 
     # ── Step 5: Validation ───────────────────────────────────────────────
     if args.validate:
-        print(f"[5/6] Model info: {'XGBoost (ProphitBet)' if soccer_model._xgb_models_loaded else 'Market-implied fallback'}")
+        src = "XGBoost (ProphitBet)" if soccer_model._xgb_models_loaded else "market-implied"
+        print(f"[5/6] Model info: {src}")
     else:
         print("[5/6] Skipping validation  (run with --validate to check model source)")
 
@@ -267,7 +258,7 @@ def main() -> None:
     print(f"{'='*65}")
 
     if not results:
-        print(f"\nNo combinations found with >=={args.min_edge:.1%} edge today.")
+        print(f"\nNo combinations found with >={args.min_edge:.1%} edge today.")
         if scored_legs:
             print(f"  (Scored {len(scored_legs)} legs — try --min-edge 0.02)")
         return
@@ -296,101 +287,11 @@ def main() -> None:
     print()
 
 
-def _fetch_soccer_props(
-    odds_client,
-    games: list[dict],
-    league_keys: list[str],
-) -> list[dict]:
-    """
-    Fetch soccer player props for all games.
-    Returns flat list of canonical prop dicts.
-    """
-    all_props: list[dict] = []
-    markets_param = ",".join(_SOCCER_PROP_MARKETS)
-
-    for game in games:
-        event_id = game.get("event_id", "")
-        if not event_id:
-            continue
-        league_key = game.get("league", "epl")
-        sport_key = _SPORT_KEY_MAP.get(league_key, "soccer_england_league1")
-
-        try:
-            import requests
-            import os
-            api_key = os.environ.get("ODDS_API_KEY", "")
-            if not api_key:
-                continue
-            url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/events/{event_id}/odds/"
-            resp = requests.get(url, params={
-                "apiKey": api_key,
-                "regions": "us",
-                "markets": markets_param,
-                "oddsFormat": "american",
-            }, timeout=15)
-            resp.raise_for_status()
-            data = resp.json()
-            props = _parse_soccer_props(data, event_id, game.get("home_team", ""), game.get("away_team", ""))
-            all_props.extend(props)
-        except Exception as exc:
-            logger.debug("Soccer props fetch failed for event %s: %s", event_id, exc)
-
-    return all_props
-
-
-def _parse_soccer_props(
-    data: dict,
-    event_id: str,
-    home_team: str,
-    away_team: str,
-) -> list[dict]:
-    """Parse Odds API soccer props response."""
-    best: dict = {}
-
-    for bookmaker in data.get("bookmakers", []):
-        for market in bookmaker.get("markets", []):
-            market_key = market.get("key", "")
-            if market_key not in _SOCCER_PROP_MARKETS:
-                continue
-
-            player_outcomes: dict = {}
-            for outcome in market.get("outcomes", []):
-                player = outcome.get("description", "")
-                if player:
-                    player_outcomes.setdefault(player, []).append(outcome)
-
-            for player, player_outs in player_outcomes.items():
-                over_out = next((o for o in player_outs if o.get("name", "").lower() == "over"), None)
-                under_out = next((o for o in player_outs if o.get("name", "").lower() == "under"), None)
-                if not over_out or not under_out:
-                    continue
-
-                line = float(over_out.get("point", 0))
-                over_odds = int(over_out.get("price", -110))
-                under_odds = int(under_out.get("price", -110))
-
-                key = (player, market_key)
-                existing = best.get(key)
-                if existing is None or over_odds > existing["over_odds"]:
-                    best[key] = {
-                        "event_id": event_id,
-                        "home_team": home_team,
-                        "away_team": away_team,
-                        "player": player,
-                        "market": market_key,
-                        "line": line,
-                        "over_odds": over_odds,
-                        "under_odds": under_odds,
-                    }
-
-    return list(best.values())
-
-
 def _market_label(market: str) -> str:
     return {
-        "player_shots":   "shots",
-        "player_goals":   "goals",
-        "player_assists": "assists",
+        "player_shots":             "shots",
+        "player_shots_on_target":   "shots_on_target",
+        "player_assists":           "assists",
     }.get(market, market)
 
 

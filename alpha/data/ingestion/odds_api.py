@@ -30,6 +30,48 @@ class OddsAPIClient:
         """Return True if an API key is set and non-empty."""
         return bool(self.api_key)
 
+    def fetch_games(self, sport_key: str) -> list[dict]:
+        """
+        NBA-ONLY: fetch games for a basketball_nba sport key.
+
+        This API key is reserved for NBA usage only.  Calls for any other
+        sport (soccer, MLB, etc.) will be rejected and return [].
+        Use football_data_client.FootballDataClient for soccer games and
+        alpha.data.ingestion.mlb_stats.fetch_today_games() for MLB games.
+        """
+        if "nba" not in sport_key.lower() and "basketball_nba" not in sport_key.lower():
+            logger.warning(
+                "OddsAPIClient.fetch_games() is NBA-only. "
+                "Rejected sport_key=%r — use sport-specific free clients instead.",
+                sport_key,
+            )
+            return []
+        if not self.is_configured():
+            logger.warning("ODDS_API_KEY not set — %s odds fetch skipped", sport_key)
+            return []
+        try:
+            resp = requests.get(
+                f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds/",
+                params={
+                    "apiKey": self.api_key,
+                    "regions": "us,eu,uk",
+                    "markets": "h2h",
+                    "oddsFormat": "american",
+                },
+                timeout=10,
+            )
+            resp.raise_for_status()
+            games = self._parse_games(resp.json())
+            for g in games:
+                g["league"] = sport_key
+            return games
+        except requests.exceptions.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else "?"
+            logger.warning("Odds API HTTP %s for %s", status, sport_key)
+        except Exception as exc:
+            logger.warning("Odds API error for %s: %s", sport_key, exc)
+        return []
+
     def fetch_nba_games(self) -> list[dict]:
         """
         Fetch today's NBA moneyline odds from The-Odds-API.

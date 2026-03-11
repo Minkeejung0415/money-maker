@@ -30,9 +30,10 @@ from scipy.stats import norm
 logger = logging.getLogger(__name__)
 
 _MARKET_COL: dict[str, str] = {
-    "player_shots":   "shots_per90",
-    "player_goals":   "goals_per90",
-    "player_assists": "assists_per90",
+    "player_shots":           "shots_per90",
+    "player_shots_on_target": "shots_per90",  # fallback to shots_per90 until xG data added
+    "player_goals":           "goals_per90",
+    "player_assists":         "assists_per90",
 }
 
 _MIN_GAMES: int = 5
@@ -184,7 +185,7 @@ class SoccerPropModel:
             base_val = float(player_row.get(col, 0.0))
 
             # Generate synthetic rolling values from season average
-            # (FBRef provides season totals, not per-game logs — use ± noise for std)
+            # (Understat provides season totals, not per-game logs — use ± noise for std)
             import random  # noqa: PLC0415
             random.seed(hash(player_name))
             values = [

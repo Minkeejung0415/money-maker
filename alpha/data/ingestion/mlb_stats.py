@@ -305,6 +305,64 @@ def get_probable_pitchers(date_str: str | None = None) -> dict[str, str]:
     return result
 
 
+def fetch_today_games(date_str: str | None = None) -> list[dict]:
+    """
+    Return today's MLB games via MLB StatsAPI (free, no key needed).
+
+    Returns list of game dicts:
+        {
+            "home_team": str,
+            "away_team": str,
+            "home_odds": int,    # -110 default (no odds available)
+            "away_odds": int,    # -110 default
+            "league": "mlb",
+            "event_id": str,
+            "commence_time": str,
+        }
+
+    Returns [] on any failure.
+    """
+    target = date_str or date.today().isoformat()
+    cache_key = f"today_games_{target}"
+    cached = _load_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        import statsapi  # noqa: PLC0415
+
+        schedule = statsapi.schedule(date=target)
+        games = []
+        for game in schedule:
+            home = game.get("home_name", "")
+            away = game.get("away_name", "")
+            game_id = str(game.get("game_id", ""))
+            commence = game.get("game_datetime", "")
+            if not home or not away:
+                continue
+            # Only include regular season + postseason (skip spring training)
+            if game.get("game_type", "R") not in ("R", "F", "D", "L", "W"):
+                continue
+            games.append({
+                "home_team": home,
+                "away_team": away,
+                "home_odds": -110,
+                "away_odds": -110,
+                "league": "mlb",
+                "event_id": game_id,
+                "commence_time": commence,
+            })
+
+        if games:
+            _save_cache(cache_key, games)
+        logger.info("Fetched %d MLB games from StatsAPI", len(games))
+        return games
+
+    except Exception as exc:
+        logger.warning("MLB StatsAPI game fetch failed: %s", exc)
+        return []
+
+
 def get_team_stats_map(season: int | None = None) -> dict[str, dict]:
     """
     Return combined team stats (batting + pitching) keyed by team name/abbr.
