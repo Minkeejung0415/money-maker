@@ -213,6 +213,9 @@ def test_xgb_confidence_cap_fires_on_heavy_favorite():
     model = NBAModel()
     model._xgb_models_loaded = True
     model._team_stats_cache = {}  # empty → credibility filter is a no-op
+    model._paint_deterrence = None
+    model._foul_trouble = None
+    model._opp_stats = None
 
     with patch.object(model, "_predict_xgb", return_value=(0.90, 0.10)):
         result = model.predict(_GAME)

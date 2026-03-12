@@ -2,17 +2,20 @@
 SGP Scanner — NBA Same-Game Parlay generator.
 
 Orchestrates the full pipeline end to end:
-  [1/6] Fetch today's NBA games (OddsAPIClient)
-  [2/6] Fetch player prop lines (PlayerPropsClient)
-  [3/6] Run prop model (PropModel via nba_api)
-  [4/6] Build correlation matrix (CorrelationEngine)
-  [5/6] Run backtest validation (PropBacktester) — only with --validate
-  [6/6] Build and rank SGP combinations (SGPBuilder)
+  [1/8] Fetch today's NBA games (OddsAPIClient)
+  [2/8] Fetch player prop lines (PlayerPropsClient)
+  [3/8] Run prop model (PropModel via nba_api)
+  [4/8] Apply contextual evaluators (position, paint deterrence, foul trouble, etc.)
+  [5/8] Build correlation matrix (CorrelationEngine)
+  [6/8] Run backtest validation (PropBacktester) — only with --validate
+  [7/8] Build and rank SGP combinations (SGPBuilder)
+  [8/8] Betting intelligence: EV analysis, parlay math, Kelly sizing
 
 Usage:
   python scripts/sgp_scanner.py --mode parlay
   python scripts/sgp_scanner.py --mode props --no-corr --min-edge 0.03
   python scripts/sgp_scanner.py --mode props --validate
+  python scripts/sgp_scanner.py --mode props --max-legs 3 --bankroll 5000
 
 NOTE: Prop model not validated by default.
 Run with --validate to check calibration before trusting results.
@@ -107,6 +110,14 @@ Examples:
         choices=["HIGH", "MEDIUM", "ALL"],
         default="MEDIUM",
         help="Minimum confidence level for prop legs (default: MEDIUM — includes HIGH and MEDIUM)",
+    )
+    parser.add_argument(
+        "--no-context", action="store_true",
+        help="Skip contextual evaluators (position filter, paint deterrence, etc.)",
+    )
+    parser.add_argument(
+        "--show-ev", action="store_true",
+        help="Show detailed EV analysis and bet type recommendations per game",
     )
     return parser.parse_args()
 
@@ -226,22 +237,78 @@ def main() -> None:
     else:
         print("[3/6] Skipping prop model (classic parlay mode)")
 
-    # ── Step 4: Correlation matrix ───────────────────────────────────────
+    # ── Step 4: Contextual evaluators ────────────────────────────────────
+    context_evaluator = None
+    context_scored = []
+    if not args.no_context and sgp_mode != SGPMode.CLASSIC_PARLAY and scored_legs:
+        print("[4/8] Running contextual evaluators (position, paint, foul trouble, pace)...")
+        try:
+            from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
+            from alpha.engines.sports.nba_context import PropContextEvaluator
+
+            stats_cache = NBAStatsCache()
+            context_evaluator = PropContextEvaluator(cache=stats_cache)
+
+            pre_count = len(scored_legs)
+            prop_dicts = []
+            for leg in scored_legs:
+                prop_dicts.append({
+                    "player": leg.player,
+                    "market": leg.market,
+                    "line": leg.line,
+                    "model_prob": leg.model_prob,
+                    "over_odds": leg.over_odds,
+                    "opponent_team": leg.away_team,
+                    "event_id": leg.event_id,
+                    "home_team": leg.home_team,
+                    "away_team": leg.away_team,
+                    "confidence": leg.confidence,
+                })
+
+            context_scored = context_evaluator.evaluate_props(prop_dicts)
+
+            # Update scored_legs with adjusted probabilities
+            adjusted_legs = []
+            for cs in context_scored:
+                if cs.get("edge", 0) >= args.min_edge:
+                    adjusted_legs.append(PropLeg(
+                        player=cs["player"],
+                        market=cs["market"],
+                        line=cs["line"],
+                        model_prob=cs.get("adjusted_prob", cs["model_prob"]),
+                        over_odds=cs["over_odds"],
+                        event_id=cs["event_id"],
+                        home_team=cs["home_team"],
+                        away_team=cs["away_team"],
+                        confidence=cs["confidence"],
+                    ))
+
+            filtered_count = pre_count - len(adjusted_legs)
+            scored_legs = adjusted_legs if adjusted_legs else scored_legs
+            print(f"    Context adjustments applied — {len(scored_legs)} legs remain "
+                  f"({filtered_count} filtered/below edge)")
+        except Exception as exc:
+            print(f"    Context evaluators skipped: {exc}")
+    else:
+        reason = "classic parlay" if sgp_mode == SGPMode.CLASSIC_PARLAY else "--no-context"
+        print(f"[4/8] Skipping contextual evaluators ({reason})")
+
+    # ── Step 5: Correlation matrix ───────────────────────────────────────
     corr_engine = None
     if not args.no_corr and sgp_mode != SGPMode.CLASSIC_PARLAY and scored_legs:
-        print("[4/6] Building correlation matrix...")
+        print("[5/8] Building correlation matrix...")
         player_names = list({leg.player for leg in scored_legs})
         corr_engine = CorrelationEngine()
         corr_engine.build(player_names)
         print(f"    Correlation matrix ready ({len(player_names)} player(s))")
     else:
         reason = "classic parlay mode" if sgp_mode == SGPMode.CLASSIC_PARLAY else "--no-corr flag"
-        print(f"[4/6] Skipping correlation matrix ({reason})")
+        print(f"[5/8] Skipping correlation matrix ({reason})")
 
-    # ── Step 5: Backtest validation (optional) ───────────────────────────
+    # ── Step 6: Backtest validation (optional) ───────────────────────────
     unreliable_players: set[str] = set()
     if args.validate and scored_legs:
-        print("[5/6] Running backtest validation...")
+        print("[6/8] Running backtest validation...")
         backtester = PropBacktester()
         player_names = list({leg.player for leg in scored_legs})
         bt_results = backtester.backtest(player_names, markets)
@@ -252,15 +319,15 @@ def main() -> None:
                 unreliable_players.add(r["player"])
 
         if unreliable_players:
-            print(f"\n⚠  UNRELIABLE players excluded from SGP: {sorted(unreliable_players)}")
+            print(f"\n  UNRELIABLE players excluded from SGP: {sorted(unreliable_players)}")
             scored_legs = [leg for leg in scored_legs if leg.player not in unreliable_players]
         print()
     elif not args.validate:
-        print("[5/6] Skipping validation  "
-              "⚠  Prop model not validated — run with --validate to check calibration.")
+        print("[6/8] Skipping validation  "
+              "-- Prop model not validated -- run with --validate to check calibration.")
 
-    # ── Step 6: Build combinations ───────────────────────────────────────
-    print("[6/6] Building SGP combinations...")
+    # ── Step 7: Build combinations ───────────────────────────────────────
+    print("[7/8] Building SGP combinations...")
     builder = SGPBuilder(
         correlation_engine=corr_engine,
         bankroll=args.bankroll,
@@ -274,15 +341,29 @@ def main() -> None:
         top_n=args.top,
     )
 
+    # ── Step 8: Betting intelligence ─────────────────────────────────────
+    parlay_ctor = None
+    if args.show_ev or context_scored:
+        print("[8/8] Running betting intelligence analysis...")
+        from alpha.engines.sports.parlay_constructor import ParlayConstructor
+        parlay_ctor = ParlayConstructor(
+            bankroll=args.bankroll,
+            kelly_fraction=0.25,
+            max_legs=args.max_legs,
+            min_edge=args.min_edge,
+        )
+    else:
+        print("[8/8] Skipping detailed EV analysis (use --show-ev to enable)")
+
     # ── Output ────────────────────────────────────────────────────────────
     print(f"\n{'='*65}")
     print(f"SGP SCANNER — Mode: {args.mode.upper()}  |  Min edge: {args.min_edge:.1%}")
     print(f"{'='*65}")
 
     if not results:
-        print(f"\nNo combinations found with ≥{args.min_edge:.1%} edge today.")
+        print(f"\nNo combinations found with >= {args.min_edge:.1%} edge today.")
         if scored_legs and sgp_mode != SGPMode.CLASSIC_PARLAY:
-            print(f"  (Scored {len(scored_legs)} legs — try --min-edge 0.02 or --no-corr)")
+            print(f"  (Scored {len(scored_legs)} legs -- try --min-edge 0.02 or --no-corr)")
         return
 
     for rank, combo in enumerate(results, 1):
@@ -291,6 +372,11 @@ def main() -> None:
               f"Stake: ${combo.stake:.2f}")
         print(f"    Model Prob: {combo.combined_model_prob:.1%}  vs  "
               f"Market Implied: {combo.combined_market_prob:.1%}")
+
+        if combo.combined_model_prob < 0.15:
+            print("    WARNING: Combined win probability below 15% -- "
+                  "unlikely to hit regardless of individual leg quality")
+
         if combo.confidence_summary:
             print(f"    Confidence: {combo.confidence_summary}")
         if combo.correlation_note:
@@ -298,15 +384,40 @@ def main() -> None:
         print("    Legs:")
         for leg in combo.legs:
             if isinstance(leg, dict):
-                # ML leg
-                print(f"      • {leg.get('team', '?')} ML  "
+                print(f"      * {leg.get('team', '?')} ML  "
                       f"({leg.get('decimal_odds', 0):.2f}x)  "
                       f"model: {leg.get('model_prob', 0):.1%}")
             else:
-                # PropLeg
-                print(f"      • {leg.player}: OVER {leg.line} {_market_label(leg.market)}  "
+                print(f"      * {leg.player}: OVER {leg.line} {_market_label(leg.market)}  "
                       f"({leg.over_odds:+d})  "
                       f"model: {leg.model_prob:.1%}  [{leg.confidence}]")
+
+    # Detailed pick output with EV analysis
+    if parlay_ctor and context_scored:
+        print(f"\n{'='*65}")
+        print("DETAILED PICK ANALYSIS")
+        print(f"{'='*65}")
+
+        edge_picks = [p for p in context_scored if p.get("edge", 0) >= args.min_edge]
+        edge_picks.sort(key=lambda p: p.get("ev", 0), reverse=True)
+
+        for pick in edge_picks[:10]:
+            print(parlay_ctor.format_pick(pick, args.bankroll))
+            print()
+
+        # Bet type recommendations
+        if edge_picks:
+            print(f"\n{'='*65}")
+            print("BET TYPE RECOMMENDATIONS")
+            print(f"{'='*65}")
+            recs = parlay_ctor.recommend_bet_types(edge_picks, corr_engine)
+            for rec in recs:
+                print(parlay_ctor.format_recommendation(rec))
+                print()
+
+            # Leg count table
+            avg_prob = sum(p.get("adjusted_prob", 0.6) for p in edge_picks) / len(edge_picks)
+            print(parlay_ctor.format_leg_count_table(avg_prob))
 
     print()
 

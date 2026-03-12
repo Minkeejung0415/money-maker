@@ -10,6 +10,7 @@ ACCURACY SAFEGUARDS (enforced in code):
   2. Correlation adjustment is a bivariate normal copula approximation.
      For N > 3 legs, treat combined_model_prob as a lower bound.
   3. Classic parlay legs are independent (different games) — no correlation engine.
+  4. Category diversity cap: max 2 props of the same stat category per parlay.
 
 Modes:
   PROPS_ONLY   : 2–4 props, same game
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -32,6 +34,17 @@ logger = logging.getLogger(__name__)
 
 _EV_CALC = EVCalculator(min_edge=0.0)
 _KELLY = KellySizer(kelly_fraction=0.25, max_stake_pct=0.05)
+
+_MAX_SAME_CATEGORY = 2
+
+_MARKET_TO_CATEGORY: dict[str, str] = {
+    "player_points": "pts",
+    "player_rebounds": "reb",
+    "player_assists": "ast",
+    "player_threes": "pts",
+    "player_steals": "stl",
+    "player_blocks": "blk",
+}
 
 
 class SGPMode(Enum):
@@ -98,6 +111,7 @@ class SGPBuilder:
 
         Returns top_n combinations sorted by EV descending.
         Always filters out LOW confidence legs before combining.
+        Enforces category diversity: max 2 props of the same stat category.
         """
         # Enforce LOW-confidence guard (belt-and-suspenders)
         valid_legs = [leg for leg in prop_legs if leg.confidence != "LOW"]
@@ -128,20 +142,52 @@ class SGPBuilder:
         return positive[:top_n]
 
     # ------------------------------------------------------------------
+    # Category diversity enforcement
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _passes_category_diversity(legs: list[PropLeg]) -> bool:
+        """Return True if no stat category appears more than _MAX_SAME_CATEGORY times."""
+        cats = [_MARKET_TO_CATEGORY.get(leg.market, leg.market) for leg in legs]
+        counts = Counter(cats)
+        return all(v <= _MAX_SAME_CATEGORY for v in counts.values())
+
+    @staticmethod
+    def _enforce_category_diversity(legs: list[PropLeg]) -> list[PropLeg]:
+        """
+        Drop the weakest legs in over-represented categories until each
+        category has at most _MAX_SAME_CATEGORY legs.
+        Preserves diversity across categories.
+        """
+        by_cat: dict[str, list[PropLeg]] = {}
+        for leg in legs:
+            cat = _MARKET_TO_CATEGORY.get(leg.market, leg.market)
+            by_cat.setdefault(cat, []).append(leg)
+
+        kept: list[PropLeg] = []
+        for cat, cat_legs in by_cat.items():
+            sorted_legs = sorted(cat_legs, key=lambda l: l.model_prob, reverse=True)
+            kept.extend(sorted_legs[:_MAX_SAME_CATEGORY])
+
+        return kept
+
+    # ------------------------------------------------------------------
     # Mode builders
     # ------------------------------------------------------------------
 
     def _build_props_only(self, legs: list[PropLeg]) -> list[ParlayCombination]:
-        """2–4 prop legs from the same game."""
+        """2–4 prop legs from the same game, with category diversity enforced."""
+        legs = self._enforce_category_diversity(legs)
         if len(legs) < 2:
             return []
 
         results: list[ParlayCombination] = []
         for n_legs in range(2, min(self._max_legs, 4) + 1):
             for combo_legs in itertools.combinations(legs, n_legs):
-                # All legs must be from the same game (event_id)
                 event_ids = {leg.event_id for leg in combo_legs}
                 if len(event_ids) > 1:
+                    continue
+                if not self._passes_category_diversity(list(combo_legs)):
                     continue
                 combo = self._score_prop_combo(list(combo_legs), SGPMode.PROPS_ONLY)
                 if combo is not None:
@@ -151,14 +197,18 @@ class SGPBuilder:
     def _build_ml_sgp(
         self, prop_legs: list[PropLeg], ml_games: list[dict]
     ) -> list[ParlayCombination]:
-        """ML leg + 1–3 prop legs from the same game."""
+        """ML leg + 1–3 prop legs from the same game, category diversity enforced."""
         results: list[ParlayCombination] = []
         for game in ml_games:
             event_id = game.get("event_id", "")
-            game_legs = [leg for leg in prop_legs if leg.event_id == event_id]
+            game_legs = self._enforce_category_diversity(
+                [leg for leg in prop_legs if leg.event_id == event_id]
+            )
 
             for n_prop_legs in range(1, min(self._max_legs - 1, 3) + 1):
                 for prop_combo in itertools.combinations(game_legs, n_prop_legs):
+                    if not self._passes_category_diversity(list(prop_combo)):
+                        continue
                     ml_leg = self._best_ml_leg(game)
                     if ml_leg is None:
                         continue
@@ -171,29 +221,30 @@ class SGPBuilder:
     def _build_mixed(
         self, prop_legs: list[PropLeg], ml_games: list[dict]
     ) -> list[ParlayCombination]:
-        """2–5 legs any combo (ML and/or props) from the same game."""
+        """2–5 legs any combo (ML and/or props) from the same game, category diversity enforced."""
         results: list[ParlayCombination] = []
-        # Same-game groups
         by_event: dict[str, list[PropLeg]] = {}
         for leg in prop_legs:
             by_event.setdefault(leg.event_id, []).append(leg)
 
         for game in ml_games:
             event_id = game.get("event_id", "")
-            game_legs = by_event.get(event_id, [])
+            game_legs = self._enforce_category_diversity(by_event.get(event_id, []))
             ml_leg = self._best_ml_leg(game)
 
-            # Props-only combos for this game
             for n in range(2, min(self._max_legs, 5) + 1):
                 for prop_combo in itertools.combinations(game_legs, n):
+                    if not self._passes_category_diversity(list(prop_combo)):
+                        continue
                     combo = self._score_prop_combo(list(prop_combo), SGPMode.MIXED_SGP)
                     if combo is not None:
                         results.append(combo)
 
-            # ML + props combos
             if ml_leg is not None:
                 for n_prop in range(1, min(self._max_legs - 1, 4) + 1):
                     for prop_combo in itertools.combinations(game_legs, n_prop):
+                        if not self._passes_category_diversity(list(prop_combo)):
+                            continue
                         all_legs: list[Any] = [ml_leg] + list(prop_combo)
                         combo = self._score_mixed_combo(all_legs, game, SGPMode.MIXED_SGP)
                         if combo is not None:

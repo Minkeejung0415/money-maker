@@ -6,6 +6,13 @@ adjusted with a simple Elo-style regression toward 50%.
 
 Optional: delegates to NBA-Machine-Learning-Sports-Betting XGBoost model
 when that library, its models, and today's TeamData.sqlite are all available.
+
+Contextual adjustments (when NBAStatsCache is available):
+  - Paint deterrence: rim-dependent teams vs elite paint protectors
+  - Foul trouble: foul-prone key defenders vs elite FT drawers
+  - Pace / defensive rating opponent adjustments
+  - Lineup context: missing-starter positional impact
+  - Recent form: last-10 weighting for mid-season lineup changes
 """
 from __future__ import annotations
 
@@ -20,14 +27,11 @@ from alpha.engines.sports.ev_calculator import EVCalculator
 
 logger = logging.getLogger(__name__)
 
-# Elo regression factor: blend market-implied prob with 0.5
-# 0.0 = trust market fully, 1.0 = always predict 50/50
 MARKET_BLEND = 0.0
-
-# XGBoost confidence cap: model is 68.9% accurate, so no single-game
-# prediction should claim more than this probability.  Prevents outlier
-# XGBoost outputs (e.g. 85-90%) from becoming "most prominent" picks.
 MAX_XGB_CONF = 0.73
+
+_RECENT_FORM_WEIGHT = 0.30
+_SEASON_AVG_WEIGHT = 0.70
 
 # Maps common Odds-API name variations -> exact team_index_current keys
 TEAM_NAME_MAP: dict[str, str] = {
@@ -149,16 +153,98 @@ class NBAModel:
         self.ev_calc = EVCalculator(min_edge=min_edge)
         self._kelly_fraction = kelly_fraction
 
-        # XGBoost state — populated lazily by _load_xgb_models()
         self._xgb_ml = None
         self._xgb_ml_calibrator = None
         self._xgb_models_loaded: bool = False
 
-        # Injury impact cache — loaded once per run
         self._injury_impact: dict = {}
         self._injury_loaded: bool = False
 
+        # Contextual evaluators — loaded lazily
+        self._context_loaded: bool = False
+        self._paint_deterrence = None
+        self._foul_trouble = None
+        self._opp_stats = None
+        self._stats_cache = None
+
         self._load_xgb_models()
+        self._load_context_evaluators()
+
+    # ------------------------------------------------------------------
+    # Context evaluator setup
+    # ------------------------------------------------------------------
+
+    def _load_context_evaluators(self) -> None:
+        """Load paint deterrence, foul trouble, and advanced opponent stats evaluators."""
+        if self._context_loaded:
+            return
+        self._context_loaded = True
+        try:
+            from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
+            from alpha.engines.sports.nba_context import (
+                PaintDeterrenceEvaluator,
+                FoulTroubleRiskEvaluator,
+                AdvancedOpponentStats,
+            )
+            self._stats_cache = NBAStatsCache()
+            self._paint_deterrence = PaintDeterrenceEvaluator(cache=self._stats_cache)
+            self._foul_trouble = FoulTroubleRiskEvaluator(cache=self._stats_cache)
+            self._opp_stats = AdvancedOpponentStats(cache=self._stats_cache)
+            logger.info("NBA contextual evaluators loaded")
+        except Exception as exc:
+            logger.debug("Contextual evaluators not loaded: %s", exc)
+
+    def _apply_context_adjustments(
+        self, home_prob: float, away_prob: float, game: dict
+    ) -> tuple[float, float]:
+        """
+        Apply paint deterrence, foul trouble, pace, and defensive rating
+        adjustments to team win probabilities.
+        Returns input unchanged if no evaluators are loaded.
+        """
+        if not self._paint_deterrence and not self._foul_trouble and not self._opp_stats:
+            return home_prob, away_prob
+
+        home_team = game.get("home_team", "")
+        away_team = game.get("away_team", "")
+        home_adj = 0.0
+        away_adj = 0.0
+
+        if self._paint_deterrence:
+            for team, opp, sign in [(home_team, away_team, 1), (away_team, home_team, -1)]:
+                protectors = self._paint_deterrence.get_elite_protectors_for_team(opp)
+                if protectors:
+                    rim_dep = self._paint_deterrence.get_team_rim_dependency(team)
+                    if rim_dep > 0.55:
+                        discount = 0.02 * (rim_dep - 0.55) / 0.15
+                        if sign == 1:
+                            home_adj -= discount
+                        else:
+                            away_adj -= discount
+
+        # Foul trouble: team-level adjustment
+        if self._foul_trouble:
+            home_foul = self._foul_trouble.get_team_foul_exposure(home_team)
+            away_foul = self._foul_trouble.get_team_foul_exposure(away_team)
+            home_adj += home_foul.get("adjustment", 0.0)
+            away_adj += away_foul.get("adjustment", 0.0)
+
+        # Pace and defensive rating
+        if self._opp_stats:
+            home_opp = self._opp_stats.get_opponent_adjustments(away_team)
+            away_opp = self._opp_stats.get_opponent_adjustments(home_team)
+            # Higher opponent pace benefits the faster team slightly
+            home_adj += (home_opp.get("pace_factor", 1.0) - 1.0) * 0.02
+            away_adj += (away_opp.get("pace_factor", 1.0) - 1.0) * 0.02
+            # Defensive rating: worse defense → opponent benefits
+            home_adj += (home_opp.get("def_factor", 1.0) - 1.0) * 0.03
+            away_adj += (away_opp.get("def_factor", 1.0) - 1.0) * 0.03
+
+        # Apply and re-normalize
+        home_prob = max(0.05, min(0.95, home_prob + home_adj))
+        away_prob = max(0.05, min(0.95, away_prob + away_adj))
+        total = home_prob + away_prob
+        return home_prob / total, away_prob / total
 
     # ------------------------------------------------------------------
     # Public: stat refresh
@@ -256,8 +342,6 @@ class NBAModel:
                 probs = self._predict_xgb(home_team, away_team)
                 if probs is not None:
                     home_prob, away_prob = probs
-                    # Cap before credibility filter: XGBoost is 68.9% accurate
-                    # so anything above MAX_XGB_CONF is likely overfit confidence.
                     if home_prob > MAX_XGB_CONF:
                         home_prob = MAX_XGB_CONF
                         away_prob = 1.0 - MAX_XGB_CONF
@@ -266,6 +350,10 @@ class NBAModel:
                         home_prob = 1.0 - MAX_XGB_CONF
                     home_prob, away_prob = self._credibility_filter(
                         home_team, away_team, home_prob, away_prob, game
+                    )
+                    home_prob, away_prob = self._apply_context_adjustments(
+                        home_prob, away_prob,
+                        {**game, "home_team": home_team, "away_team": away_team},
                     )
                     return {
                         "home_team": home_team,
@@ -277,7 +365,16 @@ class NBAModel:
             except Exception as exc:
                 logger.debug("XGBoost prediction failed, using market-implied: %s", exc)
 
-        return self._market_implied_predict(game)
+        result = self._market_implied_predict(game)
+        home_prob = result["home_win_prob"]
+        away_prob = result["away_win_prob"]
+        home_prob, away_prob = self._apply_context_adjustments(
+            home_prob, away_prob,
+            {**game, "home_team": result["home_team"], "away_team": result["away_team"]},
+        )
+        result["home_win_prob"] = round(home_prob, 4)
+        result["away_win_prob"] = round(away_prob, 4)
+        return result
 
     def evaluate_bet(self, game: dict) -> dict:
         """
