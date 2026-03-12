@@ -23,6 +23,7 @@ _CACHE_TTL_HOURS = 6
 _CACHE_TTL_H2H_HOURS = 24
 _API_SLEEP: float = 0.5
 _API_TIMEOUT: int = 10
+CANONICAL_SEASON = "2025-26"
 
 
 def _call_with_timeout(fn, timeout: int = _API_TIMEOUT) -> Any:
@@ -135,7 +136,7 @@ class NBAStatsCache:
         return self.get_or_fetch("CommonPlayerInfo", {"player_id": player_id}, _call)
 
     def fetch_league_dash_player_stats(
-        self, season: str = "2024-25", per_mode: str = "Per36"
+        self, season: str = "2025-26", per_mode: str = "Per36"
     ) -> list[dict]:
         """Fetch league-wide player stats (per 36 min by default)."""
         def _call():
@@ -148,7 +149,7 @@ class NBAStatsCache:
         )
 
     def fetch_league_dash_team_stats(
-        self, season: str = "2024-25", measure_type: str = "Base"
+        self, season: str = CANONICAL_SEASON, measure_type: str = "Base"
     ) -> list[dict]:
         """Fetch league-wide team stats."""
         def _call():
@@ -166,7 +167,7 @@ class NBAStatsCache:
         )
 
     def fetch_player_dash_pt_shots(
-        self, player_id: int, season: str = "2024-25"
+        self, player_id: int, season: str = CANONICAL_SEASON
     ) -> list[dict]:
         """Fetch shot distance breakdown for a player."""
         def _call():
@@ -182,7 +183,7 @@ class NBAStatsCache:
         )
 
     def fetch_league_dash_pt_defend(
-        self, season: str = "2024-25", defense_category: str = "Overall"
+        self, season: str = CANONICAL_SEASON, defense_category: str = "Overall"
     ) -> list[dict]:
         """Fetch defensive dashboard (rim protection stats)."""
         def _call():
@@ -201,7 +202,7 @@ class NBAStatsCache:
         )
 
     def fetch_player_game_logs(
-        self, player_id: int, season: str = "2024-25"
+        self, player_id: int, season: str = CANONICAL_SEASON
     ) -> list[dict]:
         """Fetch player game logs for the season."""
         def _call():
@@ -227,7 +228,7 @@ class NBAStatsCache:
         except Exception:
             return None
 
-    def fetch_matchup_defender(self, player_name: str, season: str = "2024-25") -> str | None:
+    def fetch_matchup_defender(self, player_name: str, season: str = CANONICAL_SEASON) -> str | None:
         """Find the defender who guards *player_name* the most minutes."""
         def _call():
             from nba_api.stats.endpoints.leagueseasonmatchups import LeagueSeasonMatchups
@@ -260,7 +261,7 @@ class NBAStatsCache:
             return None
 
     def fetch_team_recent_form(
-        self, team_name: str, last_n: int = 10, season: str = "2024-25"
+        self, team_name: str, last_n: int = 10, season: str = CANONICAL_SEASON
     ) -> dict | None:
         """Return recent-form stats for *team_name* over the last *last_n* games."""
         team_id = self._resolve_team_id(team_name, season)
@@ -314,7 +315,7 @@ class NBAStatsCache:
         self,
         home_team: str,
         away_team: str,
-        seasons: tuple[str, ...] = ("2024-25", "2023-24"),
+        seasons: tuple[str, ...] = (CANONICAL_SEASON, "2024-25"),
     ) -> dict | None:
         """
         Return H2H record between two teams over recent seasons.
@@ -367,7 +368,7 @@ class NBAStatsCache:
         }
 
     def fetch_player_team_game_count(
-        self, player_name: str, season: str = "2024-25"
+        self, player_name: str, season: str = CANONICAL_SEASON
     ) -> dict | None:
         """
         Return how many games a player has played for their current team vs total.
@@ -397,6 +398,34 @@ class NBAStatsCache:
         except Exception as exc:
             logger.debug("Player team game count failed for %s: %s", player_name, exc)
             return None
+
+    def fetch_player_team_map(self, season: str = CANONICAL_SEASON) -> dict[str, str]:
+        """
+        Return {player_name_lower: full_team_name} for all active players.
+
+        Builds the map by cross-referencing:
+          - LeagueDashPlayerStats (Totals) → player → team abbreviation
+          - LeagueDashTeamStats (Base)     → team abbreviation → full team name
+        """
+        try:
+            team_rows = self.fetch_league_dash_team_stats(season=season, measure_type="Base")
+            abbrev_to_full: dict[str, str] = {
+                str(r.get("TEAM_ABBREVIATION", "")): str(r.get("TEAM_NAME", ""))
+                for r in team_rows
+                if r.get("TEAM_ABBREVIATION") and r.get("TEAM_NAME")
+            }
+            player_rows = self.fetch_league_dash_player_stats(season=season, per_mode="Totals")
+            result: dict[str, str] = {}
+            for row in player_rows:
+                name = str(row.get("PLAYER_NAME", "")).strip()
+                abbr = str(row.get("TEAM_ABBREVIATION", "")).strip()
+                if name and abbr:
+                    full = abbrev_to_full.get(abbr, abbr)
+                    result[name.lower()] = full
+            return result
+        except Exception as exc:
+            logger.warning("fetch_player_team_map failed: %s", exc)
+            return {}
 
     def clear_stale(self) -> int:
         """Remove entries older than TTL. Returns count of deleted rows."""

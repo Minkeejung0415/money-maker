@@ -32,6 +32,9 @@ from scipy.stats import norm
 
 logger = logging.getLogger(__name__)
 
+# Keep production defaults aligned with the scanner and validation entrypoints.
+CANONICAL_SEASON = "2025-26"
+
 _MARKET_COL: dict[str, str] = {
     "player_points":   "PTS",
     "player_rebounds": "REB",
@@ -45,11 +48,31 @@ _NBA_API_SLEEP: float = 0.3          # reduced from 0.6 — nba_api handles this
 _LEAGUE_AVG_DEF_RTG: float = 112.0
 _CACHE_DIR: Path = Path("data/.prop_cache")
 
+# League averages per game (used when opp data is missing)
+_LEAGUE_AVGS: dict[str, float] = {
+    "reb_pg":   43.5,
+    "ast_pg":   25.5,
+    "stl_pg":    7.8,
+    "fg3m_pg":  13.0,
+}
+
+# How strongly each market reacts to opponent quality (max ± adjustment)
+# e.g. 0.15 = cap at 15% up or down from raw projection
+_OPP_ADJ_CAP: dict[str, float] = {
+    "player_points":   0.15,
+    "player_rebounds": 0.15,
+    "player_assists":  0.12,
+    "player_threes":   0.12,
+    "player_steals":   0.10,
+    "player_blocks":   0.10,
+}
+
 
 class PropModel:
-    def __init__(self, season: str = "2024-25", stats_cache=None):
+    def __init__(self, season: str = "2025-26", stats_cache=None):
         self._season = season
         self._def_rtg_cache: dict[str, float] | None = None
+        self._team_stats_cache: dict[str, dict] | None = None  # replaces per-market caches
         self._log_cache: dict[str, list[dict]] = {}
         self._stats_cache = stats_cache
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -105,11 +128,8 @@ class PropModel:
         proj_stat = self._weighted_avg(values)
         std_stat = max(1.0, stdev(values[:20]) if len(values[:20]) >= 2 else 1.0)
 
-        # Opponent defensive adjustment (points only)
-        if market == "player_points":
-            opp_adj = self._apply_opp_adjustment(proj_stat, opponent_team)
-        else:
-            opp_adj = proj_stat
+        # Opponent adjustment — all markets scaled by opponent defensive profile
+        opp_adj = self._apply_opp_adjustment_for_market(proj_stat, opponent_team, market)
 
         p_over = float(1 - norm.cdf(line, loc=opp_adj, scale=std_stat))
         p_over = float(np.clip(p_over, 0.01, 0.99))
@@ -121,7 +141,7 @@ class PropModel:
         if self._stats_cache:
             try:
                 tc = self._stats_cache.fetch_player_team_game_count(player_name, self._season)
-                if tc and tc["current_team_games"] < 10:
+                if tc and tc["current_team_games"] < 5:
                     recent_trade = True
                     if confidence == "HIGH":
                         confidence = "MEDIUM"
@@ -177,15 +197,74 @@ class PropModel:
 
         return weighted
 
-    def _apply_opp_adjustment(self, proj: float, opponent_team: str) -> float:
-        """Scale projection by opponent defensive rating relative to league average."""
-        def_rtgs = self._fetch_def_ratings()
-        if not def_rtgs:
+    def _apply_opp_adjustment_for_market(
+        self, proj: float, opponent_team: str, market: str
+    ) -> float:
+        """
+        Scale a player's projected stat by opponent defensive quality for that market.
+
+        Points   → opponent DEF_RTG  (higher = worse defense = more points allowed)
+        Rebounds → opponent REB/game (higher = more boards grabbed = fewer for us)
+        Assists  → opponent STL/game (higher = more disruption = fewer assists)
+        Threes   → opponent FG3M allowed/game (higher = allows more 3s = easier)
+        Steals   → opponent AST/game (more ball movement = more steal opportunities)
+        Blocks   → opponent FG2A/game (more paint attempts = more block opportunities)
+
+        All adjustments are capped per _OPP_ADJ_CAP to avoid extreme swings.
+        Returns proj unchanged for unknown markets or missing data.
+        """
+        cap = _OPP_ADJ_CAP.get(market, 0.10)
+        lo, hi = 1.0 - cap, 1.0 + cap
+
+        # Points: use existing DEF_RTG path
+        if market == "player_points":
+            def_rtgs = self._fetch_def_ratings()
+            opp_def_rtg = def_rtgs.get(opponent_team) if def_rtgs else None
+            if opp_def_rtg and opp_def_rtg > 0:
+                scale = max(lo, min(hi, _LEAGUE_AVG_DEF_RTG / opp_def_rtg))
+                return proj * scale
             return proj
-        opp_def_rtg = def_rtgs.get(opponent_team)
-        if opp_def_rtg is None or opp_def_rtg <= 0:
+
+        # All other markets: pull from the unified team stats cache
+        ts = self._fetch_team_per_game_stats()
+        opp = ts.get(opponent_team) if ts else None
+        if not opp:
             return proj
-        return proj * (_LEAGUE_AVG_DEF_RTG / opp_def_rtg)
+
+        if market == "player_rebounds":
+            # High-rebounding opponent → leaves fewer boards → scale down
+            league_avg = _LEAGUE_AVGS["reb_pg"]
+            opp_val = opp.get("reb_pg", league_avg)
+            scale = max(lo, min(hi, league_avg / opp_val)) if opp_val > 0 else 1.0
+
+        elif market == "player_assists":
+            # High-steal opponent → disrupts passing lanes → scale down
+            league_avg = _LEAGUE_AVGS["stl_pg"]
+            opp_val = opp.get("stl_pg", league_avg)
+            scale = max(lo, min(hi, league_avg / opp_val)) if opp_val > 0 else 1.0
+
+        elif market == "player_threes":
+            # Opponent allows many 3s → easier to hit → scale up (and vice versa)
+            league_avg = _LEAGUE_AVGS["fg3m_pg"]
+            opp_val = opp.get("opp_fg3m_pg", league_avg)
+            scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
+
+        elif market == "player_steals":
+            # Opponent with high AST → more ball movement → more steal chances → scale up
+            league_avg = _LEAGUE_AVGS["ast_pg"]
+            opp_val = opp.get("ast_pg", league_avg)
+            scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
+
+        elif market == "player_blocks":
+            # Opponent with more paint attempts → more block chances → scale up
+            league_avg = 84.0  # approx FGA/game league avg
+            opp_val = opp.get("fga_pg", league_avg)
+            scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
+
+        else:
+            return proj
+
+        return proj * scale
 
     def _classify_confidence(self, model_prob: float, market_implied: float) -> str:
         gap = abs(model_prob - market_implied)
@@ -275,31 +354,72 @@ class PropModel:
             logger.warning("nba_api game logs failed for %s: %s", player_name, exc)
             return None
 
-    def _fetch_def_ratings(self) -> dict[str, float] | None:
-        """Fetch team defensive ratings from nba_api (cached per instance)."""
-        if self._def_rtg_cache is not None:
-            return self._def_rtg_cache
+    def _fetch_def_ratings(self) -> dict[str, float]:
+        """Fetch opponent DEF_RTG from the unified team stats cache."""
+        ts = self._fetch_team_per_game_stats()
+        return {team: v["def_rtg"] for team, v in ts.items() if "def_rtg" in v}
+
+    def _fetch_team_per_game_stats(self) -> dict[str, dict]:
+        """
+        Fetch per-game stats for all 30 teams in one API call (cached per instance).
+
+        Two requests total (Base + Defense measure types), merged into one dict:
+          {team_name: {reb_pg, ast_pg, stl_pg, blk_pg, fga_pg, fg3m_pg,
+                       opp_fg3m_pg, def_rtg}}
+
+        Falls back gracefully — returns {} on any error so callers skip adjustment.
+        """
+        if self._team_stats_cache is not None:
+            return self._team_stats_cache
+
+        result: dict[str, dict] = {}
 
         try:
             from nba_api.stats.endpoints.leaguedashteamstats import LeagueDashTeamStats  # noqa: PLC0415
 
+            # ── Pass 1: Base stats (REB, AST, STL, BLK, FGA, FG3M per game) ──
             time.sleep(_NBA_API_SLEEP)
-            stats = LeagueDashTeamStats(
+            base_df = LeagueDashTeamStats(season=self._season).get_data_frames()[0]
+            for _, row in base_df.iterrows():
+                name = row.get("TEAM_NAME", "")
+                gp = float(row.get("GP", 0) or 0)
+                if not name or gp == 0:
+                    continue
+
+                def _pg(col: str) -> float:
+                    v = row.get(col)
+                    return float(v) / gp if v is not None else 0.0
+
+                result[name] = {
+                    "reb_pg":  _pg("REB"),
+                    "ast_pg":  _pg("AST"),
+                    "stl_pg":  _pg("STL"),
+                    "blk_pg":  _pg("BLK"),
+                    "fga_pg":  _pg("FGA"),
+                    "fg3m_pg": _pg("FG3M"),
+                }
+
+            # ── Pass 2: Defense stats (DEF_RTG + opp FG3M) ──
+            time.sleep(_NBA_API_SLEEP)
+            def_df = LeagueDashTeamStats(
                 season=self._season,
                 measure_type_detailed_defense="Defense",
-            )
-            df = stats.get_data_frames()[0]
+            ).get_data_frames()[0]
+            for _, row in def_df.iterrows():
+                name = row.get("TEAM_NAME", "")
+                if not name:
+                    continue
+                entry = result.setdefault(name, {})
+                def_rtg = row.get("DEF_RATING")
+                opp_fg3m = row.get("OPP_FG3M")
+                gp = float(row.get("GP", 0) or 0)
+                if def_rtg is not None:
+                    entry["def_rtg"] = float(def_rtg)
+                if opp_fg3m is not None and gp > 0:
+                    entry["opp_fg3m_pg"] = float(opp_fg3m) / gp
 
-            ratings: dict[str, float] = {}
-            for _, row in df.iterrows():
-                team_name = row.get("TEAM_NAME", "")
-                def_rtg = row.get("DEF_RATING", None)
-                if team_name and def_rtg is not None:
-                    ratings[team_name] = float(def_rtg)
-
-            self._def_rtg_cache = ratings
-            return ratings
         except Exception as exc:
-            logger.warning("nba_api defensive ratings fetch failed: %s", exc)
-            self._def_rtg_cache = {}
-            return {}
+            logger.warning("nba_api team stats fetch failed: %s", exc)
+
+        self._team_stats_cache = result
+        return result
