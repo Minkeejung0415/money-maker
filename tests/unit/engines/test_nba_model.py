@@ -351,3 +351,103 @@ def test_credibility_filter_no_sqlite_data_is_safe():
     game = {**_GAME, "home_odds": -150, "away_odds": +130}
     hp, ap = model._credibility_filter("Los Angeles Lakers", "Boston Celtics", 0.62, 0.38, game)
     assert abs(hp + ap - 1.0) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# Bug 2 regression: recent form constants wired into model
+# ---------------------------------------------------------------------------
+
+_FORM_GAME = {
+    "home_team": "Los Angeles Lakers",
+    "away_team": "Boston Celtics",
+    "home_odds": -150,
+    "away_odds": +130,
+}
+
+
+def _model_with_form(home_form, away_form):
+    """
+    Build an NBAModel whose _stats_cache.fetch_team_recent_form returns
+    the supplied dicts for home/away, and whose context evaluators are
+    otherwise no-ops.
+    """
+    model = NBAModel()
+    model._xgb_models_loaded = False
+    model._paint_deterrence = None
+    model._foul_trouble = None
+    model._opp_stats = None
+
+    mock_cache = MagicMock()
+    mock_cache.fetch_team_recent_form = MagicMock(
+        side_effect=lambda team, **kw: home_form if team == "Los Angeles Lakers" else away_form
+    )
+    model._stats_cache = mock_cache
+    model._team_stats_cache = {
+        "Los Angeles Lakers": {"w_pct": 0.60, "wins": 45, "gp": 75},
+        "Boston Celtics": {"w_pct": 0.60, "wins": 45, "gp": 75},
+    }
+    return model
+
+
+def test_recent_form_cold_streak_nudges_home_down():
+    """Home team on a 2-8 cold streak should have lower win prob vs baseline."""
+    baseline_model = NBAModel()
+    baseline_model._xgb_models_loaded = False
+    baseline_model._paint_deterrence = None
+    baseline_model._foul_trouble = None
+    baseline_model._opp_stats = None
+    baseline_model._stats_cache = None
+    baseline = baseline_model.predict(_FORM_GAME)
+
+    cold_form = {"win_pct_last_n": 0.2, "avg_pts_last_n": 95.0, "avg_pts_allowed_last_n": 110.0}
+    model = _model_with_form(cold_form, None)
+    result = model.predict(_FORM_GAME)
+
+    assert result["home_win_prob"] < baseline["home_win_prob"]
+
+
+def test_recent_form_hot_streak_nudges_home_up():
+    """Home team on a 9-1 hot streak should have higher win prob vs baseline."""
+    baseline_model = NBAModel()
+    baseline_model._xgb_models_loaded = False
+    baseline_model._paint_deterrence = None
+    baseline_model._foul_trouble = None
+    baseline_model._opp_stats = None
+    baseline_model._stats_cache = None
+    baseline = baseline_model.predict(_FORM_GAME)
+
+    hot_form = {"win_pct_last_n": 0.9, "avg_pts_last_n": 120.0, "avg_pts_allowed_last_n": 100.0}
+    model = _model_with_form(hot_form, None)
+    result = model.predict(_FORM_GAME)
+
+    assert result["home_win_prob"] > baseline["home_win_prob"]
+
+
+def test_recent_form_adjustment_capped_at_004():
+    """Even an extreme hot/cold streak must be capped at ±0.04."""
+    model = NBAModel()
+    model._xgb_models_loaded = False
+    model._paint_deterrence = None
+    model._foul_trouble = None
+    model._opp_stats = None
+
+    mock_cache = MagicMock()
+    extreme_form = {"win_pct_last_n": 1.0, "avg_pts_last_n": 130.0, "avg_pts_allowed_last_n": 90.0}
+    mock_cache.fetch_team_recent_form = MagicMock(return_value=extreme_form)
+    model._stats_cache = mock_cache
+    model._team_stats_cache = {
+        "Los Angeles Lakers": {"w_pct": 0.50, "wins": 38, "gp": 75},
+        "Boston Celtics": {"w_pct": 0.50, "wins": 38, "gp": 75},
+    }
+
+    baseline_model = NBAModel()
+    baseline_model._xgb_models_loaded = False
+    baseline_model._paint_deterrence = None
+    baseline_model._foul_trouble = None
+    baseline_model._opp_stats = None
+    baseline_model._stats_cache = None
+    baseline = baseline_model.predict(_FORM_GAME)
+
+    result = model.predict(_FORM_GAME)
+    diff = abs(result["home_win_prob"] - baseline["home_win_prob"])
+    assert diff <= 0.04 + 1e-6

@@ -469,3 +469,45 @@ class TestPropContextEvaluator:
         })
         assert result is not None
         assert abs(result["adjusted_prob"] - 0.60) < 0.05
+
+    def test_foul_trouble_high_when_defender_resolved(self):
+        """Bug 1 regression: resolved foul-prone defender + elite FT drawer → HIGH."""
+        cache = _mock_cache()
+        cache.fetch_player_info.return_value = {"position": "Center"}
+        cache.fetch_matchup_defender = MagicMock(return_value="Foul Prone Defender")
+
+        per36 = cache.fetch_league_dash_player_stats.return_value
+        for row in per36:
+            if row["PLAYER_NAME"] == "Foul Prone Defender":
+                row["PF"] = 4.5
+
+        ft_drawer_row = {
+            "PLAYER_NAME": "Star Scorer",
+            "PLAYER_ID": 55555,
+            "TEAM_ABBREVIATION": "ATK",
+            "TEAM_NAME": "Attack Team",
+            "REB": 5.0,
+            "PTS": 30.0,
+            "AST": 6.0,
+            "BLK": 0.1,
+            "PF": 1.0,
+            "FTA": 10.0,
+            "FGA": 22.0,
+            "FG3_PCT": 0.37,
+            "MIN": 36.0,
+        }
+        per36.append(ft_drawer_row)
+
+        pce = PropContextEvaluator(cache=cache)
+        result = pce.evaluate_single({
+            "player": "Star Scorer",
+            "market": "player_points",
+            "line": 28.5,
+            "model_prob": 0.55,
+            "over_odds": -110,
+            "opponent_team": "Defense Team",
+        })
+        assert result is not None
+        flags = result["flags"]
+        assert flags["foul_trouble_risk"] == "HIGH"
+        assert flags["foul_trouble_boost"] > 0

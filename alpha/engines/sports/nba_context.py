@@ -725,7 +725,8 @@ class PropContextEvaluator:
             flags.paint_deterrence_pct = deterrence
 
         # 4. Foul trouble
-        ft_eval = self.foul_trouble.evaluate_defender("", player)
+        defender_name = self._cache.fetch_matchup_defender(player) if self._cache else None
+        ft_eval = self.foul_trouble.evaluate_defender(defender_name or "", player)
         flags.foul_trouble_risk = ft_eval["risk"]
         flags.foul_trouble_boost = ft_eval["boost"]
 

@@ -1,0 +1,120 @@
+[1/6] Fetching today's NBA games...
+    Found 9 game(s)
+[2/6] Fetching player prop lines...
+    Fetched 353 prop lines across 9 game(s)
+[3/6] Running prop model — 106 players to fetch (cached players are instant)...
+    Fetching: 1/106 players (Tobias Harris)        Fetching: 2/106 players (Jalen Duren)        Fetching: 3/106 players (VJ Edgecombe)        Fetching: 4/106 players (Cade Cunningham)        Fetching: 5/106 players (Cameron Payne)        Fetching: 6/106 players (Ron Holland)        Fetching: 7/106 players (Quentin Grimes)        Fetching: 8/106 players (Marcus Sasser)        Fetching: 9/106 players (Duncan Robinson)        Fetching: 10/106 players (Adem Bona)        Fetching: 11/106 players (Dominick Barlow)        Fetching: 12/106 players (Isaiah Stewart II)        Fetching: 13/106 players (Jarace Walker)        Fetching: 14/106 players (Devin Booker)        Fetching: 15/106 players (Jalen Green)        Fetching: 16/106 players (Collin Gillespie)        Fetching: 17/106 players (Royce O'Neale)        Fetching: 18/106 players (Andrew Nembhard)        Fetching: 19/106 players (Aaron Nesmith)        Fetching: 20/106 players (Oso Ighodaro)        Fetching: 21/106 players (Obi Toppin)        Fetching: 22/106 players (Ivica Zubac)        Fetching: 23/106 players (Grayson Allen)        Fetching: 24/106 players (Desmond Bane)        Fetching: 25/106 players (Paolo Banchero)        Fetching: 26/106 players (Jalen Suggs)        Fetching: 27/106 players (Trae Young)        Fetching: 28/106 players (Jevon Carter)        Fetching: 29/106 players (Tristan da Silva)        Fetching: 30/106 players (Bilal Coulibaly)        Fetching: 31/106 players (Tre Johnson)        Fetching: 32/106 players (Will Riley)        Fetching: 33/106 players (Alex Sarr)        Fetching: 34/106 players (Wendell Carter Jr)        Fetching: 35/106 players (Onyeka Okongwu)        Fetching: 36/106 players (Nickeil Alexander-Walker)        Fetching: 37/106 players (Danny Wolf)        Fetching: 38/106 players (C.J. McCollum)        Fetching: 39/106 players (Jalen Johnson)        Fetching: 40/106 players (Dyson Daniels)        Fetching: 41/106 players (Nicolas Claxton)        Fetching: 42/106 players (Ben Saraf)        Fetching: 43/106 players (Drake Powell)        Fetching: 44/106 players (Zaccharie Risacher)        Fetching: 45/106 players (Corey Kispert)        Fetching: 46/106 players (Noah Clowney)        Fetching: 47/106 players (Jock Landale)        Fetching: 48/106 players (Giannis Antetokounmpo)        Fetching: 49/106 players (Ryan Rollins)        Fetching: 50/106 players (Pelle Larsson)        Fetching: 51/106 players (Kevin Porter Jr.)        Fetching: 52/106 players (Tyler Herro)        Fetching: 53/106 players (Ousmane Dieng)        Fetching: 54/106 players (Bam Adebayo)        Fetching: 55/106 players (Davion Mitchell)        Fetching: 56/106 players (Myles Turner)        Fetching: 57/106 players (Khris Middleton)        Fetching: 58/106 players (Cooper Flagg)        Fetching: 59/106 players (Cam Spencer)        Fetching: 60/106 players (Naji Marshall)        Fetching: 61/106 players (Jaylen Wells)        Fetching: 62/106 players (Max Christie)        Fetching: 63/106 players (P.J. Washington)        Fetching: 64/106 players (Taylor Hendricks)        Fetching: 65/106 players (Olivier-Maxence Prosper)        Fetching: 66/106 players (Daniel Gafford)        Fetching: 67/106 players (G.G. Jackson)        Fetching: 68/106 players (Victor Wembanyama)        Fetching: 69/106 players (Nikola Jokic)        Fetching: 70/106 players (Devin Vassell)        Fetching: 71/106 players (Jamal Murray)        Fetching: 72/106 players (Aaron Gordon)        Fetching: 73/106 players (De'Aaron Fox)        Fetching: 74/106 players (Dylan Harper)        Fetching: 75/106 players (Stephon Castle)        Fetching: 76/106 players (Christian Braun)        Fetching: 77/106 players (Tim Hardaway Jr)        Fetching: 78/106 players (Bruce Brown)        Fetching: 79/106 players (Keldon Johnson)        Fetching: 80/106 players (Cameron Johnson)        Fetching: 81/106 players (Julian Champagnie)        Fetching: 82/106 players (Derrick White)        Fetching: 83/106 players (Shai Gilgeous-Alexander)        Fetching: 84/106 players (Jayson Tatum)        Fetching: 85/106 players (Jaylen Brown)        Fetching: 86/106 players (Payton Pritchard)        Fetching: 87/106 players (Cason Wallace)        Fetching: 88/106 players (Chet Holmgren)        Fetching: 89/106 players (Luguentz Dort)        Fetching: 90/106 players (Isaiah Joe)        Fetching: 91/106 players (Ajay Mitchell)        Fetching: 92/106 players (Jared McCain)        Fetching: 93/106 players (Neemias Queta)        Fetching: 94/106 players (Sam Hauser)        Fetching: 95/106 players (Matas Buzelis)        Fetching: 96/106 players (Josh Giddey)        Fetching: 97/106 players (Luka Doncic)        Fetching: 98/106 players (Austin Reaves)        Fetching: 99/106 players (LeBron James)        Fetching: 100/106 players (Isaac Okoro)        Fetching: 101/106 players (Guerschon Yabusele)        Fetching: 102/106 players (Jalen Smith)        Fetching: 103/106 players (Deandre Ayton)        Fetching: 104/106 players (Rui Hachimura)        Fetching: 105/106 players (Jake LaRavia)        Fetching: 106/106 players (Luke Kennard)    
+    Scored 191 legs  (51 skipped: insufficient data, 30 skipped: low confidence)
+[4/8] Skipping contextual evaluators (--no-context)
+[5/8] Building correlation matrix...
+    Correlation matrix ready (84 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: MIXED  |  Min edge: 2.0%
+=================================================================
+
+#1  EV: 811.0%  |  Edge: 50.4%  |  Odds: 16.09x  |  Stake: $500.00
+    Model Prob: 56.6%  vs  Market Implied: 6.2%
+    Confidence: 4x HIGH
+    Correlation: Aaron Gordon vs Cameron Johnson: r=-0.02 (neutral); Aaron Gordon vs Bruce Brown: r=-0.03 (neutral); Aaron Gordon vs Cameron Johnson: r=0.12 (neutral); Cameron Johnson vs Bruce Brown: r=0.27 (positive); Cameron Johnson vs Cameron Johnson: r=0.18 (neutral); Bruce Brown vs Cameron Johnson: r=0.25 (positive)
+    Legs:
+      * Aaron Gordon: OVER 2.5 ast  (+148)  model: 67.9%  [HIGH]
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 6.5 pts  (+104)  model: 80.0%  [HIGH]
+      * Cameron Johnson: OVER 2.5 reb  (-157)  model: 89.9%  [HIGH]
+
+#2  EV: 805.2%  |  Edge: 51.6%  |  Odds: 15.62x  |  Stake: $500.00
+    Model Prob: 58.0%  vs  Market Implied: 6.4%
+    Confidence: 4x HIGH
+    Correlation: Aaron Gordon vs Cameron Johnson: r=-0.02 (neutral); Aaron Gordon vs Bruce Brown: r=-0.03 (neutral); Aaron Gordon vs Bruce Brown: r=0.01 (neutral); Cameron Johnson vs Bruce Brown: r=0.27 (positive); Cameron Johnson vs Bruce Brown: r=0.13 (neutral); Bruce Brown vs Bruce Brown: r=0.25 (positive)
+    Legs:
+      * Aaron Gordon: OVER 2.5 ast  (+148)  model: 67.9%  [HIGH]
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 6.5 pts  (+104)  model: 80.0%  [HIGH]
+      * Bruce Brown: OVER 2.5 reb  (-170)  model: 93.3%  [HIGH]
+
+#3  EV: 684.2%  |  Edge: 11.8%  |  Odds: 58.25x  |  Stake: $298.81
+    Model Prob: 13.5%  vs  Market Implied: 1.7%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Confidence: 3x HIGH
+    Correlation: ⚠ ML+player same team: positively correlated, book may price correctly.
+    Legs:
+      * Washington Wizards ML  (7.60x)  model: 19.3%
+      * Trae Young: OVER 5.5 ast  (-106)  model: 95.6%  [HIGH]
+      * Trae Young: OVER 13.5 pts  (+102)  model: 98.4%  [HIGH]
+      * Jalen Suggs: OVER 14.5 pts  (-105)  model: 74.8%  [HIGH]
+
+#4  EV: 683.8%  |  Edge: 43.0%  |  Odds: 15.90x  |  Stake: $500.00
+    Model Prob: 49.3%  vs  Market Implied: 6.3%
+    Confidence: 4x HIGH
+    Correlation: Victor Wembanyama vs Aaron Gordon: r=0.24 (neutral); Victor Wembanyama vs Cameron Johnson: r=0.00 (neutral); Victor Wembanyama vs Bruce Brown: r=-0.02 (neutral); Aaron Gordon vs Cameron Johnson: r=-0.02 (neutral); Aaron Gordon vs Bruce Brown: r=-0.03 (neutral); Cameron Johnson vs Bruce Brown: r=0.27 (positive)
+    Legs:
+      * Victor Wembanyama: OVER 2.5 ast  (-162)  model: 74.6%  [HIGH]
+      * Aaron Gordon: OVER 2.5 ast  (+148)  model: 67.9%  [HIGH]
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 6.5 pts  (+104)  model: 80.0%  [HIGH]
+
+#5  EV: 671.4%  |  Edge: 44.6%  |  Odds: 15.05x  |  Stake: $500.00
+    Model Prob: 51.3%  vs  Market Implied: 6.6%
+    Confidence: 4x HIGH
+    Correlation: Jake LaRavia vs Deandre Ayton: r=0.39 (positive); Jake LaRavia vs Josh Giddey: r=-0.03 (neutral); Jake LaRavia vs Deandre Ayton: r=0.07 (neutral); Deandre Ayton vs Josh Giddey: r=-0.04 (neutral); Deandre Ayton vs Deandre Ayton: r=0.30 (positive); Josh Giddey vs Deandre Ayton: r=0.20 (neutral)
+    Legs:
+      * Jake LaRavia: OVER 6.5 pts  (-114)  model: 82.7%  [HIGH]
+      * Deandre Ayton: OVER 10.5 pts  (-110)  model: 78.5%  [HIGH]
+      * Josh Giddey: OVER 7.5 reb  (-108)  model: 87.0%  [HIGH]
+      * Deandre Ayton: OVER 8.5 reb  (+118)  model: 77.0%  [HIGH]
+
+#6  EV: 649.8%  |  Edge: 21.7%  |  Odds: 29.99x  |  Stake: $500.00
+    Model Prob: 25.0%  vs  Market Implied: 3.3%
+    Confidence: 3x HIGH
+    Correlation: ⚠ ML+player same team: positively correlated, book may price correctly.
+    Legs:
+      * Denver Nuggets ML  (3.05x)  model: 42.5%
+      * Aaron Gordon: OVER 2.5 ast  (+148)  model: 67.9%  [HIGH]
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 6.5 pts  (+104)  model: 80.0%  [HIGH]
+
+#7  EV: 639.2%  |  Edge: 51.0%  |  Odds: 12.53x  |  Stake: $500.00
+    Model Prob: 59.0%  vs  Market Implied: 8.0%
+    Confidence: 4x HIGH
+    Correlation: Aaron Gordon vs Cameron Johnson: r=-0.02 (neutral); Aaron Gordon vs Bruce Brown: r=0.01 (neutral); Aaron Gordon vs Cameron Johnson: r=0.12 (neutral); Cameron Johnson vs Bruce Brown: r=0.13 (neutral); Cameron Johnson vs Cameron Johnson: r=0.18 (neutral); Bruce Brown vs Cameron Johnson: r=0.10 (neutral)
+    Legs:
+      * Aaron Gordon: OVER 2.5 ast  (+148)  model: 67.9%  [HIGH]
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 2.5 reb  (-170)  model: 93.3%  [HIGH]
+      * Cameron Johnson: OVER 2.5 reb  (-157)  model: 89.9%  [HIGH]
+
+#8  EV: 629.9%  |  Edge: 11.5%  |  Odds: 54.70x  |  Stake: $293.26
+    Model Prob: 13.3%  vs  Market Implied: 1.8%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Confidence: 3x HIGH
+    Correlation: ⚠ ML+player same team: positively correlated, book may price correctly.
+    Legs:
+      * Washington Wizards ML  (7.60x)  model: 19.3%
+      * Trae Young: OVER 5.5 ast  (-106)  model: 95.6%  [HIGH]
+      * Trae Young: OVER 13.5 pts  (+102)  model: 98.4%  [HIGH]
+      * Desmond Bane: OVER 4.5 reb  (-120)  model: 74.4%  [HIGH]
+
+#9  EV: 629.3%  |  Edge: 61.1%  |  Odds: 10.31x  |  Stake: $500.00
+    Model Prob: 70.8%  vs  Market Implied: 9.7%
+    Confidence: 4x HIGH
+    Correlation: Cameron Johnson vs Bruce Brown: r=0.27 (positive); Cameron Johnson vs Bruce Brown: r=0.13 (neutral); Cameron Johnson vs Cameron Johnson: r=0.18 (neutral); Bruce Brown vs Bruce Brown: r=0.25 (positive); Bruce Brown vs Cameron Johnson: r=0.25 (positive); Bruce Brown vs Cameron Johnson: r=0.10 (neutral)
+    Legs:
+      * Cameron Johnson: OVER 8.5 pts  (-106)  model: 99.0%  [HIGH]
+      * Bruce Brown: OVER 6.5 pts  (+104)  model: 80.0%  [HIGH]
+      * Bruce Brown: OVER 2.5 reb  (-170)  model: 93.3%  [HIGH]
+      * Cameron Johnson: OVER 2.5 reb  (-157)  model: 89.9%  [HIGH]
+
+#10  EV: 603.9%  |  Edge: 27.8%  |  Odds: 21.76x  |  Stake: $500.00
+    Model Prob: 32.4%  vs  Market Implied: 4.6%
+    Confidence: 4x HIGH
+    Correlation: Jayson Tatum vs Isaiah Joe: r=0.06 (neutral); Jayson Tatum vs Jayson Tatum: r=-0.06 (neutral); Jayson Tatum vs Jayson Tatum: r=-0.03 (neutral); Isaiah Joe vs Jayson Tatum: r=0.03 (neutral); Isaiah Joe vs Jayson Tatum: r=0.05 (neutral); Jayson Tatum vs Jayson Tatum: r=0.03 (neutral)
+    Legs:
+      * Jayson Tatum: OVER 4.5 ast  (+128)  model: 77.3%  [HIGH]
+      * Isaiah Joe: OVER 2.5 ast  (+167)  model: 53.4%  [HIGH]
+      * Jayson Tatum: OVER 19.5 pts  (+102)  model: 84.2%  [HIGH]
+      * Jayson Tatum: OVER 6.5 reb  (-130)  model: 87.6%  [HIGH]
+

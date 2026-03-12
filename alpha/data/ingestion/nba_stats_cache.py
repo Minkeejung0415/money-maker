@@ -202,6 +202,89 @@ class NBAStatsCache:
         except Exception:
             return None
 
+    def fetch_matchup_defender(self, player_name: str, season: str = "2024-25") -> str | None:
+        """Find the defender who guards *player_name* the most minutes."""
+        def _call():
+            from nba_api.stats.endpoints.leagueseasonmatchups import LeagueSeasonMatchups
+            matchups = LeagueSeasonMatchups(
+                off_player_id_nullable="",
+                def_player_id_nullable="",
+                season=season,
+            )
+            df = matchups.get_data_frames()[0]
+            return df.to_dict(orient="records")
+
+        try:
+            rows = self.get_or_fetch(
+                "LeagueSeasonMatchups",
+                {"player_name": player_name, "season": season},
+                _call,
+            )
+            best, best_min = None, 0.0
+            for row in rows:
+                off_name = row.get("OFF_PLAYER_NAME", "")
+                if off_name.lower() != player_name.lower():
+                    continue
+                poss = float(row.get("PARTIAL_POSS", 0) or 0)
+                if poss > best_min:
+                    best_min = poss
+                    best = row.get("DEF_PLAYER_NAME")
+            return best if best else None
+        except Exception as exc:
+            logger.warning("fetch_matchup_defender failed for %s: %s", player_name, exc)
+            return None
+
+    def fetch_team_recent_form(
+        self, team_name: str, last_n: int = 10, season: str = "2024-25"
+    ) -> dict | None:
+        """Return recent-form stats for *team_name* over the last *last_n* games."""
+        team_id = self._resolve_team_id(team_name, season)
+        if team_id is None:
+            return None
+
+        def _call():
+            from nba_api.stats.endpoints.teamgamelog import TeamGameLog
+            gl = TeamGameLog(team_id=team_id, season=season)
+            df = gl.get_data_frames()[0]
+            return df.to_dict(orient="records")
+
+        try:
+            rows = self.get_or_fetch(
+                "TeamGameLog",
+                {"team_id": team_id, "season": season},
+                _call,
+            )
+            recent = rows[:last_n]
+            if not recent:
+                return None
+
+            wins = sum(1 for g in recent if str(g.get("WL", "")).upper() == "W")
+            pts = [float(g.get("PTS", 0) or 0) for g in recent]
+            pts_allowed = [
+                float(g.get("PTS", 0) or 0) - float(g.get("PLUS_MINUS", 0) or 0)
+                for g in recent
+            ]
+            n = len(recent)
+            return {
+                "win_pct_last_n": wins / n,
+                "avg_pts_last_n": sum(pts) / n,
+                "avg_pts_allowed_last_n": sum(pts_allowed) / n,
+            }
+        except Exception as exc:
+            logger.warning("fetch_team_recent_form failed for %s: %s", team_name, exc)
+            return None
+
+    def _resolve_team_id(self, team_name: str, season: str) -> int | None:
+        """Look up a team ID by name from the league-wide team stats cache."""
+        try:
+            rows = self.fetch_league_dash_team_stats(season=season, measure_type="Base")
+            for row in rows:
+                if row.get("TEAM_NAME", "").lower() == team_name.lower():
+                    return int(row["TEAM_ID"])
+            return None
+        except Exception:
+            return None
+
     def clear_stale(self) -> int:
         """Remove entries older than TTL. Returns count of deleted rows."""
         cutoff = (datetime.now() - timedelta(hours=_CACHE_TTL_HOURS)).isoformat()

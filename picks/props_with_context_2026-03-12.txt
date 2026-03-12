@@ -1,0 +1,146 @@
+[1/6] Fetching today's NBA games...
+    Found 9 game(s)
+[2/6] Fetching player prop lines...
+    Fetched 349 prop lines across 9 game(s)
+[3/6] Running prop model — 105 players to fetch (cached players are instant)...
+    Fetching: 1/105 players (Tobias Harris)        Fetching: 2/105 players (Jalen Duren)        Fetching: 3/105 players (VJ Edgecombe)        Fetching: 4/105 players (Cade Cunningham)        Fetching: 5/105 players (Cameron Payne)        Fetching: 6/105 players (Ron Holland)        Fetching: 7/105 players (Quentin Grimes)        Fetching: 8/105 players (Marcus Sasser)        Fetching: 9/105 players (Duncan Robinson)        Fetching: 10/105 players (Dominick Barlow)        Fetching: 11/105 players (Isaiah Stewart II)        Fetching: 12/105 players (Jarace Walker)        Fetching: 13/105 players (Devin Booker)        Fetching: 14/105 players (Jalen Green)        Fetching: 15/105 players (Collin Gillespie)        Fetching: 16/105 players (Royce O'Neale)        Fetching: 17/105 players (Andrew Nembhard)        Fetching: 18/105 players (Aaron Nesmith)        Fetching: 19/105 players (Obi Toppin)        Fetching: 20/105 players (Oso Ighodaro)        Fetching: 21/105 players (Ivica Zubac)        Fetching: 22/105 players (Grayson Allen)        Fetching: 23/105 players (Desmond Bane)        Fetching: 24/105 players (Paolo Banchero)        Fetching: 25/105 players (Jalen Suggs)        Fetching: 26/105 players (Trae Young)        Fetching: 27/105 players (Jevon Carter)        Fetching: 28/105 players (Tristan da Silva)        Fetching: 29/105 players (Bilal Coulibaly)        Fetching: 30/105 players (Tre Johnson)        Fetching: 31/105 players (Will Riley)        Fetching: 32/105 players (Alex Sarr)        Fetching: 33/105 players (Wendell Carter Jr)        Fetching: 34/105 players (Onyeka Okongwu)        Fetching: 35/105 players (Nickeil Alexander-Walker)        Fetching: 36/105 players (Danny Wolf)        Fetching: 37/105 players (C.J. McCollum)        Fetching: 38/105 players (Jalen Johnson)        Fetching: 39/105 players (Dyson Daniels)        Fetching: 40/105 players (Nicolas Claxton)        Fetching: 41/105 players (Ben Saraf)        Fetching: 42/105 players (Drake Powell)        Fetching: 43/105 players (Zaccharie Risacher)        Fetching: 44/105 players (Corey Kispert)        Fetching: 45/105 players (Noah Clowney)        Fetching: 46/105 players (Jock Landale)        Fetching: 47/105 players (Giannis Antetokounmpo)        Fetching: 48/105 players (Ryan Rollins)        Fetching: 49/105 players (Pelle Larsson)        Fetching: 50/105 players (Kevin Porter Jr.)        Fetching: 51/105 players (Tyler Herro)        Fetching: 52/105 players (Ousmane Dieng)        Fetching: 53/105 players (Bam Adebayo)        Fetching: 54/105 players (Davion Mitchell)        Fetching: 55/105 players (Myles Turner)        Fetching: 56/105 players (Khris Middleton)        Fetching: 57/105 players (Cooper Flagg)        Fetching: 58/105 players (Cam Spencer)        Fetching: 59/105 players (Naji Marshall)        Fetching: 60/105 players (Jaylen Wells)        Fetching: 61/105 players (Max Christie)        Fetching: 62/105 players (P.J. Washington)        Fetching: 63/105 players (Taylor Hendricks)        Fetching: 64/105 players (Olivier-Maxence Prosper)        Fetching: 65/105 players (Daniel Gafford)        Fetching: 66/105 players (G.G. Jackson)        Fetching: 67/105 players (Victor Wembanyama)        Fetching: 68/105 players (Nikola Jokic)        Fetching: 69/105 players (Devin Vassell)        Fetching: 70/105 players (Jamal Murray)        Fetching: 71/105 players (Aaron Gordon)        Fetching: 72/105 players (De'Aaron Fox)        Fetching: 73/105 players (Dylan Harper)        Fetching: 74/105 players (Stephon Castle)        Fetching: 75/105 players (Christian Braun)        Fetching: 76/105 players (Tim Hardaway Jr)        Fetching: 77/105 players (Bruce Brown)        Fetching: 78/105 players (Keldon Johnson)        Fetching: 79/105 players (Cameron Johnson)        Fetching: 80/105 players (Julian Champagnie)        Fetching: 81/105 players (Derrick White)        Fetching: 82/105 players (Shai Gilgeous-Alexander)        Fetching: 83/105 players (Jayson Tatum)        Fetching: 84/105 players (Jaylen Brown)        Fetching: 85/105 players (Payton Pritchard)        Fetching: 86/105 players (Cason Wallace)        Fetching: 87/105 players (Chet Holmgren)        Fetching: 88/105 players (Luguentz Dort)        Fetching: 89/105 players (Isaiah Joe)        Fetching: 90/105 players (Ajay Mitchell)        Fetching: 91/105 players (Jared McCain)        Fetching: 92/105 players (Neemias Queta)        Fetching: 93/105 players (Sam Hauser)        Fetching: 94/105 players (Matas Buzelis)        Fetching: 95/105 players (Josh Giddey)        Fetching: 96/105 players (Luka Doncic)        Fetching: 97/105 players (Austin Reaves)        Fetching: 98/105 players (LeBron James)        Fetching: 99/105 players (Isaac Okoro)        Fetching: 100/105 players (Guerschon Yabusele)        Fetching: 101/105 players (Jalen Smith)        Fetching: 102/105 players (Deandre Ayton)        Fetching: 103/105 players (Rui Hachimura)        Fetching: 104/105 players (Jake LaRavia)        Fetching: 105/105 players (Luke Kennard)    
+    Scored 189 legs  (51 skipped: insufficient data, 30 skipped: low confidence)
+[4/8] Running contextual evaluators (position, paint, foul trouble, pace)...
+    Context adjustments applied — 73 legs remain (116 filtered/below edge)
+[5/8] Building correlation matrix...
+    Correlation matrix ready (50 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+[7/8] Building SGP combinations...
+[8/8] Running betting intelligence analysis...
+
+=================================================================
+SGP SCANNER — Mode: PROPS  |  Min edge: 2.0%
+=================================================================
+
+#1  EV: 238.0%  |  Edge: 66.3%  |  Odds: 3.59x  |  Stake: $500.00
+    Model Prob: 94.1%  vs  Market Implied: 27.9%
+    Confidence: 2x HIGH
+    Correlation: Trae Young vs Trae Young: r=0.00 (neutral)
+    Legs:
+      * Trae Young: OVER 5.5 ast  (-106)  model: 95.4%  [HIGH]
+      * Trae Young: OVER 12.5 pts  (-118)  model: 98.7%  [HIGH]
+
+=================================================================
+DETAILED PICK ANALYSIS
+=================================================================
+  Cameron Johnson Over 8.5 pts
+    Model confidence:   97.0%
+    Implied odds prob:  51.5%
+    Edge:               +45.5%
+    EV per $100:        $+88.51
+    Kelly stake:        23.5% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: +0.7%, def_rating_adjustment: -2.7%, total_adjustment: -2.0%]
+
+  Trae Young Over 5.5 ast
+    Model confidence:   95.4%
+    Implied odds prob:  51.5%
+    Edge:               +43.9%
+    EV per $100:        $+85.36
+    Kelly stake:        22.6% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: MEDIUM, foul_trouble_boost: +3.0%, pace_adjustment: +1.8%, def_rating_adjustment: -5.1%, total_adjustment: -0.3%]
+
+  Trae Young Over 12.5 pts
+    Model confidence:   98.7%
+    Implied odds prob:  54.1%
+    Edge:               +44.6%
+    EV per $100:        $+82.34
+    Kelly stake:        24.3% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: MEDIUM, foul_trouble_boost: +3.0%, pace_adjustment: +1.8%, def_rating_adjustment: -5.1%, total_adjustment: -0.3%]
+
+  Jayson Tatum Over 4.5 ast
+    Model confidence:   76.0%
+    Implied odds prob:  43.9%
+    Edge:               +32.2%
+    EV per $100:        $+73.37
+    Kelly stake:        14.3% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: -3.4%, def_rating_adjustment: +1.7%, total_adjustment: -1.7%]
+
+  Giannis Antetokounmpo Over 25.5 pts
+    Model confidence:   91.3%
+    Implied odds prob:  52.8%
+    Edge:               +38.5%
+    EV per $100:        $+72.82
+    Kelly stake:        20.4% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: MEDIUM, foul_trouble_boost: +3.0%, pace_adjustment: -0.1%, def_rating_adjustment: -0.6%, total_adjustment: +2.3%]
+
+  Ivica Zubac Over 9.5 pts
+    Model confidence:   88.5%
+    Implied odds prob:  51.5%
+    Edge:               +37.0%
+    EV per $100:        $+71.93
+    Kelly stake:        19.1% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: -1.7%, def_rating_adjustment: -4.8%, total_adjustment: -6.5%]
+
+  Aaron Gordon Over 2.5 ast
+    Model confidence:   68.5%
+    Implied odds prob:  40.3%
+    Edge:               +28.2%
+    EV per $100:        $+70.00
+    Kelly stake:        11.8% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: MEDIUM, foul_trouble_boost: +3.0%, pace_adjustment: +0.7%, def_rating_adjustment: -2.7%, total_adjustment: +1.0%]
+
+  Davion Mitchell Over 9.5 pts
+    Model confidence:   92.7%
+    Implied odds prob:  54.5%
+    Edge:               +38.1%
+    EV per $100:        $+69.88
+    Kelly stake:        21.0% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: -0.1%, def_rating_adjustment: -0.6%, total_adjustment: -0.7%]
+
+  Deandre Ayton Over 8.5 reb
+    Model confidence:   77.9%
+    Implied odds prob:  45.9%
+    Edge:               +32.0%
+    EV per $100:        $+69.73
+    Kelly stake:        14.8% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: +3.6%, def_rating_adjustment: -2.4%, total_adjustment: +1.2%]
+
+  Josh Giddey Over 7.5 reb
+    Model confidence:   88.1%
+    Implied odds prob:  51.9%
+    Edge:               +36.1%
+    EV per $100:        $+69.60
+    Kelly stake:        18.8% of bankroll
+    Flags: [shared_minutes_weight: +100.0%, foul_trouble_risk: LOW, pace_adjustment: +3.6%, def_rating_adjustment: -2.4%, total_adjustment: +1.2%]
+
+
+=================================================================
+BET TYPE RECOMMENDATIONS
+=================================================================
+  [3-LEG PARLAY]
+    Win probability:  91.4%
+    Decimal odds:     6.98x
+    EV per $100:      $+537.55
+    Edge:             +77.0%
+    Kelly stake:      22.5% of bankroll ($2248.24)
+
+  [2-LEG PARLAY]
+    Win probability:  92.6%
+    Decimal odds:     3.78x
+    EV per $100:      $+249.63
+    Edge:             +66.1%
+    Kelly stake:      22.5% of bankroll ($2247.45)
+
+  [SINGLE]
+    Win probability:  97.0%
+    Decimal odds:     1.94x
+    EV per $100:      $+88.51
+    Edge:             +45.5%
+    Kelly stake:      23.5% of bankroll ($2345.50)
+
+  Leg count probability table (per-leg: 70%):
+    1-leg = 70.0%
+    2-leg = 49.0%
+    3-leg = 34.3%
+    4-leg = 24.0% <-- recommended max
+    5-leg = 16.8%
+    6-leg = 11.8%
+    7-leg = 8.2%
+    8-leg = 5.8%
+    9-leg = 4.0%
+

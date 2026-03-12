@@ -202,7 +202,7 @@ class NBAModel:
         adjustments to team win probabilities.
         Returns input unchanged if no evaluators are loaded.
         """
-        if not self._paint_deterrence and not self._foul_trouble and not self._opp_stats:
+        if not self._paint_deterrence and not self._foul_trouble and not self._opp_stats and not self._stats_cache:
             return home_prob, away_prob
 
         home_team = game.get("home_team", "")
@@ -239,6 +239,20 @@ class NBAModel:
             # Defensive rating: worse defense → opponent benefits
             home_adj += (home_opp.get("def_factor", 1.0) - 1.0) * 0.03
             away_adj += (away_opp.get("def_factor", 1.0) - 1.0) * 0.03
+
+        # Recent form blending
+        if self._stats_cache:
+            team_stats = self._get_team_stats_summary()
+            for team, sign in [(home_team, 1), (away_team, -1)]:
+                form = self._stats_cache.fetch_team_recent_form(team)
+                if form:
+                    season_p = team_stats.get(team, {}).get("w_pct", 0.5)
+                    blended = _SEASON_AVG_WEIGHT * season_p + _RECENT_FORM_WEIGHT * form["win_pct_last_n"]
+                    delta = max(-0.04, min(0.04, blended - season_p))
+                    if sign == 1:
+                        home_adj += delta
+                    else:
+                        away_adj += delta
 
         # Apply and re-normalize
         home_prob = max(0.05, min(0.95, home_prob + home_adj))
