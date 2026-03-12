@@ -1,4 +1,4 @@
-"""Tests for NBA scanner features: ml mode, min-prob filter, H2H, traded player."""
+"""Tests for NBA scanner features: ml mode, min-prob filter, H2H, traded player, team map."""
 from __future__ import annotations
 
 import subprocess
@@ -93,13 +93,76 @@ def test_h2h_nudges_home_prob():
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# fetch_player_team_map
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_player_team_map_returns_correct_team():
+    """fetch_player_team_map should map player names (lowercase) to full team names."""
+    from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
+
+    cache = NBAStatsCache.__new__(NBAStatsCache)
+
+    # Mock fetch_league_dash_team_stats → abbreviation to full name
+    cache.fetch_league_dash_team_stats = MagicMock(return_value=[
+        {"TEAM_ABBREVIATION": "BOS", "TEAM_NAME": "Boston Celtics"},
+        {"TEAM_ABBREVIATION": "WAS", "TEAM_NAME": "Washington Wizards"},
+        {"TEAM_ABBREVIATION": "MIL", "TEAM_NAME": "Milwaukee Bucks"},
+    ])
+    # Mock fetch_league_dash_player_stats → player to abbreviation
+    cache.fetch_league_dash_player_stats = MagicMock(return_value=[
+        {"PLAYER_NAME": "Jayson Tatum", "TEAM_ABBREVIATION": "BOS"},
+        {"PLAYER_NAME": "Trae Young", "TEAM_ABBREVIATION": "WAS"},
+        {"PLAYER_NAME": "Giannis Antetokounmpo", "TEAM_ABBREVIATION": "MIL"},
+    ])
+
+    team_map = cache.fetch_player_team_map()
+
+    assert team_map["jayson tatum"] == "Boston Celtics"
+    assert team_map["trae young"] == "Washington Wizards"
+    assert team_map["giannis antetokounmpo"] == "Milwaukee Bucks"
+
+
+def test_fetch_player_team_map_fallback_on_error():
+    """fetch_player_team_map should return empty dict on any error."""
+    from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
+
+    cache = NBAStatsCache.__new__(NBAStatsCache)
+    cache.fetch_league_dash_team_stats = MagicMock(side_effect=RuntimeError("API down"))
+    cache.fetch_league_dash_player_stats = MagicMock(return_value=[])
+
+    result = cache.fetch_player_team_map()
+    assert result == {}
+
+
+def test_prop_leg_player_team_uses_team_map():
+    """PropLeg player_team should match actual player team, not always home_team."""
+    from alpha.engines.sports.sgp_builder import PropLeg
+
+    # Simulate what scanner now does: look up actual team from map
+    player_team_map = {"trae young": "Washington Wizards"}
+    player = "Trae Young"
+    home_team = "Boston Celtics"  # Trae is NOT on Boston
+    actual_team = player_team_map.get(player.lower(), home_team)
+
+    leg = PropLeg(
+        player=player, market="player_points", line=15.0,
+        model_prob=0.70, over_odds=-110, event_id="e1",
+        home_team=home_team, away_team="Washington Wizards",
+        confidence="HIGH", player_team=actual_team,
+    )
+    assert leg.player_team == "Washington Wizards"
+    assert leg.player_team != home_team
+
+
 def test_traded_player_confidence_downgraded():
-    """Player with <10 games on current team should have confidence downgraded."""
+    """Player with <5 games on current team should have confidence downgraded."""
     from alpha.engines.sports.prop_model import PropModel
 
     mock_cache = MagicMock()
     mock_cache.fetch_player_team_game_count.return_value = {
-        "current_team_games": 5,
+        "current_team_games": 3,
         "total_games": 50,
     }
 

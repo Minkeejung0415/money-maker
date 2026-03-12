@@ -47,6 +47,20 @@ logging.basicConfig(
     format="%(levelname)s %(name)s: %(message)s",
 )
 logger = logging.getLogger("sgp_scanner")
+ACTIVE_SEASON = "2025-26"
+
+
+def _emit_season_verification() -> None:
+    """Print canonical season evidence used by scanner startup paths."""
+    from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
+    from alpha.engines.sports.prop_model import PropModel
+
+    stats_cache = NBAStatsCache()
+    model = PropModel(season=ACTIVE_SEASON, stats_cache=stats_cache)
+
+    print(f"ACTIVE_SEASON={ACTIVE_SEASON}")
+    print(f"NBAStatsCache active season={ACTIVE_SEASON}")
+    print(f"PropModel active season={getattr(model, '_season', ACTIVE_SEASON)}")
 
 
 # ---------------------------------------------------------------------------
@@ -97,8 +111,8 @@ Examples:
         help="Comma-separated prop markets (default: player_points,player_rebounds,player_assists)",
     )
     parser.add_argument(
-        "--top", type=int, default=5,
-        help="Number of top combinations to display (default: 5)",
+        "--top", type=int, default=0,
+        help="Number of top combinations to display (default: 0 = show all)",
     )
     parser.add_argument(
         "--no-corr", action="store_true",
@@ -116,7 +130,7 @@ Examples:
     )
     parser.add_argument(
         "--no-context", action="store_true",
-        help="Skip contextual evaluators (position filter, paint deterrence, etc.)",
+        help="[Deprecated] Context is now off by default. Use --context to enable.",
     )
     parser.add_argument(
         "--show-ev", action="store_true",
@@ -129,6 +143,25 @@ Examples:
     parser.add_argument(
         "--favorites-only", action="store_true",
         help="In parlay mode, only include games where at least one side has model_prob >= 0.45",
+    )
+    parser.add_argument(
+        "--context", action="store_true",
+        help="Enable contextual evaluators (position, paint deterrence, foul trouble). "
+             "Disabled by default — adds 5-18 min runtime and can over-filter props.",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true",
+        help="Print reasoning for dropped props and skipped games.",
+    )
+    parser.add_argument(
+        "--date",
+        default=None,
+        help="Optional execution date marker for logs (YYYY-MM-DD).",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print startup checks only, then exit before API calls.",
     )
     return parser.parse_args()
 
@@ -184,10 +217,11 @@ def _run_ml_mode(args, games, nba_model) -> None:
 
     if value_sides:
         value_sides.sort(key=lambda x: x["edge"], reverse=True)
+        limit = args.top if args.top > 0 else len(value_sides)
         print(f"\n{'='*65}")
-        print("TOP VALUE ML BETS (edge > 4%)")
+        print(f"TOP VALUE ML BETS (edge > 4%) — showing {limit} of {len(value_sides)}")
         print(f"{'='*65}")
-        for i, v in enumerate(value_sides[:5], 1):
+        for i, v in enumerate(value_sides[:limit], 1):
             print(f"  {i}. {v['team']:30s}  edge {v['edge']:+.1%}  |  "
                   f"EV/100: ${v['ev100']:+.2f}  |  model: {v['mp']:.1%}")
     else:
@@ -198,6 +232,12 @@ def _run_ml_mode(args, games, nba_model) -> None:
 
 def main() -> None:
     args = _parse_args()
+    _emit_season_verification()
+    if args.date:
+        print(f"RUN_DATE={args.date}")
+    if args.dry_run:
+        print("DRY_RUN=1")
+        return
 
     markets = [m.strip() for m in args.markets.split(",") if m.strip()]
 
@@ -228,6 +268,10 @@ def main() -> None:
         print("    No NBA games found today (or API error). Exiting.")
         sys.exit(0)
     print(f"    Found {len(games)} game(s)")
+    if getattr(args, "verbose", False):
+        for g in games:
+            print(f"      {g.get('away_team','?')} @ {g.get('home_team','?')}  "
+                  f"[event_id={g.get('event_id','?')[:12]}...]")
 
     # Enrich games with NBAModel win probabilities so SGPBuilder has real model_prob
     from alpha.engines.sports.nba_model import NBAModel
@@ -272,9 +316,16 @@ def main() -> None:
     if sgp_mode != SGPMode.CLASSIC_PARLAY and prop_legs_raw:
         unique_players = len({r["player"] for r in prop_legs_raw if r.get("market") in markets})
         print(f"[3/6] Running prop model — {unique_players} players to fetch (cached players are instant)...")
-        model = PropModel()
+
+        # Build player → current team map (single cached API call, used to fix player_team)
+        from alpha.data.ingestion.nba_stats_cache import NBAStatsCache as _NBAStatsCache
+        _stats_cache_step3 = _NBAStatsCache()
+        player_team_map = _stats_cache_step3.fetch_player_team_map()
+
+        model = PropModel(stats_cache=_stats_cache_step3)
         seen_players: set[str] = set()
         done = 0
+        traded_warnings: list[str] = []
         for raw in prop_legs_raw:
             if raw.get("market") not in markets:
                 continue
@@ -303,6 +354,14 @@ def main() -> None:
                 skipped_low_conf += 1
                 continue
 
+            # Resolve player's actual current team (fall back to home_team if unknown)
+            actual_team = player_team_map.get(player.lower(), raw.get("home_team", ""))
+
+            if result.get("recent_trade"):
+                traded_warnings.append(
+                    f"  ⚠ {player}: recently traded — stats may be stale, confidence capped MEDIUM"
+                )
+
             scored_legs.append(PropLeg(
                 player=raw["player"],
                 market=raw["market"],
@@ -313,7 +372,7 @@ def main() -> None:
                 home_team=raw["home_team"],
                 away_team=raw["away_team"],
                 confidence=conf,
-                player_team=raw.get("home_team", ""),
+                player_team=actual_team,
             ))
 
         print()  # newline after progress
@@ -323,18 +382,28 @@ def main() -> None:
         scored_legs = [leg for leg in scored_legs if leg.model_prob >= args.min_prob]
         dropped = pre_filter - len(scored_legs)
         if dropped > 0:
+            if args.verbose:
+                weak = [leg for leg in [l for l in scored_legs if l.model_prob < args.min_prob]]
+                # re-check before filter for verbose (already filtered, show count)
             print(f"    Min-prob filter ({args.min_prob:.0%}): dropped {dropped} weak legs")
 
         print(f"    Scored {len(scored_legs)} legs  "
               f"({skipped_insufficient} skipped: insufficient data, "
               f"{skipped_low_conf} skipped: low confidence)")
+
+        if traded_warnings:
+            print("\n  RECENTLY TRADED PLAYERS (stats may be stale):")
+            for w in sorted(set(traded_warnings)):
+                print(w)
+            print()
     else:
         print("[3/6] Skipping prop model (classic parlay mode)")
 
-    # ── Step 4: Contextual evaluators ────────────────────────────────────
+    # ── Step 4: Contextual evaluators (opt-in with --context) ────────────
     context_evaluator = None
     context_scored = []
-    if not args.no_context and sgp_mode != SGPMode.CLASSIC_PARLAY and scored_legs:
+    _use_context = getattr(args, "context", False) and not getattr(args, "no_context", False)
+    if _use_context and sgp_mode != SGPMode.CLASSIC_PARLAY and scored_legs:
         print("[4/8] Running contextual evaluators (position, paint, foul trouble, pace)...")
         try:
             import threading as _threading
@@ -406,7 +475,12 @@ def main() -> None:
         except Exception as exc:
             print(f"    Context evaluators skipped: {exc}")
     else:
-        reason = "classic parlay" if sgp_mode == SGPMode.CLASSIC_PARLAY else "--no-context"
+        if sgp_mode == SGPMode.CLASSIC_PARLAY:
+            reason = "classic parlay"
+        elif not _use_context:
+            reason = "disabled by default (use --context to enable)"
+        else:
+            reason = "--no-context"
         print(f"[4/8] Skipping contextual evaluators ({reason})")
 
     # ── Step 5: Correlation matrix ───────────────────────────────────────

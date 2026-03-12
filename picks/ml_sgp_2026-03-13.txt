@@ -1,0 +1,101 @@
+[1/6] Fetching today's NBA games...
+    Found 9 game(s)
+[2/6] Fetching player prop lines...
+    Fetched 383 prop lines across 9 game(s)
+[3/6] Running prop model — 116 players to fetch (cached players are instant)...
+    Fetching: 1/116 players (Tobias Harris)        Fetching: 2/116 players (Jalen Duren)        Fetching: 3/116 players (VJ Edgecombe)        Fetching: 4/116 players (Cade Cunningham)        Fetching: 5/116 players (Cameron Payne)        Fetching: 6/116 players (Ron Holland)        Fetching: 7/116 players (Quentin Grimes)        Fetching: 8/116 players (Marcus Sasser)        Fetching: 9/116 players (Duncan Robinson)        Fetching: 10/116 players (Adem Bona)        Fetching: 11/116 players (Dominick Barlow)        Fetching: 12/116 players (Isaiah Stewart II)        Fetching: 13/116 players (Jarace Walker)        Fetching: 14/116 players (Devin Booker)        Fetching: 15/116 players (Jalen Green)        Fetching: 16/116 players (Collin Gillespie)        Fetching: 17/116 players (Royce O'Neale)        Fetching: 18/116 players (Andrew Nembhard)        Fetching: 19/116 players (Aaron Nesmith)        Fetching: 20/116 players (Oso Ighodaro)        Fetching: 21/116 players (Obi Toppin)        Fetching: 22/116 players (Ivica Zubac)        Fetching: 23/116 players (Grayson Allen)        Fetching: 24/116 players (Desmond Bane)        Fetching: 25/116 players (Paolo Banchero)        Fetching: 26/116 players (Jalen Suggs)        Fetching: 27/116 players (Trae Young)        Fetching: 28/116 players (Jevon Carter)        Fetching: 29/116 players (Tristan da Silva)        Fetching: 30/116 players (Bilal Coulibaly)        Fetching: 31/116 players (Tre Johnson)        Fetching: 32/116 players (Will Riley)        Fetching: 33/116 players (Jaden Hardy)        Fetching: 34/116 players (Jett Howard)        Fetching: 35/116 players (Moe Wagner)        Fetching: 36/116 players (Alex Sarr)        Fetching: 37/116 players (Wendell Carter Jr)        Fetching: 38/116 players (Onyeka Okongwu)        Fetching: 39/116 players (Nickeil Alexander-Walker)        Fetching: 40/116 players (Danny Wolf)        Fetching: 41/116 players (C.J. McCollum)        Fetching: 42/116 players (Jalen Johnson)        Fetching: 43/116 players (Dyson Daniels)        Fetching: 44/116 players (Nicolas Claxton)        Fetching: 45/116 players (Ben Saraf)        Fetching: 46/116 players (Drake Powell)        Fetching: 47/116 players (Zaccharie Risacher)        Fetching: 48/116 players (Corey Kispert)        Fetching: 49/116 players (Noah Clowney)        Fetching: 50/116 players (Jock Landale)        Fetching: 51/116 players (Giannis Antetokounmpo)        Fetching: 52/116 players (Ryan Rollins)        Fetching: 53/116 players (Pelle Larsson)        Fetching: 54/116 players (Kevin Porter Jr.)        Fetching: 55/116 players (Tyler Herro)        Fetching: 56/116 players (Jaime Jaquez Jr)        Fetching: 57/116 players (Ousmane Dieng)        Fetching: 58/116 players (Bam Adebayo)        Fetching: 59/116 players (Davion Mitchell)        Fetching: 60/116 players (Myles Turner)        Fetching: 61/116 players (Simone Fontecchio)        Fetching: 62/116 players (Kasparas Jakucionis)        Fetching: 63/116 players (Cam Thomas)        Fetching: 64/116 players (Brandon Williams)        Fetching: 65/116 players (Khris Middleton)        Fetching: 66/116 players (Cooper Flagg)        Fetching: 67/116 players (Cam Spencer)        Fetching: 68/116 players (Naji Marshall)        Fetching: 69/116 players (Marvin Bagley III)        Fetching: 70/116 players (P.J. Washington)        Fetching: 71/116 players (Daniel Gafford)        Fetching: 72/116 players (Jaylen Wells)        Fetching: 73/116 players (Max Christie)        Fetching: 74/116 players (Taylor Hendricks)        Fetching: 75/116 players (Olivier-Maxence Prosper)        Fetching: 76/116 players (G.G. Jackson)        Fetching: 77/116 players (Victor Wembanyama)        Fetching: 78/116 players (Nikola Jokic)        Fetching: 79/116 players (Devin Vassell)        Fetching: 80/116 players (Jamal Murray)        Fetching: 81/116 players (Aaron Gordon)        Fetching: 82/116 players (De'Aaron Fox)        Fetching: 83/116 players (Dylan Harper)        Fetching: 84/116 players (Stephon Castle)        Fetching: 85/116 players (Christian Braun)        Fetching: 86/116 players (Tim Hardaway Jr)        Fetching: 87/116 players (Bruce Brown)        Fetching: 88/116 players (Keldon Johnson)        Fetching: 89/116 players (Cameron Johnson)        Fetching: 90/116 players (Julian Champagnie)        Fetching: 91/116 players (Derrick White)        Fetching: 92/116 players (Shai Gilgeous-Alexander)        Fetching: 93/116 players (Jayson Tatum)        Fetching: 94/116 players (Jaylen Brown)        Fetching: 95/116 players (Payton Pritchard)        Fetching: 96/116 players (Cason Wallace)        Fetching: 97/116 players (Chet Holmgren)        Fetching: 98/116 players (Luguentz Dort)        Fetching: 99/116 players (Isaiah Joe)        Fetching: 100/116 players (Ajay Mitchell)        Fetching: 101/116 players (Jared McCain)        Fetching: 102/116 players (Neemias Queta)        Fetching: 103/116 players (Sam Hauser)        Fetching: 104/116 players (Matas Buzelis)        Fetching: 105/116 players (Josh Giddey)        Fetching: 106/116 players (Luka Doncic)        Fetching: 107/116 players (Tre Jones)        Fetching: 108/116 players (Austin Reaves)        Fetching: 109/116 players (LeBron James)        Fetching: 110/116 players (Isaac Okoro)        Fetching: 111/116 players (Guerschon Yabusele)        Fetching: 112/116 players (Jalen Smith)        Fetching: 113/116 players (Deandre Ayton)        Fetching: 114/116 players (Rui Hachimura)        Fetching: 115/116 players (Jake LaRavia)        Fetching: 116/116 players (Luke Kennard)    
+    Min-prob filter (60%): dropped 114 weak legs
+    Scored 87 legs  (61 skipped: insufficient data, 34 skipped: low confidence)
+
+  RECENTLY TRADED PLAYERS (stats may be stale):
+  ⚠ Bruce Brown: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Cam Thomas: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Cameron Johnson: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Cameron Payne: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Corey Kispert: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Deandre Ayton: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Desmond Bane: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Duncan Robinson: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Guerschon Yabusele: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Isaac Okoro: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Ivica Zubac: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Jaden Hardy: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Jake LaRavia: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Jalen Green: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Jared McCain: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Jock Landale: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Khris Middleton: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Luke Kennard: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Marvin Bagley III: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Myles Turner: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Nickeil Alexander-Walker: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Olivier-Maxence Prosper: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Ousmane Dieng: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Simone Fontecchio: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Taylor Hendricks: recently traded — stats may be stale, confidence capped MEDIUM
+  ⚠ Trae Young: recently traded — stats may be stale, confidence capped MEDIUM
+
+[4/8] Skipping contextual evaluators (--no-context)
+[5/8] Building correlation matrix...
+    Correlation matrix ready (61 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: ML_SGP  |  Min edge: 2.0%
+=================================================================
+
+#1  EV: 805.6%  |  Edge: 11.7%  |  Odds: 68.84x  |  Stake: $296.92
+    Model Prob: 13.2%  vs  Market Implied: 1.5%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Confidence: 1x HIGH, 2x MEDIUM
+    Correlation: ⚠ ML+opposing player: negatively correlated if ML team wins big
+    Legs:
+      * Washington Wizards ML  (8.30x)  model: 18.9%
+      * Trae Young: OVER 5.5 ast  (+114)  model: 95.6%  [MEDIUM]
+      * Trae Young: OVER 13.5 pts  (+103)  model: 98.4%  [MEDIUM]
+      * Jalen Suggs: OVER 14.5 pts  (-110)  model: 74.8%  [HIGH]
+
+#2  EV: 779.5%  |  Edge: 11.9%  |  Odds: 65.37x  |  Stake: $302.74
+    Model Prob: 13.5%  vs  Market Implied: 1.5%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Confidence: 3x MEDIUM
+    Correlation: ⚠ ML+opposing player: negatively correlated if ML team wins big
+    Legs:
+      * Washington Wizards ML  (8.30x)  model: 18.9%
+      * Trae Young: OVER 5.5 ast  (+114)  model: 95.6%  [MEDIUM]
+      * Trae Young: OVER 13.5 pts  (+103)  model: 98.4%  [MEDIUM]
+      * Trae Young: OVER 1.5 reb  (-123)  model: 75.4%  [MEDIUM]
+
+#3  EV: 747.7%  |  Edge: 19.0%  |  Odds: 39.41x  |  Stake: $486.71
+    Model Prob: 21.5%  vs  Market Implied: 2.5%
+    Confidence: 1x HIGH, 2x MEDIUM
+    Correlation: ⚠ ML+opposing player: negatively correlated if ML team wins big
+    Legs:
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+      * Jake LaRavia: OVER 6.5 pts  (-114)  model: 82.7%  [MEDIUM]
+      * Josh Giddey: OVER 7.5 reb  (-108)  model: 87.0%  [HIGH]
+      * Deandre Ayton: OVER 8.5 reb  (+118)  model: 77.0%  [MEDIUM]
+
+#4  EV: 699.1%  |  Edge: 11.6%  |  Odds: 60.09x  |  Stake: $295.77
+    Model Prob: 13.3%  vs  Market Implied: 1.7%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Confidence: 1x HIGH, 2x MEDIUM
+    Correlation: ⚠ ML+opposing player: negatively correlated if ML team wins big
+    Legs:
+      * Washington Wizards ML  (8.30x)  model: 18.9%
+      * Trae Young: OVER 5.5 ast  (+114)  model: 95.6%  [MEDIUM]
+      * Trae Young: OVER 13.5 pts  (+103)  model: 98.4%  [MEDIUM]
+      * Bilal Coulibaly: OVER 3.5 reb  (-150)  model: 75.4%  [HIGH]
+
+#5  EV: 692.5%  |  Edge: 20.2%  |  Odds: 34.20x  |  Stake: $500.00
+    Model Prob: 23.2%  vs  Market Implied: 2.9%
+    Confidence: 2x HIGH, 1x MEDIUM
+    Correlation: ⚠ ML+opposing player: negatively correlated if ML team wins big
+    Legs:
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+      * Tre Jones: OVER 4.5 ast  (-159)  model: 89.5%  [HIGH]
+      * Josh Giddey: OVER 7.5 reb  (-108)  model: 87.0%  [HIGH]
+      * Deandre Ayton: OVER 8.5 reb  (+118)  model: 77.0%  [MEDIUM]
+

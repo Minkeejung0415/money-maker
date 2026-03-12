@@ -52,7 +52,7 @@ _CALIBRATION_BUCKETS = [
 
 
 class PropBacktester:
-    def __init__(self, season: str = "2024-25"):
+    def __init__(self, season: str = "2025-26"):
         self._season = season
 
     # ------------------------------------------------------------------

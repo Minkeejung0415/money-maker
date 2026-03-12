@@ -1,0 +1,51 @@
+[1/6] Fetching today's NBA games...
+    Found 9 game(s)
+[2/6] Skipping prop lines (classic parlay mode)
+[3/6] Skipping prop model (classic parlay mode)
+[4/8] Skipping contextual evaluators (classic parlay)
+[5/8] Skipping correlation matrix (classic parlay mode)
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: PARLAY  |  Min edge: 5.0%
+=================================================================
+
+#1  EV: 282.1%  |  Edge: 6.9%  |  Odds: 40.92x  |  Stake: $176.65
+    Model Prob: 9.3%  vs  Market Implied: 2.4%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Legs:
+      * Memphis Grizzlies ML  (2.64x)  model: 53.7%
+      * Boston Celtics ML  (3.10x)  model: 47.6%
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+
+#2  EV: 244.0%  |  Edge: 5.2%  |  Odds: 46.50x  |  Stake: $134.04
+    Model Prob: 7.4%  vs  Market Implied: 2.2%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Legs:
+      * Denver Nuggets ML  (3.00x)  model: 42.5%
+      * Boston Celtics ML  (3.10x)  model: 47.6%
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+
+#3  EV: 229.9%  |  Edge: 5.8%  |  Odds: 39.60x  |  Stake: $148.93
+    Model Prob: 8.3%  vs  Market Implied: 2.5%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Legs:
+      * Memphis Grizzlies ML  (2.64x)  model: 53.7%
+      * Denver Nuggets ML  (3.00x)  model: 42.5%
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+
+#4  EV: 221.4%  |  Edge: 5.5%  |  Odds: 40.00x  |  Stake: $141.95
+    Model Prob: 8.0%  vs  Market Implied: 2.5%
+    WARNING: Combined win probability below 15% -- unlikely to hit regardless of individual leg quality
+    Legs:
+      * Brooklyn Nets ML  (8.00x)  model: 22.0%
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+
+#5  EV: 169.6%  |  Edge: 10.9%  |  Odds: 15.50x  |  Stake: $292.51
+    Model Prob: 17.4%  vs  Market Implied: 6.5%
+    Legs:
+      * Boston Celtics ML  (3.10x)  model: 47.6%
+      * Chicago Bulls ML  (5.00x)  model: 36.5%
+

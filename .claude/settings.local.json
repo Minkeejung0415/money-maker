@@ -22,7 +22,13 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(cd C:/Users/justi/Documents/money-maker && ./venv/Scripts/python.exe -c \"\nfrom dotenv import load_dotenv; load_dotenv\\(\\)\nfrom alpha.data.ingestion.odds_api import OddsAPIClient\nfrom alpha.data.ingestion.player_props import PlayerPropsClient\nimport requests, os\n\ngames = OddsAPIClient\\(\\).fetch_nba_games\\(\\)\nprint\\('Games found:', len\\(games\\)\\)\nif games:\n    g = games[0]\n    print\\('Testing event_id:', g['event_id'], '-', g['away_team'], '@', g['home_team']\\)\n    key = os.environ.get\\('ODDS_API_KEY', ''\\)\n    url = f'https://api.the-odds-api.com/v4/sports/basketball_nba/events/{g[\\\\\"event_id\\\\\"]}/odds/'\n    resp = requests.get\\(url, params={'apiKey': key, 'regions': 'us', 'markets': 'player_points', 'oddsFormat': 'american'}, timeout=15\\)\n    print\\('Status:', resp.status_code\\)\n    print\\('Response preview:', str\\(resp.json\\(\\)\\)[:500]\\)\n\" 2>&1)",
-      "Bash(taskkill /F /IM python.exe 2>/dev/null; echo \"killed\")"
+      "Bash(taskkill /F /IM python.exe 2>/dev/null; echo \"killed\")",
+      "Bash(git log:*)",
+      "Bash(./venv/Scripts/python.exe -m pytest tests/ --tb=short -q 2>&1; echo \"EXIT:$?\")",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: initialize project\" --files .planning/PROJECT.md 2>&1)",
+      "WebFetch(domain:www.sportsline.com)",
+      "WebFetch(domain:www.nbastuffer.com)",
+      "WebFetch(domain:squared2020.com)"
     ]
   }
 }

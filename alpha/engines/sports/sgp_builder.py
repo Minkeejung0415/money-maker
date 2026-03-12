@@ -60,6 +60,29 @@ def _market_label(market: str) -> str:
     return _MARKET_LABELS.get(market, market)
 
 
+def _cap_per_player(
+    combos: list, max_per_player: int = 2
+) -> list:
+    """
+    Enforce player diversity: each player can appear in at most max_per_player
+    combos in the final output.  Combos are already sorted by EV descending,
+    so highest-EV combos for each player are preserved.
+    """
+    player_counts: Counter = Counter()
+    result = []
+    for combo in combos:
+        players_in_combo: set[str] = set()
+        for leg in combo.legs:
+            if isinstance(leg, PropLeg):
+                players_in_combo.add(leg.player)
+        # Accept combo if every player in it is still under the cap
+        if all(player_counts[p] < max_per_player for p in players_in_combo):
+            result.append(combo)
+            for p in players_in_combo:
+                player_counts[p] += 1
+    return result
+
+
 class SGPMode(Enum):
     PROPS_ONLY     = "props"
     MONEYLINE_SGP  = "ml_sgp"
@@ -153,7 +176,13 @@ class SGPBuilder:
         # Filter to positive edge and sort
         positive = [c for c in combos if c.edge >= self._min_edge]
         positive.sort(key=lambda c: c.ev, reverse=True)
-        return positive[:top_n]
+
+        # Apply player diversity cap: max 2 SGPs featuring any single player
+        diverse = _cap_per_player(positive, max_per_player=2)
+
+        if top_n and top_n > 0:
+            return diverse[:top_n]
+        return diverse
 
     # ------------------------------------------------------------------
     # Category diversity enforcement
