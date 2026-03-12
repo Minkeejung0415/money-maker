@@ -103,12 +103,13 @@ def test_market_col_mapping(model):
 
 
 def test_confidence_high_when_large_gap(model):
-    """Model 65%, market 52% → gap=13% → HIGH confidence."""
+    """Model ~84%, market 52% → gap=32% → HIGH confidence."""
     rows = _make_log_rows([26.0] * 20)
     with _patch_logs(rows), _patch_def_ratings():
         # over_odds=-110 → market_implied ≈ 52.4%
-        # With avg=26 and line=20 and std≈1.0, p_over ≈ 1.0 → gap large
-        result = model.predict_prop("Test Player", "player_points", 20.0, "Boston Celtics",
+        # With avg=26 and line=25 and std≈1.0, p_over ≈ 0.84 → gap large
+        # (line=25 avoids CONF-02 low-line skepticism gate)
+        result = model.predict_prop("Test Player", "player_points", 25.0, "Boston Celtics",
                                     over_odds=-110)
     assert result is not None
     assert result["confidence"] == "HIGH"

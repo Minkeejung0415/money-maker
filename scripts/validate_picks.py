@@ -108,17 +108,54 @@ def _qualifying(logs: list[dict]) -> list[dict]:
     return [g for g in logs if g.get("MIN_float", 0) >= _MIN_MINUTES]
 
 
+_DECAY_LAMBDA = 0.85
+_REB_DAMP = 0.90
+_REST_MULT = {0: 0.94, 1: 0.97, 2: 1.00}
+_REST_DEFAULT = 1.02
+
+
 def _weighted_avg(values: list[float]) -> float:
-    def safe_mean(v):
-        return mean(v) if v else 0.0
-    last5, last10, last20 = values[:5], values[:10], values[:20]
-    w5  = 0.5 if last5  else 0.0
-    w10 = 0.3 if last10 else 0.0
-    w20 = 0.2 if last20 else 0.0
-    total = w5 + w10 + w20
-    if total == 0:
+    """Exponential-decay weighted average: weight[i] = _DECAY_LAMBDA ** i."""
+    if not values:
         return 0.0
-    return (w5 * safe_mean(last5) + w10 * safe_mean(last10) + w20 * safe_mean(last20)) / total
+    total_w = 0.0
+    total_v = 0.0
+    for i, v in enumerate(values):
+        w = _DECAY_LAMBDA ** i
+        total_w += w
+        total_v += v * w
+    return total_v / total_w if total_w > 0 else 0.0
+
+
+def _rest_multiplier(pre_q: list[dict], test_date_str: str) -> float:
+    """Days-rest multiplier: B2B=0.94, 1d=0.97, 2d=1.0, 3+=1.02."""
+    if not pre_q:
+        return 1.0
+    try:
+        from datetime import datetime
+        most_recent_str = str(pre_q[0].get("GAME_DATE", ""))[:10]
+        if not most_recent_str:
+            return 1.0
+        most_recent = datetime.strptime(most_recent_str, "%Y-%m-%d").date()
+        test_date = datetime.strptime(test_date_str, "%Y-%m-%d").date()
+        rest_days = (test_date - most_recent).days - 1
+        if rest_days < 0:
+            rest_days = 2
+        return _REST_MULT.get(rest_days, _REST_DEFAULT)
+    except Exception:
+        return 1.0
+
+
+def _filter_by_location(games: list[dict], location: str) -> list[dict]:
+    """Filter game logs to home ('vs.') or away ('@') games."""
+    result = []
+    for g in games:
+        matchup = str(g.get("MATCHUP", ""))
+        if location == "home" and "vs." in matchup:
+            result.append(g)
+        elif location == "away" and "@" in matchup:
+            result.append(g)
+    return result
 
 
 def _run_mar11_cache_validation() -> None:
@@ -315,6 +352,94 @@ def _fetch_season_logs(player_id: int, season: str = "2025-26") -> list[dict] | 
     return rows
 
 
+def _fetch_team_dreb_and_pace() -> dict[str, dict]:
+    """Fetch team DREB/game and pace for opponent adjustments in validation."""
+    try:
+        from nba_api.stats.endpoints.leaguedashteamstats import LeagueDashTeamStats
+        time.sleep(_SLEEP)
+        base_df = LeagueDashTeamStats(season="2025-26").get_data_frames()[0]
+        result: dict[str, dict] = {}
+        for _, row in base_df.iterrows():
+            name = str(row.get("TEAM_NAME", ""))
+            gp = float(row.get("GP", 0) or 0)
+            if not name or gp == 0:
+                continue
+            result[name.lower()] = {
+                "dreb_pg": float(row.get("DREB", 0)) / gp,
+                "reb_pg": float(row.get("REB", 0)) / gp,
+            }
+        try:
+            time.sleep(_SLEEP)
+            adv_df = LeagueDashTeamStats(
+                season="2025-26",
+                measure_type_detailed_defense="Advanced",
+            ).get_data_frames()[0]
+            for _, row in adv_df.iterrows():
+                name = str(row.get("TEAM_NAME", "")).lower()
+                pace = row.get("PACE")
+                if name in result and pace is not None:
+                    result[name]["pace"] = float(pace)
+        except Exception:
+            pass
+        return result
+    except Exception:
+        return {}
+
+
+def _detect_player_opponents(game_ids: list[str]) -> dict[str, str]:
+    """Return {player_name_lower: opponent_team_name_lower} for March 11 games."""
+    from nba_api.stats.endpoints.boxscoretraditionalv3 import BoxScoreTraditionalV3
+    result: dict[str, str] = {}
+    for gid in game_ids:
+        time.sleep(_SLEEP)
+        try:
+            raw = BoxScoreTraditionalV3(game_id=gid).get_dict()
+            home_team = raw.get("boxScoreTraditional", {}).get("homeTeam")
+            away_team = raw.get("boxScoreTraditional", {}).get("awayTeam")
+            if not home_team or not away_team:
+                continue
+            home_name = str(home_team.get("teamName", "")).lower()
+            away_name = str(away_team.get("teamName", "")).lower()
+            for p in home_team.get("players", []):
+                first = str(p.get("firstName", "")).strip()
+                last = str(p.get("familyName", "")).strip()
+                name = f"{first} {last}".strip().lower()
+                if name:
+                    result[name] = away_name
+            for p in away_team.get("players", []):
+                first = str(p.get("firstName", "")).strip()
+                last = str(p.get("familyName", "")).strip()
+                name = f"{first} {last}".strip().lower()
+                if name:
+                    result[name] = home_name
+        except Exception:
+            pass
+    return result
+
+
+def _detect_mar11_locations(game_ids: list[str]) -> dict[str, str]:
+    """Return {player_name_lower: 'home'|'away'} for each player in March 11 games."""
+    from nba_api.stats.endpoints.boxscoretraditionalv3 import BoxScoreTraditionalV3
+    result: dict[str, str] = {}
+    for gid in game_ids:
+        time.sleep(_SLEEP)
+        try:
+            raw = BoxScoreTraditionalV3(game_id=gid).get_dict()
+            for side, loc in [("homeTeam", "home"), ("awayTeam", "away")]:
+                team = raw.get("boxScoreTraditional", {}).get(side)
+                if team is None:
+                    continue
+                for p in team.get("players", []):
+                    first = str(p.get("firstName", "")).strip()
+                    last = str(p.get("familyName", "")).strip()
+                    name = f"{first} {last}".strip().lower()
+                    if name:
+                        result[name] = loc
+        except Exception:
+            pass
+    return result
+
+
 def _run_mar11_live_validation() -> None:
     """
     Walk-forward backtest for March 11 2026:
@@ -322,8 +447,9 @@ def _run_mar11_live_validation() -> None:
       2. For each player who played, fetch their 2025-26 season logs
       3. EXCLUDE any game played ON or AFTER March 11 (simulate pre-game)
       4. Compute model projection from remaining history
-      5. Synthetic line = projection rounded to .5
-      6. Check if actual > line
+      5. Apply rest multiplier and home/away location split
+      6. Synthetic line = projection rounded to .5
+      7. Check if actual > line
 
     Zero Odds API credits. Only nba_api (free).
     """
@@ -340,6 +466,16 @@ def _run_mar11_live_validation() -> None:
     player_stats, team_wins = _fetch_box_scores(game_ids)
     qualifying_players = {n: s for n, s in player_stats.items() if s["MIN"] >= _MIN_MINUTES}
     print(f"  {len(qualifying_players)} players with >= {_MIN_MINUTES}min\n")
+
+    print(f"  Detecting home/away locations and opponents...")
+    player_locations = _detect_mar11_locations(game_ids)
+    player_opponents = _detect_player_opponents(game_ids)
+    team_stats = _fetch_team_dreb_and_pace()
+    league_avg_dreb = mean([t["dreb_pg"] for t in team_stats.values()]) if team_stats else 34.0
+    league_avg_pace = mean([t.get("pace", 100.0) for t in team_stats.values()]) if team_stats else 100.0
+    print(f"  Mapped {len(player_locations)} locations, {len(player_opponents)} opponents")
+    print(f"  League avg DREB/g={league_avg_dreb:.1f}, pace={league_avg_pace:.1f}\n")
+
     print(f"  Fetching 2025-26 season logs to simulate pre-game predictions...")
     print(f"  (This takes ~{len(qualifying_players)*0.6:.0f}s — one free nba_api call per player)\n")
 
@@ -361,7 +497,6 @@ def _run_mar11_live_validation() -> None:
             no_data.append(actual_name)
             continue
 
-        # Keep only games BEFORE the test date (simulate pre-game state)
         pre_logs = [g for g in logs
                     if str(g.get("GAME_DATE", ""))[:10] < TEST_DATE]
         pre_q = [g for g in pre_logs if g.get("MIN_float", 0) >= _MIN_MINUTES]
@@ -369,14 +504,47 @@ def _run_mar11_live_validation() -> None:
         if len(pre_q) < _MIN_GAMES:
             continue
 
+        # Home/away location split
+        loc = player_locations.get(actual_name, "all")
+        if loc in ("home", "away"):
+            filtered = _filter_by_location(pre_q, loc)
+            if len(filtered) >= _MIN_GAMES:
+                pre_q_for_proj = filtered
+            else:
+                pre_q_for_proj = pre_q
+        else:
+            pre_q_for_proj = pre_q
+
+        rest_mult = _rest_multiplier(pre_q, TEST_DATE)
+
         done += 1
         print(f"\r  {done} players processed...", end="", flush=True)
 
         for stat in _STAT_COLS:
-            values = [float(g[stat]) for g in pre_q if stat in g and g[stat] is not None]
+            values = [float(g[stat]) for g in pre_q_for_proj if stat in g and g[stat] is not None]
             if len(values) < _MIN_GAMES:
-                continue
-            proj   = _weighted_avg(values)
+                values = [float(g[stat]) for g in pre_q if stat in g and g[stat] is not None]
+                if len(values) < _MIN_GAMES:
+                    continue
+            proj = _weighted_avg(values) * rest_mult
+
+            # OPP-01/03/04: Rebound volatility dampening + opponent adjustment
+            if stat == "REB":
+                proj *= _REB_DAMP
+
+                if actual_name in player_opponents:
+                    opp_name = player_opponents[actual_name]
+                    opp_data = team_stats.get(opp_name)
+                    if opp_data:
+                        opp_dreb = opp_data.get("dreb_pg", league_avg_dreb)
+                        if opp_dreb > 0:
+                            reb_scale = max(0.90, min(1.10, league_avg_dreb / opp_dreb))
+                            proj *= reb_scale
+                        opp_pace = opp_data.get("pace", league_avg_pace)
+                        if opp_pace > 0:
+                            pace_ratio = opp_pace / league_avg_pace
+                            proj *= pace_ratio
+
             line   = round(proj * 2) / 2
             actual = actual_stats[stat]
             hit    = actual > line
@@ -526,9 +694,7 @@ def main() -> None:
     print()
 
     if args.date == "2026-03-11":
-        print("Mode: nba_api box scores + cached .pkl history  (free, no Odds API)\n")
-        print("Strategy: cached .pkl = 2024-25 season history for projections")
-        print("          nba_api box scores = actual March 11 2026 results\n")
+        print("Mode: nba_api live box scores + 2025-26 pre-game season logs (free, no Odds API)\n")
         _run_mar11_live_validation()
 
     elif args.date == "2026-03-12":

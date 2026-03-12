@@ -28,12 +28,31 @@ from statistics import mean, stdev
 from typing import Any
 
 import numpy as np
-from scipy.stats import norm
+from scipy.stats import nbinom, norm, poisson
 
 logger = logging.getLogger(__name__)
 
 # Keep production defaults aligned with the scanner and validation entrypoints.
 CANONICAL_SEASON = "2025-26"
+
+# Exponential decay factor: weight[i] = DECAY_LAMBDA ** i (index 0 = most recent)
+DECAY_LAMBDA: float = 0.85
+
+# Days-rest multipliers applied to projection before CDF
+_REST_MULTIPLIER: dict[int, float] = {
+    0: 0.94,   # back-to-back
+    1: 0.97,
+    2: 1.00,   # neutral
+}
+_REST_DEFAULT: float = 1.02   # 3+ days rest
+
+# Rebound volatility dampening: single-game rebounds have ~40-50% CoV,
+# and exponential-decay averages overweight outlier games.
+_REB_DAMP: float = 0.90
+
+# Markets that use Poisson CDF vs Negative Binomial CDF
+_POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals", "player_threes"}
+_NEGBIN_MARKETS  = {"player_points", "player_rebounds"}
 
 _MARKET_COL: dict[str, str] = {
     "player_points":   "PTS",
@@ -60,11 +79,24 @@ _LEAGUE_AVGS: dict[str, float] = {
 # e.g. 0.15 = cap at 15% up or down from raw projection
 _OPP_ADJ_CAP: dict[str, float] = {
     "player_points":   0.15,
-    "player_rebounds": 0.15,
+    "player_rebounds": 0.10,  # tightened from 0.15 — OPP-04
     "player_assists":  0.12,
     "player_threes":   0.12,
     "player_steals":   0.10,
     "player_blocks":   0.10,
+}
+
+_LEAGUE_AVG_DREB_PG: float = 34.0
+_LEAGUE_AVG_PACE: float = 100.0
+
+# OPP-02: Position-level scaling for opponent adjustments.
+# Bigs are more affected by opponent defensive strength than guards.
+_POSITION_OPP_WEIGHT: dict[str, float] = {
+    "C":  1.00,
+    "PF": 0.85,
+    "SF": 0.65,
+    "SG": 0.45,
+    "PG": 0.40,
 }
 
 
@@ -88,20 +120,20 @@ class PropModel:
         line: float,
         opponent_team: str,
         over_odds: int = -110,
+        location: str = "all",
+        position: str = "",
+        team_win_prob: float = 0.50,
     ) -> dict | None:
         """
         Predict P(player > line) for the given market.
 
-        Returns:
-            {
-                "player": str, "market": str, "line": float,
-                "proj_stat": float, "std_stat": float,
-                "model_prob": float,   # P(over)
-                "games_used": int,
-                "source": "nba_api",
-                "confidence": "HIGH" | "MEDIUM" | "LOW",
-            }
-        Or None if insufficient data.
+        Parameters:
+            location: "home", "away", or "all" — filters game logs to matching
+                      venue before computing the projection.
+            position: Player position (C, PF, SF, SG, PG) for OPP-02
+                      position-level opponent scaling.
+
+        Returns dict with model_prob or None if insufficient data.
         """
         col = self._market_col(market)
         if col is None:
@@ -112,7 +144,6 @@ class PropModel:
         if logs is None:
             return None
 
-        # Filter to games with ≥ MIN_MINUTES played
         qualifying = [g for g in logs if g.get("MIN_float", 0) >= _MIN_MINUTES]
         if len(qualifying) < _MIN_GAMES:
             logger.debug(
@@ -121,21 +152,56 @@ class PropModel:
             )
             return None
 
+        # ALGO-02: Home/Away location split
+        if location in ("home", "away"):
+            filtered = self._filter_by_location(qualifying, location)
+            if len(filtered) >= _MIN_GAMES:
+                qualifying = filtered
+
         values = [g[col] for g in qualifying if col in g]
         if len(values) < _MIN_GAMES:
             return None
 
         proj_stat = self._weighted_avg(values)
-        std_stat = max(1.0, stdev(values[:20]) if len(values[:20]) >= 2 else 1.0)
+        var_stat = max(1.0, stdev(values[:20]) ** 2 if len(values[:20]) >= 2 else 1.0)
+        std_stat = max(1.0, var_stat ** 0.5)
 
-        # Opponent adjustment — all markets scaled by opponent defensive profile
-        opp_adj = self._apply_opp_adjustment_for_market(proj_stat, opponent_team, market)
+        # ALGO-04: Days-rest multiplier
+        rest_mult = self._rest_multiplier(qualifying)
+        proj_stat *= rest_mult
 
-        p_over = float(1 - norm.cdf(line, loc=opp_adj, scale=std_stat))
+        # Rebound volatility dampening
+        if market == "player_rebounds":
+            proj_stat *= _REB_DAMP
+
+        # OPP-03: Compute pace ratio for rebounds
+        pace_ratio = self._compute_pace_ratio(opponent_team) if market == "player_rebounds" else 1.0
+
+        # Opponent adjustment (OPP-02: position-level scaling)
+        opp_adj = self._apply_opp_adjustment_for_market(
+            proj_stat, opponent_team, market, pace_ratio=pace_ratio,
+            position=position,
+        )
+
+        # ALGO-03: Appropriate CDF per market
+        p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat)
         p_over = float(np.clip(p_over, 0.01, 0.99))
 
         market_implied = self._american_to_implied(over_odds)
         confidence = self._classify_confidence(p_over, market_implied)
+
+        # CONF-01: Blowout gate — downgrade when player's team is a heavy underdog
+        if team_win_prob < 0.30 and confidence == "HIGH":
+            confidence = "MEDIUM"
+
+        # CONF-02: Low-line skepticism — suspiciously easy lines are traps
+        if p_over > 0.85 and line < opp_adj - 1.5 * std_stat:
+            if confidence == "HIGH":
+                confidence = "MEDIUM"
+
+        # CONF-03: 60% confidence floor
+        if p_over < 0.60:
+            confidence = "LOW"
 
         recent_trade = False
         if self._stats_cache:
@@ -159,6 +225,8 @@ class PropModel:
             "source": "nba_api",
             "confidence": confidence,
             "recent_trade": recent_trade,
+            "rest_multiplier": rest_mult,
+            "location_filter": location,
         }
 
     # ------------------------------------------------------------------
@@ -168,55 +236,86 @@ class PropModel:
     def _market_col(self, market: str) -> str | None:
         return _MARKET_COL.get(market)
 
-    def _weighted_avg(self, values: list[float]) -> float:
-        """
-        Weighted rolling average:
-          0.5 × avg(last 5) + 0.3 × avg(last 10) + 0.2 × avg(last 20)
-        Falls back gracefully if fewer values are available.
-        """
-        def safe_mean(v: list[float]) -> float:
-            return mean(v) if v else 0.0
-
-        last5  = values[:5]
-        last10 = values[:10]
-        last20 = values[:20]
-
-        w5  = 0.5 if len(last5)  >= 1 else 0.0
-        w10 = 0.3 if len(last10) >= 1 else 0.0
-        w20 = 0.2 if len(last20) >= 1 else 0.0
-
-        total_weight = w5 + w10 + w20
-        if total_weight == 0:
+    @staticmethod
+    def _weighted_avg(values: list[float]) -> float:
+        """Exponential-decay weighted average: weight[i] = DECAY_LAMBDA ** i."""
+        if not values:
             return 0.0
+        total_w = 0.0
+        total_v = 0.0
+        for i, v in enumerate(values):
+            w = DECAY_LAMBDA ** i
+            total_w += w
+            total_v += v * w
+        return total_v / total_w if total_w > 0 else 0.0
 
-        weighted = (
-            w5  * safe_mean(last5) +
-            w10 * safe_mean(last10) +
-            w20 * safe_mean(last20)
-        ) / total_weight
+    @staticmethod
+    def _filter_by_location(games: list[dict], location: str) -> list[dict]:
+        """Filter game logs to home or away games based on MATCHUP field."""
+        result = []
+        for g in games:
+            matchup = str(g.get("MATCHUP", ""))
+            if location == "home" and "vs." in matchup:
+                result.append(g)
+            elif location == "away" and "@" in matchup:
+                result.append(g)
+        return result
 
-        return weighted
+    @staticmethod
+    def _rest_multiplier(qualifying: list[dict]) -> float:
+        """Derive days-rest multiplier from most recent game date vs today."""
+        if not qualifying:
+            return 1.0
+        try:
+            most_recent_str = str(qualifying[0].get("GAME_DATE", ""))[:10]
+            if not most_recent_str:
+                return 1.0
+            from datetime import datetime
+            most_recent = datetime.strptime(most_recent_str, "%Y-%m-%d").date()
+            rest_days = (date.today() - most_recent).days - 1
+            if rest_days < 0:
+                rest_days = 2
+            mult = _REST_MULTIPLIER.get(rest_days, _REST_DEFAULT)
+            logger.debug("Rest days=%d, multiplier=%.2f", rest_days, mult)
+            return mult
+        except Exception:
+            return 1.0
+
+    @staticmethod
+    def _compute_p_over(
+        market: str, line: float, projection: float, std: float, var: float
+    ) -> float:
+        """Select appropriate CDF based on market type."""
+        if market in _POISSON_MARKETS:
+            return float(1 - poisson.cdf(line, mu=projection))
+        if market in _NEGBIN_MARKETS:
+            mean_ = projection
+            if var > mean_ and mean_ > 0:
+                r = mean_ ** 2 / max(1e-9, var - mean_)
+                p = mean_ / max(1e-9, var)
+                if r > 0:
+                    return float(1 - nbinom.cdf(int(line), r, p))
+            return float(1 - norm.cdf(line, loc=projection, scale=std))
+        return float(1 - norm.cdf(line, loc=projection, scale=std))
 
     def _apply_opp_adjustment_for_market(
-        self, proj: float, opponent_team: str, market: str
+        self, proj: float, opponent_team: str, market: str,
+        player_team: str = "", pace_ratio: float = 1.0,
+        position: str = "",
     ) -> float:
         """
-        Scale a player's projected stat by opponent defensive quality for that market.
+        Scale a player's projected stat by opponent defensive quality.
 
-        Points   → opponent DEF_RTG  (higher = worse defense = more points allowed)
-        Rebounds → opponent REB/game (higher = more boards grabbed = fewer for us)
-        Assists  → opponent STL/game (higher = more disruption = fewer assists)
-        Threes   → opponent FG3M allowed/game (higher = allows more 3s = easier)
-        Steals   → opponent AST/game (more ball movement = more steal opportunities)
-        Blocks   → opponent FG2A/game (more paint attempts = more block opportunities)
-
-        All adjustments are capped per _OPP_ADJ_CAP to avoid extreme swings.
-        Returns proj unchanged for unknown markets or missing data.
+        OPP-01: Rebounds use opponent DREB_pg (defensive rebounds allowed).
+                High DREB_pg → strong def rebounder → REDUCE player projection.
+        OPP-02: Position-level scaling — bigs get full opponent adjustment,
+                guards get partial (opponent defense affects bigs more).
+        OPP-03: Pace ratio applied to rebounds before opponent adjustment.
+        OPP-04: Rebound cap tightened to ±10%.
         """
         cap = _OPP_ADJ_CAP.get(market, 0.10)
         lo, hi = 1.0 - cap, 1.0 + cap
 
-        # Points: use existing DEF_RTG path
         if market == "player_points":
             def_rtgs = self._fetch_def_ratings()
             opp_def_rtg = def_rtgs.get(opponent_team) if def_rtgs else None
@@ -225,46 +324,61 @@ class PropModel:
                 return proj * scale
             return proj
 
-        # All other markets: pull from the unified team stats cache
         ts = self._fetch_team_per_game_stats()
         opp = ts.get(opponent_team) if ts else None
         if not opp:
             return proj
 
         if market == "player_rebounds":
-            # High-rebounding opponent → leaves fewer boards → scale down
-            league_avg = _LEAGUE_AVGS["reb_pg"]
-            opp_val = opp.get("reb_pg", league_avg)
-            scale = max(lo, min(hi, league_avg / opp_val)) if opp_val > 0 else 1.0
+            # OPP-03: Apply pace ratio first
+            proj = proj * pace_ratio
+
+            # OPP-01: Use opponent DREB_pg with correct direction
+            # High DREB_pg = strong defensive rebounder = REDUCE projection
+            opp_dreb = opp.get("dreb_pg", _LEAGUE_AVG_DREB_PG)
+            scale = max(lo, min(hi, _LEAGUE_AVG_DREB_PG / opp_dreb)) if opp_dreb > 0 else 1.0
+            logger.debug("Reb opp adj: opp_dreb=%.1f, league_avg=%.1f, scale=%.3f",
+                         opp_dreb, _LEAGUE_AVG_DREB_PG, scale)
 
         elif market == "player_assists":
-            # High-steal opponent → disrupts passing lanes → scale down
             league_avg = _LEAGUE_AVGS["stl_pg"]
             opp_val = opp.get("stl_pg", league_avg)
             scale = max(lo, min(hi, league_avg / opp_val)) if opp_val > 0 else 1.0
 
         elif market == "player_threes":
-            # Opponent allows many 3s → easier to hit → scale up (and vice versa)
             league_avg = _LEAGUE_AVGS["fg3m_pg"]
             opp_val = opp.get("opp_fg3m_pg", league_avg)
             scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
 
         elif market == "player_steals":
-            # Opponent with high AST → more ball movement → more steal chances → scale up
             league_avg = _LEAGUE_AVGS["ast_pg"]
             opp_val = opp.get("ast_pg", league_avg)
             scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
 
         elif market == "player_blocks":
-            # Opponent with more paint attempts → more block chances → scale up
-            league_avg = 84.0  # approx FGA/game league avg
+            league_avg = 84.0
             opp_val = opp.get("fga_pg", league_avg)
             scale = max(lo, min(hi, opp_val / league_avg)) if opp_val > 0 else 1.0
 
         else:
             return proj
 
+        # OPP-02: Dampen the adjustment toward 1.0 for non-big positions
+        pos_weight = _POSITION_OPP_WEIGHT.get(position.upper(), 0.70) if position else 1.0
+        scale = 1.0 + (scale - 1.0) * pos_weight
+
         return proj * scale
+
+    def _compute_pace_ratio(self, opponent_team: str) -> float:
+        """OPP-03: Pace ratio = matchup_avg_pace / league_avg_pace."""
+        ts = self._fetch_team_per_game_stats()
+        opp = ts.get(opponent_team) if ts else None
+        if not opp or "pace" not in opp:
+            return 1.0
+        opp_pace = opp["pace"]
+        if opp_pace <= 0:
+            return 1.0
+        return opp_pace / _LEAGUE_AVG_PACE
 
     def _classify_confidence(self, model_prob: float, market_implied: float) -> str:
         gap = abs(model_prob - market_implied)
@@ -392,6 +506,7 @@ class PropModel:
 
                 result[name] = {
                     "reb_pg":  _pg("REB"),
+                    "dreb_pg": _pg("DREB"),
                     "ast_pg":  _pg("AST"),
                     "stl_pg":  _pg("STL"),
                     "blk_pg":  _pg("BLK"),
@@ -417,6 +532,24 @@ class PropModel:
                     entry["def_rtg"] = float(def_rtg)
                 if opp_fg3m is not None and gp > 0:
                     entry["opp_fg3m_pg"] = float(opp_fg3m) / gp
+
+            # ── Pass 3: Advanced stats (PACE) ──
+            try:
+                time.sleep(_NBA_API_SLEEP)
+                adv_df = LeagueDashTeamStats(
+                    season=self._season,
+                    measure_type_detailed_defense="Advanced",
+                ).get_data_frames()[0]
+                for _, row in adv_df.iterrows():
+                    name = row.get("TEAM_NAME", "")
+                    if not name:
+                        continue
+                    entry = result.setdefault(name, {})
+                    pace = row.get("PACE")
+                    if pace is not None:
+                        entry["pace"] = float(pace)
+            except Exception:
+                pass
 
         except Exception as exc:
             logger.warning("nba_api team stats fetch failed: %s", exc)
