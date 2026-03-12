@@ -254,6 +254,19 @@ class NBAModel:
                     else:
                         away_adj += delta
 
+        # Head-to-head history nudge
+        if self._stats_cache:
+            h2h_weight = 0.15
+            try:
+                h2h = self._stats_cache.fetch_head_to_head(home_team, away_team)
+                if h2h and h2h["total_games"] >= 4:
+                    h2h_delta = (h2h["home_win_pct_h2h"] - 0.5) * h2h_weight
+                    h2h_delta = max(-0.03, min(0.03, h2h_delta))
+                    home_adj += h2h_delta
+                    away_adj -= h2h_delta
+            except Exception as exc:
+                logger.debug("H2H adjustment failed: %s", exc)
+
         # Apply and re-normalize
         home_prob = max(0.05, min(0.95, home_prob + home_adj))
         away_prob = max(0.05, min(0.95, away_prob + away_adj))

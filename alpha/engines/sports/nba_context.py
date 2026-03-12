@@ -684,15 +684,26 @@ class PropContextEvaluator:
         self.foul_trouble = FoulTroubleRiskEvaluator(cache=cache, season=season)
         self.opp_stats = AdvancedOpponentStats(cache=cache, season=season)
 
-    def evaluate_props(self, props: list[dict]) -> list[dict]:
+    def evaluate_props(self, props: list[dict], wall_timeout: float = 60.0) -> list[dict]:
         """
         Takes a list of candidate prop dicts with keys:
             player, market, line, model_prob, over_odds, opponent_team, event_id,
             home_team, away_team, confidence
-        Returns list with added keys: adjusted_prob, ev, flags
+        Returns list with added keys: adjusted_prob, ev, flags.
+        Falls back to unmodified props if wall_timeout is exceeded.
         """
+        import time as _time
+        start = _time.monotonic()
         results = []
         for prop in props:
+            if _time.monotonic() - start > wall_timeout:
+                logger.warning(
+                    "PropContextEvaluator exceeded %.0fs wall timeout after %d/%d props — "
+                    "returning remaining props unmodified",
+                    wall_timeout, len(results), len(props),
+                )
+                results.extend(props[len(results):])
+                return results
             result = self.evaluate_single(prop)
             if result is not None:
                 results.append(result)

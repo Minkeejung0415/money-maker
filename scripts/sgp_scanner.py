@@ -63,16 +63,19 @@ Modes:
   ml_sgp   -- Moneyline + player props (same game)
   mixed    -- Any combination of ML and props (same game)
   parlay   -- Classic multi-game moneyline parlay (independent legs)
+  ml       -- List all moneylines with model vs market edge
 
 Examples:
   python scripts/sgp_scanner.py --mode parlay
+  python scripts/sgp_scanner.py --mode ml
   python scripts/sgp_scanner.py --mode props --no-corr --min-edge 0.03
   python scripts/sgp_scanner.py --mode props --validate
+  python scripts/sgp_scanner.py --mode parlay --favorites-only
         """,
     )
     parser.add_argument(
         "--mode",
-        choices=["props", "ml_sgp", "mixed", "parlay"],
+        choices=["props", "ml_sgp", "mixed", "parlay", "ml"],
         default="props",
         help="Parlay mode (default: props)",
     )
@@ -119,12 +122,79 @@ Examples:
         "--show-ev", action="store_true",
         help="Show detailed EV analysis and bet type recommendations per game",
     )
+    parser.add_argument(
+        "--min-prob", type=float, default=0.60,
+        help="Minimum model probability for a prop leg (default: 0.60)",
+    )
+    parser.add_argument(
+        "--favorites-only", action="store_true",
+        help="In parlay mode, only include games where at least one side has model_prob >= 0.45",
+    )
     return parser.parse_args()
 
 
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
+
+def _run_ml_mode(args, games, nba_model) -> None:
+    """--mode ml: list all moneylines with model vs market edge."""
+    from alpha.engines.sports.ev_calculator import EVCalculator
+    from alpha.engines.sports.kelly import KellySizer
+
+    ev_calc = EVCalculator(min_edge=0.0)
+    kelly = KellySizer(kelly_fraction=0.25, max_stake_pct=0.05)
+
+    print(f"\n{'='*65}")
+    print("MONEYLINE SCANNER — All Games")
+    print(f"{'='*65}")
+
+    value_sides: list[dict] = []
+
+    for game in games:
+        home = game.get("home_team", "")
+        away = game.get("away_team", "")
+        home_odds = game.get("home_odds", -110)
+        away_odds = game.get("away_odds", -110)
+        home_dec = ev_calc.american_to_decimal(home_odds)
+        away_dec = ev_calc.american_to_decimal(away_odds)
+        home_mp = game.get("home_model_prob", ev_calc.implied_prob(home_dec))
+        away_mp = game.get("away_model_prob", ev_calc.implied_prob(away_dec))
+        home_mkt = ev_calc.implied_prob(home_dec)
+        away_mkt = ev_calc.implied_prob(away_dec)
+
+        home_edge = home_mp - home_mkt
+        away_edge = away_mp - away_mkt
+        home_ev100 = ev_calc.expected_value(home_mp, home_dec) * 100
+        away_ev100 = ev_calc.expected_value(away_mp, away_dec) * 100
+        home_kelly = kelly.kelly_fraction(home_mp, home_dec) * 0.25
+        away_kelly = kelly.kelly_fraction(away_mp, away_dec) * 0.25
+
+        print(f"\n{home} vs {away}")
+        for team, mp, mkt, edge, ev100, kf, is_value in [
+            (home, home_mp, home_mkt, home_edge, home_ev100, home_kelly, home_edge > 0.04),
+            (away, away_mp, away_mkt, away_edge, away_ev100, away_kelly, away_edge > 0.04),
+        ]:
+            tag = " <- VALUE" if is_value else (" <- SKIP" if edge < 0 else "")
+            print(f"  {team:30s}  model {mp:.1%}  |  market {mkt:.1%}  |  "
+                  f"edge {edge:+.1%}  |  EV/100: ${ev100:+.2f}  |  "
+                  f"Kelly: {kf:.1%}{tag}")
+            if is_value:
+                value_sides.append({"team": team, "edge": edge, "ev100": ev100, "mp": mp})
+
+    if value_sides:
+        value_sides.sort(key=lambda x: x["edge"], reverse=True)
+        print(f"\n{'='*65}")
+        print("TOP VALUE ML BETS (edge > 4%)")
+        print(f"{'='*65}")
+        for i, v in enumerate(value_sides[:5], 1):
+            print(f"  {i}. {v['team']:30s}  edge {v['edge']:+.1%}  |  "
+                  f"EV/100: ${v['ev100']:+.2f}  |  model: {v['mp']:.1%}")
+    else:
+        print("\n  No moneyline value found today (no side with > 4% edge).")
+
+    print()
+
 
 def main() -> None:
     args = _parse_args()
@@ -144,7 +214,6 @@ def main() -> None:
         "mixed":  SGPMode.MIXED_SGP,
         "parlay": SGPMode.CLASSIC_PARLAY,
     }
-    sgp_mode = mode_map[args.mode]
 
     # ── Step 1: Fetch games ──────────────────────────────────────────────
     print("[1/6] Fetching today's NBA games...")
@@ -167,6 +236,23 @@ def main() -> None:
         pred = nba_model.predict(game)
         game["home_model_prob"] = pred["home_win_prob"]
         game["away_model_prob"] = pred["away_win_prob"]
+
+    # ── ML-only mode: skip all prop logic ────────────────────────────────
+    if args.mode == "ml":
+        _run_ml_mode(args, games, nba_model)
+        return
+
+    sgp_mode = mode_map[args.mode]
+
+    # ── Feature 4: --favorites-only filter ───────────────────────────────
+    if args.favorites_only and sgp_mode == SGPMode.CLASSIC_PARLAY:
+        pre = len(games)
+        games = [
+            g for g in games
+            if g.get("home_model_prob", 0) >= 0.45
+            or g.get("away_model_prob", 0) >= 0.45
+        ]
+        print(f"    --favorites-only: kept {len(games)}/{pre} games with >= 45% model prob side")
 
     # ── Step 2: Fetch props (skip for classic parlay) ────────────────────
     prop_legs_raw: list[dict] = []
@@ -197,7 +283,6 @@ def main() -> None:
                 seen_players.add(player)
                 done += 1
                 print(f"\r    Fetching: {done}/{unique_players} players ({player[:30]})    ", end="", flush=True)
-            # Determine opponent team
             opponent = raw.get("away_team", "")
             result = model.predict_prop(
                 player_name=raw["player"],
@@ -228,9 +313,18 @@ def main() -> None:
                 home_team=raw["home_team"],
                 away_team=raw["away_team"],
                 confidence=conf,
+                player_team=raw.get("home_team", ""),
             ))
 
         print()  # newline after progress
+
+        # Feature 2: min-prob confidence floor
+        pre_filter = len(scored_legs)
+        scored_legs = [leg for leg in scored_legs if leg.model_prob >= args.min_prob]
+        dropped = pre_filter - len(scored_legs)
+        if dropped > 0:
+            print(f"    Min-prob filter ({args.min_prob:.0%}): dropped {dropped} weak legs")
+
         print(f"    Scored {len(scored_legs)} legs  "
               f"({skipped_insufficient} skipped: insufficient data, "
               f"{skipped_low_conf} skipped: low confidence)")
@@ -243,6 +337,8 @@ def main() -> None:
     if not args.no_context and sgp_mode != SGPMode.CLASSIC_PARLAY and scored_legs:
         print("[4/8] Running contextual evaluators (position, paint, foul trouble, pace)...")
         try:
+            import threading as _threading
+
             from alpha.data.ingestion.nba_stats_cache import NBAStatsCache
             from alpha.engines.sports.nba_context import PropContextEvaluator
 
@@ -265,28 +361,48 @@ def main() -> None:
                     "confidence": leg.confidence,
                 })
 
-            context_scored = context_evaluator.evaluate_props(prop_dicts)
+            result_box: list = []
+            exc_box: list = []
 
-            # Update scored_legs with adjusted probabilities
-            adjusted_legs = []
-            for cs in context_scored:
-                if cs.get("edge", 0) >= args.min_edge:
-                    adjusted_legs.append(PropLeg(
-                        player=cs["player"],
-                        market=cs["market"],
-                        line=cs["line"],
-                        model_prob=cs.get("adjusted_prob", cs["model_prob"]),
-                        over_odds=cs["over_odds"],
-                        event_id=cs["event_id"],
-                        home_team=cs["home_team"],
-                        away_team=cs["away_team"],
-                        confidence=cs["confidence"],
-                    ))
+            def _run_ctx():
+                try:
+                    result_box.append(context_evaluator.evaluate_props(prop_dicts, wall_timeout=60))
+                except Exception as e:
+                    exc_box.append(e)
 
-            filtered_count = pre_count - len(adjusted_legs)
-            scored_legs = adjusted_legs if adjusted_legs else scored_legs
-            print(f"    Context adjustments applied — {len(scored_legs)} legs remain "
-                  f"({filtered_count} filtered/below edge)")
+            ctx_thread = _threading.Thread(target=_run_ctx, daemon=True)
+            ctx_thread.start()
+            ctx_thread.join(timeout=90)
+
+            if ctx_thread.is_alive():
+                print("    Context evaluators timed out (90s) — falling back to no-context")
+                context_scored = []
+            elif exc_box:
+                raise exc_box[0]
+            else:
+                context_scored = result_box[0] if result_box else []
+
+            if context_scored:
+                adjusted_legs = []
+                for cs in context_scored:
+                    if cs.get("edge", 0) >= args.min_edge:
+                        adjusted_legs.append(PropLeg(
+                            player=cs["player"],
+                            market=cs["market"],
+                            line=cs["line"],
+                            model_prob=cs.get("adjusted_prob", cs["model_prob"]),
+                            over_odds=cs["over_odds"],
+                            event_id=cs["event_id"],
+                            home_team=cs["home_team"],
+                            away_team=cs["away_team"],
+                            confidence=cs["confidence"],
+                            player_team=cs.get("home_team", ""),
+                        ))
+
+                filtered_count = pre_count - len(adjusted_legs)
+                scored_legs = adjusted_legs if adjusted_legs else scored_legs
+                print(f"    Context adjustments applied — {len(scored_legs)} legs remain "
+                      f"({filtered_count} filtered/below edge)")
         except Exception as exc:
             print(f"    Context evaluators skipped: {exc}")
     else:

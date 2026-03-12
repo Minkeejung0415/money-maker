@@ -375,6 +375,42 @@ class TestCategoryDiversityCap:
 # ---------------------------------------------------------------------------
 
 
+class TestKellyCap:
+    """Feature 3: Kelly display cap at 5%."""
+
+    def test_kelly_cap_at_5pct(self):
+        """Displayed Kelly never exceeds 5% even with very high model prob."""
+        pick = PickOutput(
+            player="Super Star",
+            description="Over 30.5 pts",
+            model_confidence=0.99,
+            implied_odds_prob=0.52,
+            edge=0.47,
+            ev_per_100=90.0,
+            kelly_pct=0.235,    # 23.5% raw Kelly — huge
+            kelly_stake=2350.0,
+        )
+        text = pick.format(bankroll=10_000.0)
+        assert "5.0% of bankroll" in text
+        assert "capped from 23.5%" in text
+        assert "23.5% of bankroll" not in text
+
+    def test_kelly_no_cap_when_below_5pct(self):
+        pick = PickOutput(
+            player="Normal Player",
+            description="Over 20.5 pts",
+            model_confidence=0.60,
+            implied_odds_prob=0.52,
+            edge=0.08,
+            ev_per_100=5.0,
+            kelly_pct=0.03,
+            kelly_stake=300.0,
+        )
+        text = pick.format(bankroll=10_000.0)
+        assert "3.0% of bankroll" in text
+        assert "capped" not in text
+
+
 class TestNBAStatsCache:
     def test_cache_creation(self, tmp_path):
         from alpha.data.ingestion.nba_stats_cache import NBAStatsCache

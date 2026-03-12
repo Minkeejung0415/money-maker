@@ -10,6 +10,7 @@ import hashlib
 import json
 import logging
 import sqlite3
+import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -19,7 +20,30 @@ logger = logging.getLogger(__name__)
 
 _CACHE_DB = Path("data/.nba_api_cache.sqlite")
 _CACHE_TTL_HOURS = 6
+_CACHE_TTL_H2H_HOURS = 24
 _API_SLEEP: float = 0.5
+_API_TIMEOUT: int = 10
+
+
+def _call_with_timeout(fn, timeout: int = _API_TIMEOUT) -> Any:
+    """Run *fn()* in a thread with a wall-clock timeout. Raises TimeoutError on expiry."""
+    result_box: list[Any] = []
+    exc_box: list[Exception] = []
+
+    def _worker():
+        try:
+            result_box.append(fn())
+        except Exception as e:
+            exc_box.append(e)
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    t.join(timeout=timeout)
+    if t.is_alive():
+        raise TimeoutError(f"nba_api call timed out after {timeout}s")
+    if exc_box:
+        raise exc_box[0]
+    return result_box[0]
 
 
 def _ensure_db(conn: sqlite3.Connection) -> None:
@@ -61,6 +85,7 @@ class NBAStatsCache:
         """
         Check cache first; if miss or stale, call fetch_fn() with rate-limit sleep.
         fetch_fn should return a JSON-serializable object (list/dict).
+        Uses a 10-second thread-based timeout on the fetch call.
         """
         key = _cache_key(endpoint, params)
 
@@ -73,7 +98,7 @@ class NBAStatsCache:
 
         time.sleep(_API_SLEEP)
         try:
-            result = fetch_fn()
+            result = _call_with_timeout(fetch_fn, timeout=10)
         except Exception as exc:
             logger.warning("nba_api call failed (%s): %s", endpoint, exc)
             if row:
@@ -283,6 +308,94 @@ class NBAStatsCache:
                     return int(row["TEAM_ID"])
             return None
         except Exception:
+            return None
+
+    def fetch_head_to_head(
+        self,
+        home_team: str,
+        away_team: str,
+        seasons: tuple[str, ...] = ("2024-25", "2023-24"),
+    ) -> dict | None:
+        """
+        Return H2H record between two teams over recent seasons.
+        Returns None if fewer than 4 games found.
+        Cached with 24-hour TTL (H2H doesn't change intraday).
+        """
+        home_id = self._resolve_team_id(home_team, seasons[0])
+        away_id = self._resolve_team_id(away_team, seasons[0])
+        if home_id is None or away_id is None:
+            return None
+
+        home_wins = 0
+        away_wins = 0
+
+        for season in seasons:
+            try:
+                def _fetch_home(tid=home_id, s=season):
+                    from nba_api.stats.endpoints.teamgamelog import TeamGameLog
+                    gl = TeamGameLog(team_id=tid, season=s)
+                    df = gl.get_data_frames()[0]
+                    return df.to_dict(orient="records")
+
+                home_logs = self.get_or_fetch(
+                    "TeamGameLog_h2h",
+                    {"team_id": home_id, "season": season},
+                    _fetch_home,
+                )
+
+                for g in home_logs:
+                    matchup = str(g.get("MATCHUP", ""))
+                    opp_in_matchup = away_team.split()[-1].lower()
+                    if opp_in_matchup not in matchup.lower():
+                        continue
+                    if str(g.get("WL", "")).upper() == "W":
+                        home_wins += 1
+                    else:
+                        away_wins += 1
+            except Exception as exc:
+                logger.debug("H2H fetch failed for season %s: %s", season, exc)
+
+        total = home_wins + away_wins
+        if total < 4:
+            return None
+
+        return {
+            "home_wins": home_wins,
+            "away_wins": away_wins,
+            "total_games": total,
+            "home_win_pct_h2h": home_wins / total,
+        }
+
+    def fetch_player_team_game_count(
+        self, player_name: str, season: str = "2024-25"
+    ) -> dict | None:
+        """
+        Return how many games a player has played for their current team vs total.
+        Used to detect recently traded players.
+        """
+        player_id = self.resolve_player_id(player_name)
+        if player_id is None:
+            return None
+
+        try:
+            logs = self.fetch_player_game_logs(player_id, season)
+            if not logs:
+                return None
+
+            info = self.fetch_player_info(player_id)
+            current_team_abbr = info.get("team_abbreviation", "")
+            if not current_team_abbr:
+                return None
+
+            total = len(logs)
+            current = sum(
+                1 for g in logs
+                if current_team_abbr in str(g.get("MATCHUP", ""))
+            )
+
+            return {"current_team_games": current, "total_games": total}
+        except Exception as exc:
+            logger.debug("Player team game count failed for %s: %s", player_name, exc)
             return None
 
     def clear_stale(self) -> int:

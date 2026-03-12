@@ -28,6 +28,7 @@ def _make_leg(
     home_team: str = "Los Angeles Lakers",
     away_team: str = "Boston Celtics",
     confidence: str = "HIGH",
+    player_team: str = "",
 ) -> PropLeg:
     return PropLeg(
         player=player,
@@ -39,6 +40,7 @@ def _make_leg(
         home_team=home_team,
         away_team=away_team,
         confidence=confidence,
+        player_team=player_team,
     )
 
 
@@ -159,8 +161,10 @@ def test_classic_parlay_uses_product_not_corr(builder):
     """Classic parlay: 2 independent games → combined_prob = p1 * p2 (no corr engine)."""
     game1 = _make_ml_game(home_team="Lakers", away_team="Celtics",
                           home_odds=-150, away_odds=+130, event_id="g1")
+    game1["home_model_prob"] = 0.70  # ensure positive EV
     game2 = _make_ml_game(home_team="Warriors", away_team="Nuggets",
                           home_odds=-120, away_odds=+100, event_id="g2")
+    game2["home_model_prob"] = 0.65
 
     result = builder.build([], ml_games=[game1, game2], mode=SGPMode.CLASSIC_PARLAY, top_n=10)
     assert len(result) >= 1
@@ -191,6 +195,7 @@ def test_moneyline_same_team_prop_flags_warning():
         home_team="Los Angeles Lakers",
         away_team="Boston Celtics",
         confidence="HIGH",
+        player_team="Los Angeles Lakers",
     )
     lakers_game = _make_ml_game(
         home_team="Los Angeles Lakers",
@@ -199,6 +204,7 @@ def test_moneyline_same_team_prop_flags_warning():
         away_odds=+130,
         event_id="evt1",
     )
+    lakers_game["home_model_prob"] = 0.70  # ensure positive EV for ML leg
 
     result = builder.build(
         [lebron_leg], ml_games=[lakers_game], mode=SGPMode.MONEYLINE_SGP, top_n=10
@@ -216,3 +222,48 @@ def test_kelly_stake_attached_to_results(builder):
     result = builder.build([leg_a, leg_b], mode=SGPMode.PROPS_ONLY, top_n=5)
     for combo in result:
         assert combo.stake > 0
+
+
+# ---------------------------------------------------------------------------
+# Bug 1: same-player pair in correlation note
+# ---------------------------------------------------------------------------
+
+
+def test_corr_note_same_player_skipped():
+    """Same-player pair (pts + ast) should show 'same player — r=0.65', never 'vs'."""
+    corr = _null_corr()
+    builder = SGPBuilder(correlation_engine=corr, bankroll=10_000, min_edge=0.0, max_legs=4)
+    trae_pts = _make_leg(player="Trae Young", market="player_points", model_prob=0.65,
+                         over_odds=-110, event_id="e1", confidence="HIGH")
+    trae_ast = _make_leg(player="Trae Young", market="player_assists", model_prob=0.62,
+                         over_odds=-110, event_id="e1", confidence="HIGH")
+
+    result = builder.build([trae_pts, trae_ast], mode=SGPMode.PROPS_ONLY, top_n=5)
+    assert len(result) >= 1
+    note = result[0].correlation_note
+    assert "same player" in note
+    assert "r=0.65" in note
+    assert "Trae Young vs Trae Young" not in note
+
+
+# ---------------------------------------------------------------------------
+# Bug 3: negative EV ML leg returns None
+# ---------------------------------------------------------------------------
+
+
+def test_ml_leg_negative_ev_returns_none():
+    """When both sides of a game have negative EV, _best_ml_leg returns None."""
+    builder = SGPBuilder(bankroll=10_000, min_edge=0.0, max_legs=4)
+    # Home: -400 → dec 1.25, implied 80%. Model 78% → EV = 0.78*0.25-0.22 = -0.025
+    # Away: +300 → dec 4.0, implied 25%. Model 22% → EV = 0.22*3.0-0.78 = -0.12
+    game = {
+        "home_team": "Detroit Pistons",
+        "away_team": "Boston Celtics",
+        "home_odds": -400,
+        "away_odds": +300,
+        "event_id": "neg_ev_game",
+        "home_model_prob": 0.78,
+        "away_model_prob": 0.22,
+    }
+    result = builder._best_ml_leg(game)
+    assert result is None

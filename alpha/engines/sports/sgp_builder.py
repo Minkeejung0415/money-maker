@@ -46,6 +46,19 @@ _MARKET_TO_CATEGORY: dict[str, str] = {
     "player_blocks": "blk",
 }
 
+_MARKET_LABELS: dict[str, str] = {
+    "player_points": "pts",
+    "player_rebounds": "reb",
+    "player_assists": "ast",
+    "player_threes": "3pm",
+    "player_steals": "stl",
+    "player_blocks": "blk",
+}
+
+
+def _market_label(market: str) -> str:
+    return _MARKET_LABELS.get(market, market)
+
 
 class SGPMode(Enum):
     PROPS_ONLY     = "props"
@@ -66,6 +79,7 @@ class PropLeg:
     away_team: str
     confidence: str       # "HIGH" / "MEDIUM" / "LOW"
     direction: str = "over"
+    player_team: str = ""
 
 
 @dataclass
@@ -376,9 +390,14 @@ class SGPBuilder:
             team = ml_leg.get("team", "")
             if team:
                 for pl in prop_legs_only:
-                    if pl.home_team == team or pl.away_team == team:
+                    if pl.player_team == team:
                         corr_note_parts.append(
-                            "⚠ ML+player same team: positively correlated, book may price correctly."
+                            "⚠ ML+player same team: positively correlated"
+                        )
+                        break
+                    elif pl.player_team and pl.player_team != team:
+                        corr_note_parts.append(
+                            "⚠ ML+opposing player: negatively correlated if ML team wins big"
                         )
                         break
 
@@ -399,19 +418,21 @@ class SGPBuilder:
         )
 
     def _best_ml_leg(self, game: dict) -> dict | None:
-        """Return the better side (home/away) of a game as an ML dict leg."""
+        """Return the better side (home/away) of a game as an ML dict leg, or None if no positive EV."""
         home_odds = game.get("home_odds", -110)
         away_odds = game.get("away_odds", -110)
         home_dec = _EV_CALC.american_to_decimal(home_odds)
         away_dec = _EV_CALC.american_to_decimal(away_odds)
 
-        # Prefer NBAModel probabilities; fall back to market-implied
         home_prob = game.get("home_model_prob") or _EV_CALC.implied_prob(home_dec)
         away_prob = game.get("away_model_prob") or _EV_CALC.implied_prob(away_dec)
 
-        # Pick the better expected value side
         home_ev = _EV_CALC.expected_value(home_prob, home_dec)
         away_ev = _EV_CALC.expected_value(away_prob, away_dec)
+
+        best_ev = max(home_ev, away_ev)
+        if best_ev <= 0:
+            return None
 
         if home_ev >= away_ev:
             return {
@@ -441,6 +462,12 @@ class SGPBuilder:
         for i in range(len(legs)):
             for j in range(i + 1, len(legs)):
                 la, lb = legs[i], legs[j]
+                if la.player == lb.player:
+                    parts.append(
+                        f"{la.player} ({_market_label(la.market)} + "
+                        f"{_market_label(lb.market)}): same player — r=0.65 (positive)"
+                    )
+                    continue
                 r = self._corr.get_correlation(la.player, la.market, lb.player, lb.market)
                 ct = self._corr.classify(r)
                 parts.append(

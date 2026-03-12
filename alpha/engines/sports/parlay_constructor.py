@@ -35,6 +35,9 @@ class BetRecommendation:
     warnings: list[str] = field(default_factory=list)
 
 
+_KELLY_DISPLAY_CAP = 0.05
+
+
 @dataclass
 class PickOutput:
     """Rich output format for a single prop or ML pick."""
@@ -44,18 +47,25 @@ class PickOutput:
     implied_odds_prob: float
     edge: float
     ev_per_100: float
-    kelly_pct: float
+    kelly_pct: float               # raw (uncapped) Kelly fraction
     kelly_stake: float
     flags: dict = field(default_factory=dict)
 
-    def format(self) -> str:
+    def format(self, bankroll: float = 10_000.0) -> str:
+        display_kelly_pct = min(self.kelly_pct, _KELLY_DISPLAY_CAP)
+        display_kelly_dollars = display_kelly_pct * bankroll
+        cap_note = ""
+        if self.kelly_pct > _KELLY_DISPLAY_CAP:
+            cap_note = f"  [capped from {self.kelly_pct:.1%}]"
+
         lines = [
             f"  {self.player} {self.description}",
             f"    Model confidence:   {self.model_confidence:.1%}",
             f"    Implied odds prob:  {self.implied_odds_prob:.1%}",
             f"    Edge:               {self.edge:+.1%}",
             f"    EV per $100:        ${self.ev_per_100:+.2f}",
-            f"    Kelly stake:        {self.kelly_pct:.1%} of bankroll",
+            f"    Kelly stake:        {display_kelly_pct:.1%} of bankroll "
+            f"(${display_kelly_dollars:.2f}){cap_note}",
         ]
         if self.flags:
             flag_parts = [f"{k}: {v:+.1%}" if isinstance(v, float) else f"{k}: {v}"
@@ -368,17 +378,24 @@ class ParlayConstructor:
             kelly_stake=kelly_dollars,
             flags=prop.get("flags", {}),
         )
-        return pick.format()
+        return pick.format(bankroll=bankroll)
 
     def format_recommendation(self, rec: BetRecommendation) -> str:
         """Format a BetRecommendation for display."""
+        display_kelly_pct = min(rec.kelly_pct, _KELLY_DISPLAY_CAP)
+        display_kelly_dollars = display_kelly_pct * self._bankroll
+        cap_note = ""
+        if rec.kelly_pct > _KELLY_DISPLAY_CAP:
+            cap_note = f"  [capped from {rec.kelly_pct:.1%}]"
+
         lines = [
             f"  [{rec.bet_type.upper()}]",
             f"    Win probability:  {rec.combined_win_prob:.1%}",
             f"    Decimal odds:     {rec.combined_decimal_odds:.2f}x",
             f"    EV per $100:      ${rec.ev_per_100:+.2f}",
             f"    Edge:             {rec.edge:+.1%}",
-            f"    Kelly stake:      {rec.kelly_pct:.1%} of bankroll (${rec.kelly_stake:.2f})",
+            f"    Kelly stake:      {display_kelly_pct:.1%} of bankroll "
+            f"(${display_kelly_dollars:.2f}){cap_note}",
         ]
         for w in rec.warnings:
             lines.append(f"    WARNING: {w}")

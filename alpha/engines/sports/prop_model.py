@@ -47,11 +47,11 @@ _CACHE_DIR: Path = Path("data/.prop_cache")
 
 
 class PropModel:
-    def __init__(self, season: str = "2024-25"):
+    def __init__(self, season: str = "2024-25", stats_cache=None):
         self._season = season
         self._def_rtg_cache: dict[str, float] | None = None
-        # In-memory cache for this run (player_name -> rows)
         self._log_cache: dict[str, list[dict]] = {}
+        self._stats_cache = stats_cache
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
@@ -117,6 +117,17 @@ class PropModel:
         market_implied = self._american_to_implied(over_odds)
         confidence = self._classify_confidence(p_over, market_implied)
 
+        recent_trade = False
+        if self._stats_cache:
+            try:
+                tc = self._stats_cache.fetch_player_team_game_count(player_name, self._season)
+                if tc and tc["current_team_games"] < 10:
+                    recent_trade = True
+                    if confidence == "HIGH":
+                        confidence = "MEDIUM"
+            except Exception:
+                pass
+
         return {
             "player": player_name,
             "market": market,
@@ -127,6 +138,7 @@ class PropModel:
             "games_used": min(len(qualifying), 20),
             "source": "nba_api",
             "confidence": confidence,
+            "recent_trade": recent_trade,
         }
 
     # ------------------------------------------------------------------
