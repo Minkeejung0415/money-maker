@@ -6,10 +6,10 @@ The current prop model produces a 43.5% overall hit rate and a critical 34.2% on
 
 ## Phases
 
-- [ ] **Phase 1: Data Hygiene** - Delete stale cache, verify season, record baseline
-- [ ] **Phase 2: Projection Algorithm** - Exponential decay, home/away split, Poisson/NB distribution, rest factor
-- [ ] **Phase 3: Opponent Adjustments** - Fix rebound direction, position-level stats, pace adjustment, tighten cap
-- [ ] **Phase 4: Confidence Tuning** - Blowout gate, low-line skepticism, 60% floor, final validation
+- [x] **Phase 1: Data Hygiene** - Delete stale cache, verify season, record baseline
+- [x] **Phase 2: Projection Algorithm** - Exponential decay, home/away split, Poisson/NB distribution, rest factor
+- [x] **Phase 3: Opponent Adjustments** - Fix rebound direction, position-level stats, pace adjustment, tighten cap
+- [x] **Phase 4: Confidence Tuning** - Blowout gate, low-line skepticism, 60% floor, final validation
 
 ## Phase Details
 
@@ -63,7 +63,18 @@ The current prop model produces a 43.5% overall hit rate and a critical 34.2% on
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Hygiene | 0/TBD | Not started | - |
-| 2. Projection Algorithm | 0/TBD | Not started | - |
-| 3. Opponent Adjustments | 0/TBD | Not started | - |
-| 4. Confidence Tuning | 0/TBD | Not started | - |
+| 1. Data Hygiene | 3/3 | ✅ Complete | 2026-03-12 |
+| 2. Projection Algorithm | 4/4 | ✅ Complete | 2026-03-12 |
+| 3. Opponent Adjustments | 4/4 | ✅ Complete | 2026-03-12 |
+| 4. Confidence Tuning | 3/3 | ✅ Complete | 2026-03-12 |
+
+## Final Results
+| Stat    | Baseline | Final  | Delta   |
+|---------|----------|--------|---------|
+| pts     | 49.3%    | 52.1%  | +2.8%   |
+| reb     | 34.2%    | 45.2%  | +11.0%  |
+| ast     | 49.3%    | 50.7%  | +1.4%   |
+| 3pm     | 41.1%    | 46.6%  | +5.5%   |
+| overall | 43.5%    | 48.6%  | +5.1%   |
+
+Tests: 493/493 passing.

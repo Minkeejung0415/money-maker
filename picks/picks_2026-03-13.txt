@@ -1,0 +1,268 @@
+================================================================
+ALPHA TERMINAL — ALL PICKS  |  2026-03-13
+================================================================
+Games: 8  |  Prop lines scored: 232
+NOTE: AST legs marked [!] — model hit rate 41% (below random), bet at own risk
+================================================================
+
+MONEYLINES
+──────────────────────────────────────────────────────────────
+  Team                            Model%  Side   ML Odds  vs
+──────────────────────────────────────────────────────────────
+  Detroit Pistons                  90.3%  home     -1350  vs Memphis Grizzlies
+  New York Knicks                  88.4%  away      -950  vs Indiana Pacers
+  Portland Trail Blazers           87.3%  home     -1200  vs Utah Jazz
+  Los Angeles Clippers             82.3%  home      -670  vs Chicago Bulls
+  Cleveland Cavaliers              71.5%  away      -700  vs Dallas Mavericks
+  Houston Rockets                  70.5%  home      -260  vs New Orleans Pelicans
+  Toronto Raptors                  52.0%  home      -176  vs Phoenix Suns
+  Golden State Warriors            50.9%  home      +180  vs Minnesota Timberwolves
+  Minnesota Timberwolves           49.1%  away      -220  vs Golden State Warriors
+  Phoenix Suns                     48.0%  away      +148  vs Toronto Raptors
+  New Orleans Pelicans             29.4%  away      +215  vs Houston Rockets
+  Dallas Mavericks                 28.5%  home      +490  vs Cleveland Cavaliers
+  Chicago Bulls                    17.7%  away      +490  vs Los Angeles Clippers
+  Utah Jazz                        12.7%  away      +750  vs Portland Trail Blazers
+  Indiana Pacers                   11.6%  home      +640  vs New York Knicks
+  Memphis Grizzlies                 9.7%  away      +810  vs Detroit Pistons
+──────────────────────────────────────────────────────────────
+
+PROP LEGS  (sorted by model probability — highest first)
+──────────────────────────────────────────────────────────────
+  Player                     Stat   Line   Proj  Model%  Conf    Odds   Matchup
+──────────────────────────────────────────────────────────────
+  Derik Queen                pts     7.5   12.4   86.0%  HIGH    -114   Pelicans @ Rockets
+  Jeremiah Fears             reb     2.5    5.1   85.2%  HIGH    -112   Pelicans @ Rockets
+  Jeremiah Fears             ast[!]  2.5    4.5   82.4%  HIGH    +110   Pelicans @ Rockets
+  Jeremiah Fears             pts     9.5   14.7   81.2%  HIGH    +100   Pelicans @ Rockets
+  Ty Jerome                  pts    16.5   20.5   80.1%  HIGH    -122   Grizzlies @ Pistons
+  Pascal Siakam              pts    21.5   25.5   77.9%  HIGH    -112   Knicks @ Pacers
+  Sandro Mamukelashvili      pts     8.5   12.2   77.1%  HIGH    -116   Suns @ Raptors
+  Collin Gillespie           reb     3.5    4.8   74.5%  HIGH    -159   Suns @ Raptors
+  Jaylon Tyson               pts    10.5   13.2   74.4%  HIGH    -102   Cavaliers @ Mavericks
+  Donovan Clingan            ast[!]  1.5    2.6   74.1%  HIGH    -183   Jazz @ Blazers
+  Kevin Huerter              reb     2.5    4.3   73.4%  HIGH    +112   Grizzlies @ Pistons
+  Derik Queen                reb     4.5    6.8   72.5%  HIGH    -123   Pelicans @ Rockets
+  Reed Sheppard              reb     2.5    3.5   71.7%  HIGH    -148   Pelicans @ Rockets
+  Will Richard               pts     7.5   10.8   71.4%  HIGH    -125   Timberwolves @ Warriors
+  Grayson Allen              pts    14.5   18.0   70.8%  HIGH    -101   Suns @ Raptors
+  Josh Giddey                ast[!]  8.5   10.1   68.0%  HIGH    -127   Bulls @ Clippers
+  Daniel Gafford             pts     9.5   12.6   67.3%  HIGH    -102   Cavaliers @ Mavericks
+  Dean Wade                  reb     4.5    5.5   66.5%  HIGH    -119   Cavaliers @ Mavericks
+  Karl-Anthony Towns         ast[!]  2.5    3.4   65.8%  LOW     -169   Knicks @ Pacers
+  Jalen Duren                pts    19.5   21.8   65.8%  HIGH    -108   Grizzlies @ Pistons
+  Kobe Sanders               pts     7.5    9.1   65.1%  HIGH    +104   Bulls @ Clippers
+  Donovan Clingan            reb    10.5   12.3   64.8%  HIGH    -114   Jazz @ Blazers
+  Dean Wade                  pts     5.5    7.6   64.6%  HIGH    -106   Cavaliers @ Mavericks
+  Grayson Allen              ast[!]  3.5    4.4   64.1%  HIGH    +118   Suns @ Raptors
+  Ty Jerome                  ast[!]  4.5    5.3   61.9%  HIGH    -110   Grizzlies @ Pistons
+  Aaron Nesmith              pts    11.5   14.2   61.4%  HIGH    -111   Knicks @ Pacers
+  Jaylen Wells               pts    12.5   14.4   60.7%  HIGH    +100   Grizzlies @ Pistons
+  Gui Santos                 ast[!]  2.5    3.1   60.7%  LOW     -156   Timberwolves @ Warriors
+  Cody Williams              ast[!]  2.5    3.1   60.4%  HIGH    +138   Jazz @ Blazers
+  Cedric Coward              reb     5.5    7.0   60.2%  HIGH    +111   Grizzlies @ Pistons
+  Daniel Gafford             reb     7.5    8.5   59.9%  LOW     -102   Cavaliers @ Mavericks
+  Royce O'Neale              pts     8.5   10.1   59.7%  LOW     +102   Suns @ Raptors
+  Immanuel Quickley          pts    15.5   17.5   59.5%  LOW     -127   Suns @ Raptors
+  Taylor Hendricks           pts     9.5   11.4   58.9%  LOW     -101   Grizzlies @ Pistons
+  Kyle Filipowski            reb     8.5    9.6   58.6%  LOW     -108   Jazz @ Blazers
+  Devin Booker               reb     3.5    4.1   58.0%  LOW     -111   Suns @ Raptors
+  Derik Queen                ast[!]  2.5    3.0   58.0%  LOW     -135   Pelicans @ Rockets
+  Jalen Green                pts    18.5   20.9   57.7%  LOW     -118   Suns @ Raptors
+  Marcus Sasser              pts     8.5   10.2   57.4%  LOW     -128   Grizzlies @ Pistons
+  Gui Santos                 reb     5.5    6.3   57.0%  LOW     -137   Timberwolves @ Warriors
+  Ayo Dosunmu                pts     9.5   11.3   55.0%  LOW     -120   Timberwolves @ Warriors
+  Naji Marshall              ast[!]  2.5    2.9   54.6%  LOW     -162   Cavaliers @ Mavericks
+  OG Anunoby                 pts    16.5   18.2   54.6%  LOW     -118   Knicks @ Pacers
+  Isaiah Collier             pts    15.5   16.5   54.6%  LOW     +106   Jazz @ Blazers
+  Dejounte Murray            pts    16.5   17.2   54.4%  LOW     -104   Pelicans @ Rockets
+  Jalen Brunson              ast[!]  7.5    7.9   53.6%  LOW     -106   Knicks @ Pacers
+  Toumani Camara             reb     5.5    6.0   53.6%  LOW     +114   Jazz @ Blazers
+  Cody Williams              reb     3.5    4.1   53.3%  LOW     +122   Jazz @ Blazers
+  Kevin Durant               reb     5.5    5.7   53.2%  LOW     +118   Pelicans @ Rockets
+  Oso Ighodaro               pts     6.5    7.3   53.2%  LOW     -119   Suns @ Raptors
+  Draymond Green             pts     8.5    9.7   52.8%  LOW     -115   Timberwolves @ Warriors
+  Keon Ellis                 pts     8.5   10.0   52.5%  LOW     +102   Cavaliers @ Mavericks
+  Grayson Allen              reb     2.5    2.8   52.1%  LOW     -123   Suns @ Raptors
+  Cedric Coward              pts    11.5   12.3   51.9%  LOW     -102   Grizzlies @ Pistons
+  Donte DiVincenzo           reb     3.5    3.6   51.6%  LOW     -110   Timberwolves @ Warriors
+  Brook Lopez                pts    10.5   11.4   51.6%  LOW     -102   Bulls @ Clippers
+  Max Christie               reb     2.5    2.8   51.0%  LOW     -132   Cavaliers @ Mavericks
+  Jrue Holiday               reb     3.5    3.8   50.8%  LOW     -155   Jazz @ Blazers
+  Ty Jerome                  reb     2.5    2.9   50.7%  LOW     -115   Grizzlies @ Pistons
+  Scoot Henderson            reb     2.5    2.7   50.7%  LOW     -108   Jazz @ Blazers
+  Julius Randle              reb     6.5    6.5   50.6%  LOW     -132   Timberwolves @ Warriors
+  Cooper Flagg               reb     6.5    6.8   50.5%  LOW     -116   Cavaliers @ Mavericks
+  Draymond Green             reb     4.5    4.7   50.3%  LOW     -154   Timberwolves @ Warriors
+  Trey Murphy III            pts    20.5   21.3   49.8%  LOW     -102   Pelicans @ Rockets
+  Mikal Bridges              reb     3.5    3.7   49.6%  LOW     -159   Knicks @ Pacers
+  Olivier-Maxence Prosper    reb     4.5    4.7   49.6%  LOW     -114   Grizzlies @ Pistons
+  Cody Williams              pts     8.5    8.7   49.5%  LOW     -119   Jazz @ Blazers
+  Sam Merrill                reb     2.5    2.5   49.4%  LOW     -154   Cavaliers @ Mavericks
+  Trey Murphy III            reb     4.5    4.7   49.3%  LOW     -120   Pelicans @ Rockets
+  Karl-Anthony Towns         pts    20.5   20.8   48.6%  LOW     -105   Knicks @ Pacers
+  Deni Avdija                reb     6.5    6.4   48.6%  LOW     +111   Jazz @ Blazers
+  Naz Reid                   pts    11.5   12.1   48.5%  LOW     -121   Timberwolves @ Warriors
+  Ayo Dosunmu                ast[!]  2.5    2.6   48.4%  LOW     +100   Timberwolves @ Warriors
+  Al Horford                 pts    10.5   10.9   48.3%  LOW     -116   Timberwolves @ Warriors
+  Tobias Harris              reb     4.5    4.8   48.3%  LOW     -152   Grizzlies @ Pistons
+  Devin Booker               pts    26.5   26.6   48.1%  LOW     +100   Suns @ Raptors
+  Josh Hart                  reb     7.5    7.4   47.9%  LOW     +114   Knicks @ Pacers
+  Naz Reid                   reb     5.5    5.4   47.6%  LOW     -132   Timberwolves @ Warriors
+  Collin Gillespie           ast[!]  4.5    4.5   47.5%  LOW     -125   Suns @ Raptors
+  Ace Bailey                 ast[!]  1.5    1.6   47.4%  LOW     -126   Jazz @ Blazers
+  Deni Avdija                ast[!]  6.5    6.5   47.4%  LOW     +112   Jazz @ Blazers
+  De'Anthony Melton          reb     3.5    3.4   47.4%  LOW     +112   Timberwolves @ Warriors
+  Dejounte Murray            reb     5.5    5.3   47.4%  LOW     +128   Pelicans @ Rockets
+  Kyle Filipowski            ast[!]  3.5    3.5   47.1%  LOW     +128   Jazz @ Blazers
+  De'Anthony Melton          pts    15.5   15.8   46.9%  LOW     -112   Timberwolves @ Warriors
+  Jalen Green                reb     3.5    3.4   46.8%  LOW     -127   Suns @ Raptors
+  Trey Murphy III            ast[!]  3.5    3.5   46.8%  LOW     +100   Pelicans @ Rockets
+  Jarace Walker              reb     5.5    5.7   46.8%  LOW     -116   Knicks @ Pacers
+  Olivier-Maxence Prosper    pts    10.5   10.9   46.7%  LOW     +104   Grizzlies @ Pistons
+  Pascal Siakam              ast[!]  3.5    3.5   46.1%  LOW     -123   Knicks @ Pacers
+  Pascal Siakam              reb     5.5    5.5   46.0%  LOW     -130   Knicks @ Pacers
+  Saddiq Bey                 pts    17.5   17.8   46.0%  LOW     -126   Pelicans @ Rockets
+  Jrue Holiday               ast[!]  5.5    5.4   45.9%  LOW     -138   Jazz @ Blazers
+  Royce O'Neale              reb     4.5    4.5   45.8%  LOW     +118   Suns @ Raptors
+  Draymond Green             ast[!]  5.5    5.4   45.7%  LOW     -120   Timberwolves @ Warriors
+  Oso Ighodaro               ast[!]  2.5    2.5   45.6%  LOW     +115   Suns @ Raptors
+  Al Horford                 reb     5.5    5.4   45.4%  LOW     -130   Timberwolves @ Warriors
+  Oso Ighodaro               reb     5.5    5.6   45.4%  LOW     -137   Suns @ Raptors
+  Jalen Brunson              reb     3.5    3.5   45.2%  LOW     -113   Knicks @ Pacers
+  Kobe Sanders               reb     2.5    2.5   45.1%  LOW     -169   Bulls @ Clippers
+  Zion Williamson            reb     5.5    5.5   45.1%  LOW     -109   Pelicans @ Rockets
+  Matas Buzelis              reb     5.5    5.3   45.1%  LOW     +117   Bulls @ Clippers
+  Al Horford                 ast[!]  3.5    3.4   44.9%  LOW     +128   Timberwolves @ Warriors
+  Josh Hart                  pts    11.5   11.5   44.8%  LOW     -102   Knicks @ Pacers
+  Cooper Flagg               ast[!]  4.5    4.4   44.5%  LOW     +114   Cavaliers @ Mavericks
+  Ace Bailey                 reb     4.5    4.5   44.4%  LOW     -123   Jazz @ Blazers
+  De'Anthony Melton          ast[!]  2.5    2.4   44.0%  LOW     +129   Timberwolves @ Warriors
+  Brandin Podziemski         pts    15.5   15.1   44.0%  LOW     -110   Timberwolves @ Warriors
+  Kawhi Leonard              ast[!]  4.5    4.3   43.8%  LOW     +109   Bulls @ Clippers
+  Brandin Podziemski         ast[!]  4.5    4.3   43.7%  LOW     -125   Timberwolves @ Warriors
+  Donovan Clingan            pts    12.5   12.3   43.6%  LOW     -101   Jazz @ Blazers
+  Jalen Green                ast[!]  2.5    2.4   43.6%  LOW     -120   Suns @ Raptors
+  Brandin Podziemski         reb     6.5    6.4   43.5%  LOW     +124   Timberwolves @ Warriors
+  Immanuel Quickley          reb     3.5    3.5   43.3%  LOW     -135   Suns @ Raptors
+  Zion Williamson            pts    20.5   19.9   43.0%  LOW     +102   Pelicans @ Rockets
+  Kevin Huerter              pts     9.5    9.2   43.0%  LOW     +102   Grizzlies @ Pistons
+  Reed Sheppard              ast[!]  3.5    3.3   42.8%  LOW     -156   Pelicans @ Rockets
+  Will Richard               reb     3.5    3.4   42.8%  LOW     +122   Timberwolves @ Warriors
+  Matas Buzelis              ast[!]  2.5    2.4   42.8%  LOW     +146   Bulls @ Clippers
+  Duncan Robinson            pts    10.5   10.4   42.7%  LOW     -102   Grizzlies @ Pistons
+  Kawhi Leonard              pts    29.5   28.6   42.5%  LOW     -112   Bulls @ Clippers
+  Gui Santos                 pts    15.5   14.9   42.3%  LOW     -102   Timberwolves @ Warriors
+  Sandro Mamukelashvili      reb     4.5    4.3   42.1%  LOW     -111   Suns @ Raptors
+  James Harden               pts    21.5   20.7   42.0%  LOW     -106   Cavaliers @ Mavericks
+  Saddiq Bey                 reb     5.5    5.3   41.8%  LOW     +118   Pelicans @ Rockets
+  Josh Giddey                reb     7.5    7.2   41.8%  LOW     +107   Bulls @ Clippers
+  Jrue Holiday               pts    17.5   16.9   41.5%  LOW     +100   Jazz @ Blazers
+  Jerami Grant               reb     3.5    3.3   40.8%  LOW     +107   Jazz @ Blazers
+  Tobias Harris              pts    11.5   11.0   40.8%  LOW     -110   Grizzlies @ Pistons
+  Jaylon Tyson               reb     4.5    4.3   40.7%  LOW     -106   Cavaliers @ Mavericks
+  Jalen Duren                reb    10.5    9.9   40.7%  LOW     -122   Grizzlies @ Pistons
+  Jarace Walker              pts    13.5   12.8   40.7%  LOW     -108   Knicks @ Pacers
+  Scoot Henderson            ast[!]  4.5    4.2   40.7%  LOW     +111   Jazz @ Blazers
+  Collin Gillespie           pts    12.5   12.0   40.6%  LOW     -108   Suns @ Raptors
+  Josh Hart                  ast[!]  4.5    4.2   40.2%  LOW     -109   Knicks @ Pacers
+  Bennedict Mathurin         reb     5.5    5.1   39.7%  LOW     -103   Bulls @ Clippers
+  Cooper Flagg               pts    19.5   18.5   39.7%  LOW     -105   Cavaliers @ Mavericks
+  Scoot Henderson            pts    14.5   13.6   39.2%  LOW     -109   Jazz @ Blazers
+  Donte DiVincenzo           ast[!]  3.5    3.2   39.1%  LOW     -110   Timberwolves @ Warriors
+  Bennedict Mathurin         pts    19.5   18.2   38.9%  LOW     -110   Bulls @ Clippers
+  Saddiq Bey                 ast[!]  2.5    2.2   38.8%  LOW     +140   Pelicans @ Rockets
+  Anthony Edwards            pts    29.5   27.8   38.7%  LOW     -108   Timberwolves @ Warriors
+  Brice Sensabaugh           ast[!]  2.5    2.2   38.4%  LOW     +140   Jazz @ Blazers
+  Aaron Nesmith              reb     3.5    3.3   38.2%  LOW     +109   Knicks @ Pacers
+  Tari Eason                 reb     6.5    5.9   38.2%  LOW     +118   Pelicans @ Rockets
+  Jaden McDaniels            pts    12.5   11.7   38.1%  LOW     -118   Timberwolves @ Warriors
+  Sam Merrill                ast[!]  2.5    2.2   38.0%  LOW     +113   Cavaliers @ Mavericks
+  Taylor Hendricks           reb     5.5    5.0   38.0%  LOW     +117   Grizzlies @ Pistons
+  Kyle Filipowski            pts    14.5   13.5   38.0%  LOW     +109   Jazz @ Blazers
+  Kris Dunn                  reb     4.5    4.0   38.0%  LOW     +123   Bulls @ Clippers
+  Jakob Poeltl               pts    11.5   10.6   37.9%  LOW     +100   Suns @ Raptors
+  Max Christie               pts    10.5    9.6   37.8%  LOW     -129   Cavaliers @ Mavericks
+  Toumani Camara             ast[!]  2.5    2.2   37.7%  LOW     +122   Jazz @ Blazers
+  Duncan Robinson            ast[!]  2.5    2.2   37.5%  LOW     +167   Grizzlies @ Pistons
+  Mikal Bridges              ast[!]  3.5    3.1   37.3%  LOW     +104   Knicks @ Pacers
+  Donovan Mitchell           reb     4.5    4.0   37.3%  LOW     -141   Cavaliers @ Mavericks
+  Cedric Coward              ast[!]  2.5    2.2   37.1%  LOW     +152   Grizzlies @ Pistons
+  Brandon Ingram             reb     5.5    4.9   36.9%  LOW     -110   Suns @ Raptors
+  Evan Mobley                pts    18.5   17.2   36.8%  LOW     +100   Cavaliers @ Mavericks
+  Reed Sheppard              pts    15.5   14.1   36.8%  LOW     -112   Pelicans @ Rockets
+  Rudy Gobert                pts    10.5    9.5   36.7%  LOW     +105   Timberwolves @ Warriors
+  Ayo Dosunmu                reb     2.5    2.3   36.7%  LOW     +106   Timberwolves @ Warriors
+  Jerami Grant               pts    20.5   18.7   36.6%  LOW     -103   Jazz @ Blazers
+  Brice Sensabaugh           pts    18.5   16.8   36.5%  LOW     -124   Jazz @ Blazers
+  P.J. Washington            reb     6.5    5.8   36.4%  LOW     +116   Cavaliers @ Mavericks
+  Brice Sensabaugh           reb     3.5    2.9   36.4%  LOW     -146   Jazz @ Blazers
+  Amen Thompson              reb     7.5    6.6   36.3%  LOW     +115   Pelicans @ Rockets
+  Isaiah Collier             reb     2.5    2.2   36.1%  LOW     -131   Jazz @ Blazers
+  Bennedict Mathurin         ast[!]  2.5    2.1   36.1%  LOW     +130   Bulls @ Clippers
+  Cade Cunningham            ast[!] 10.5    9.6   36.0%  LOW     -104   Grizzlies @ Pistons
+  Devin Booker               ast[!]  5.5    4.9   36.0%  LOW     +116   Suns @ Raptors
+  Naji Marshall              pts    13.5   12.4   36.0%  LOW     -108   Cavaliers @ Mavericks
+  Brook Lopez                reb     4.5    3.9   35.2%  LOW     +134   Bulls @ Clippers
+  Donte DiVincenzo           pts    10.5    9.3   35.1%  LOW     -128   Timberwolves @ Warriors
+  Donovan Mitchell           pts    26.5   24.0   34.9%  LOW     -107   Cavaliers @ Mavericks
+  Scottie Barnes             pts    17.5   15.9   34.7%  LOW     -103   Suns @ Raptors
+  Kris Dunn                  ast[!]  5.5    4.8   34.6%  LOW     +108   Bulls @ Clippers
+  Donovan Mitchell           ast[!]  5.5    4.8   34.6%  LOW     -108   Cavaliers @ Mavericks
+  Evan Mobley                reb     9.5    8.4   34.5%  LOW     +102   Cavaliers @ Mavericks
+  Jaden McDaniels            ast[!]  2.5    2.1   34.5%  LOW     +100   Timberwolves @ Warriors
+  Matas Buzelis              pts    21.5   19.1   34.4%  LOW     -104   Bulls @ Clippers
+  Duncan Robinson            reb     2.5    2.0   34.3%  LOW     +118   Grizzlies @ Pistons
+  Sam Merrill                pts    11.5   10.2   34.2%  LOW     -107   Cavaliers @ Mavericks
+  Julius Randle              pts    17.5   15.3   33.8%  LOW     -113   Timberwolves @ Warriors
+  P.J. Washington            pts    12.5   10.9   33.7%  LOW     -102   Cavaliers @ Mavericks
+  Kobe Sanders               ast[!]  2.5    2.0   33.5%  LOW     +100   Bulls @ Clippers
+  James Harden               reb     5.5    4.6   33.4%  LOW     +122   Cavaliers @ Mavericks
+  Toumani Camara             pts    12.5   10.8   33.3%  LOW     -109   Jazz @ Blazers
+  Amen Thompson              pts    19.5   17.2   32.4%  LOW     -115   Pelicans @ Rockets
+  Ace Bailey                 pts    17.5   15.2   32.4%  LOW     -107   Jazz @ Blazers
+  Alperen Sengun             reb     8.5    7.2   32.3%  LOW     -101   Pelicans @ Rockets
+  Rudy Gobert                reb    11.5    9.9   32.1%  LOW     +108   Timberwolves @ Warriors
+  Deni Avdija                pts    22.5   19.4   31.1%  LOW     -121   Jazz @ Blazers
+  Cade Cunningham            reb     5.5    4.5   30.7%  LOW     -110   Grizzlies @ Pistons
+  Brandon Ingram             pts    21.5   18.3   30.6%  LOW     -116   Suns @ Raptors
+  Dejounte Murray            ast[!]  5.5    4.5   30.1%  LOW     +114   Pelicans @ Rockets
+  Kevin Durant               pts    25.5   22.1   30.0%  LOW     -112   Pelicans @ Rockets
+  Kris Dunn                  pts     7.5    6.0   30.0%  LOW     -110   Bulls @ Clippers
+  Jerami Grant               ast[!]  2.5    1.9   29.9%  LOW     +148   Jazz @ Blazers
+  Alperen Sengun             pts    19.5   16.2   29.8%  LOW     -106   Pelicans @ Rockets
+  Anthony Edwards            reb     4.5    3.5   29.8%  LOW     -143   Timberwolves @ Warriors
+  Jalen Brunson              pts    26.5   22.5   29.8%  LOW     -102   Knicks @ Pacers
+  Jarace Walker              ast[!]  3.5    2.8   29.7%  LOW     +134   Knicks @ Pacers
+  Aaron Nesmith              ast[!]  2.5    1.9   29.6%  LOW     +158   Knicks @ Pacers
+  Karl-Anthony Towns         reb    12.5   10.6   29.1%  LOW     +109   Knicks @ Pacers
+  Kevin Durant               ast[!]  4.5    3.6   29.1%  LOW     -138   Pelicans @ Rockets
+  Brandon Ingram             ast[!]  4.5    3.6   29.1%  LOW     +115   Suns @ Raptors
+  Zion Williamson            ast[!]  3.5    2.7   28.3%  LOW     +122   Pelicans @ Rockets
+  Naji Marshall              reb     4.5    3.4   28.0%  LOW     +134   Cavaliers @ Mavericks
+  OG Anunoby                 reb     5.5    4.3   28.0%  LOW     +128   Knicks @ Pacers
+  Marcus Sasser              reb     2.5    1.8   27.8%  LOW     +136   Grizzlies @ Pistons
+  Immanuel Quickley          ast[!]  6.5    5.3   27.6%  LOW     +115   Suns @ Raptors
+  Scottie Barnes             ast[!]  4.5    3.5   27.2%  LOW     -104   Suns @ Raptors
+  Jaden McDaniels            reb     4.5    3.4   26.9%  LOW     +134   Timberwolves @ Warriors
+  Amen Thompson              ast[!]  5.5    4.3   26.4%  LOW     -137   Pelicans @ Rockets
+  Julius Randle              ast[!]  4.5    3.4   26.2%  LOW     +118   Timberwolves @ Warriors
+  Jakob Poeltl               reb     8.5    7.2   26.0%  LOW     -109   Suns @ Raptors
+  Keon Ellis                 reb     3.5    2.6   26.0%  LOW     +109   Cavaliers @ Mavericks
+  Mikal Bridges              pts    13.5   10.0   25.2%  LOW     -114   Knicks @ Pacers
+  Marcus Sasser              ast[!]  3.5    2.5   25.0%  LOW     +128   Grizzlies @ Pistons
+  Cade Cunningham            pts    24.5   19.2   24.0%  LOW     -104   Grizzlies @ Pistons
+  Jaylen Wells               reb     3.5    2.4   23.5%  LOW     +134   Grizzlies @ Pistons
+  James Harden               ast[!]  8.5    6.7   23.2%  LOW     -114   Cavaliers @ Mavericks
+  OG Anunoby                 ast[!]  2.5    1.7   23.2%  LOW     +158   Knicks @ Pacers
+  Kawhi Leonard              reb     7.5    5.7   22.3%  LOW     +107   Bulls @ Clippers
+  Anthony Edwards            ast[!]  4.5    3.2   21.5%  LOW     +128   Timberwolves @ Warriors
+  Tari Eason                 ast[!]  2.5    1.6   21.5%  LOW     +141   Pelicans @ Rockets
+  Josh Giddey                pts    20.5   15.5   21.3%  LOW     +100   Bulls @ Clippers
+  Scottie Barnes             reb     7.5    5.2   20.8%  LOW     +120   Suns @ Raptors
+  Isaiah Collier             ast[!]  9.5    7.3   20.6%  LOW     +126   Jazz @ Blazers
+  Alperen Sengun             ast[!]  5.5    3.9   19.6%  LOW     -114   Pelicans @ Rockets
+  Tari Eason                 pts    11.5    7.3   19.1%  LOW     -112   Pelicans @ Rockets
+──────────────────────────────────────────────────────────────
+Total props: 232  |  [!] = AST model unreliable (41% hit rate on 2026-03-12)
+================================================================

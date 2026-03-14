@@ -20,6 +20,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import io
 import pickle
 import sys
@@ -36,13 +37,37 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 _CACHE_DIR = ROOT / "data" / ".prop_cache"
-_SLEEP = 0.6
+_SLEEP = 1.5
 
-_STAT_COLS = ["PTS", "REB", "AST", "FG3M"]
-_MARKET_LABELS = {"PTS": "pts", "REB": "reb", "AST": "ast", "FG3M": "3pm"}
+_STAT_COLS = ["PTS", "REB", "AST"]
+_MARKET_LABELS = {"PTS": "pts", "REB": "reb", "AST": "ast"}
 _MIN_MINUTES = 20
 _MIN_GAMES   = 5
 ACTIVE_SEASON = "2025-26"
+
+_RESULTS_FILE = ROOT / "data" / "validation_log.csv"
+_CSV_COLS = ["date", "player", "stat", "proj", "line", "actual", "hit", "diff"]
+
+
+def _save_results(rows: list[dict], date_str: str) -> None:
+    """Append validation results to data/validation_log.csv."""
+    write_header = not _RESULTS_FILE.exists()
+    with open(_RESULTS_FILE, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=_CSV_COLS)
+        if write_header:
+            writer.writeheader()
+        for r in rows:
+            writer.writerow({
+                "date":   date_str,
+                "player": r["player"],
+                "stat":   _MARKET_LABELS.get(r["stat"], r["stat"]),
+                "proj":   r["proj"],
+                "line":   r["line"],
+                "actual": r["actual"],
+                "hit":    1 if r["hit"] else 0,
+                "diff":   round(r["diff"], 2),
+            })
+    print(f"\n  Results saved -> {_RESULTS_FILE}  ({len(rows)} rows)")
 
 
 def _emit_season_verification() -> None:
@@ -332,24 +357,30 @@ def _fetch_box_scores(game_ids: list[str]) -> tuple[dict, dict]:
 
 
 def _fetch_season_logs(player_id: int, season: str = "2025-26") -> list[dict] | None:
-    """Fetch full season game logs for a player via nba_api (free)."""
+    """Fetch full season game logs for a player via nba_api (free). Retries on timeout."""
     from nba_api.stats.endpoints.playergamelogs import PlayerGameLogs  # noqa
-    time.sleep(_SLEEP)
-    gl = PlayerGameLogs(player_id_nullable=str(player_id),
-                        season_nullable=season, last_n_games_nullable="0")
-    df = gl.get_data_frames()[0]
-    if df.empty:
-        return None
-    rows = []
-    for _, row in df.iterrows():
-        entry = dict(row)
-        min_val = entry.get("MIN", 0)
+    for attempt in range(3):
         try:
-            entry["MIN_float"] = float(str(min_val).split(":")[0]) if ":" in str(min_val) else float(min_val)
+            time.sleep(_SLEEP + attempt * 1.5)
+            gl = PlayerGameLogs(player_id_nullable=str(player_id),
+                                season_nullable=season, last_n_games_nullable="0",
+                                timeout=60)
+            df = gl.get_data_frames()[0]
+            if df.empty:
+                return None
+            rows = []
+            for _, row in df.iterrows():
+                entry = dict(row)
+                min_val = entry.get("MIN", 0)
+                try:
+                    entry["MIN_float"] = float(str(min_val).split(":")[0]) if ":" in str(min_val) else float(min_val)
+                except Exception:
+                    entry["MIN_float"] = 0.0
+                rows.append(entry)
+            return rows
         except Exception:
-            entry["MIN_float"] = 0.0
-        rows.append(entry)
-    return rows
+            if attempt == 2:
+                return None
 
 
 def _fetch_team_dreb_and_pace() -> dict[str, dict]:
@@ -368,6 +399,20 @@ def _fetch_team_dreb_and_pace() -> dict[str, dict]:
                 "dreb_pg": float(row.get("DREB", 0)) / gp,
                 "reb_pg": float(row.get("REB", 0)) / gp,
             }
+        try:
+            time.sleep(_SLEEP)
+            def_df = LeagueDashTeamStats(
+                season="2025-26",
+                measure_type_detailed_defense="Defense",
+            ).get_data_frames()[0]
+            for _, row in def_df.iterrows():
+                name = str(row.get("TEAM_NAME", "")).lower()
+                gp2 = float(row.get("GP", 0) or 0)
+                opp_ast = row.get("OPP_AST")
+                if name in result and opp_ast is not None and gp2 > 0:
+                    result[name]["opp_ast_pg"] = float(opp_ast) / gp2
+        except Exception:
+            pass
         try:
             time.sleep(_SLEEP)
             adv_df = LeagueDashTeamStats(
@@ -417,6 +462,98 @@ def _detect_player_opponents(game_ids: list[str]) -> dict[str, str]:
     return result
 
 
+_team_assist_cache: dict[str, tuple[float, float]] = {}
+
+
+def _get_team_assist_context(team_name: str) -> tuple[float, float]:
+    """
+    Returns (fg_trend_mult, ast_rate_trend_mult) for a team.
+    Signal 1: last-5g FG% / season FG%  — hot teammates convert more passes
+    Signal 2: last-5g AST/FGM / season AST/FGM  — ball-movement trend
+    Both capped at ±8%. One API call per team, cached.
+    """
+    if team_name in _team_assist_cache:
+        return _team_assist_cache[team_name]
+    try:
+        from nba_api.stats.static import teams as nba_teams
+        from nba_api.stats.endpoints.teamgamelogs import TeamGameLogs
+        all_teams = nba_teams.get_teams()
+        matched = [t for t in all_teams if t["full_name"].lower() == team_name.lower()
+                   or t["nickname"].lower() == team_name.lower()]
+        if not matched:
+            return 1.0, 1.0
+        tid = matched[0]["id"]
+        time.sleep(_SLEEP)
+        gl = TeamGameLogs(team_id_nullable=str(tid), season_nullable=ACTIVE_SEASON)
+        df = gl.get_data_frames()[0]
+        if df.empty or len(df) < 5:
+            return 1.0, 1.0
+
+        fg_mult = 1.0
+        if "FG_PCT" in df.columns:
+            season_fg = float(df["FG_PCT"].mean())
+            recent_fg = float(df["FG_PCT"].iloc[:5].mean())
+            if season_fg > 0:
+                fg_mult = max(0.92, min(1.08, recent_fg / season_fg))
+
+        ast_rate_mult = 1.0
+        if "AST" in df.columns and "FGM" in df.columns:
+            import pandas as pd
+            fgm = df["FGM"].replace(0, float("nan"))
+            ast_rate = df["AST"] / fgm
+            season_rate = float(ast_rate.mean())
+            recent_rate = float(ast_rate.iloc[:5].mean())
+            if season_rate > 0 and pd.notna(season_rate) and pd.notna(recent_rate):
+                ast_rate_mult = max(0.92, min(1.08, recent_rate / season_rate))
+
+        result = (fg_mult, ast_rate_mult)
+        _team_assist_cache[team_name] = result
+        return result
+    except Exception:
+        return 1.0, 1.0
+
+
+def _detect_player_context(game_ids: list[str]) -> tuple[dict, dict, dict]:
+    """Return (locations, opponents, own_teams) in one pass — one API call per game."""
+    from nba_api.stats.endpoints.boxscoretraditionalv3 import BoxScoreTraditionalV3
+    locations: dict[str, str] = {}
+    opponents: dict[str, str] = {}
+    own_teams: dict[str, str] = {}
+    for gid in game_ids:
+        time.sleep(_SLEEP)
+        try:
+            raw = BoxScoreTraditionalV3(game_id=gid).get_dict()
+            home = raw.get("boxScoreTraditional", {}).get("homeTeam")
+            away = raw.get("boxScoreTraditional", {}).get("awayTeam")
+            if not home or not away:
+                continue
+            home_city = str(home.get("teamCity", "")).strip()
+            home_name_str = str(home.get("teamName", "")).strip()
+            away_city = str(away.get("teamCity", "")).strip()
+            away_name_str = str(away.get("teamName", "")).strip()
+            home_full = f"{home_city} {home_name_str}".strip().lower()
+            away_full = f"{away_city} {away_name_str}".strip().lower()
+            for p in home.get("players", []):
+                first = str(p.get("firstName", "")).strip()
+                last = str(p.get("familyName", "")).strip()
+                pname = f"{first} {last}".strip().lower()
+                if pname:
+                    locations[pname] = "home"
+                    opponents[pname] = away_full
+                    own_teams[pname] = home_full
+            for p in away.get("players", []):
+                first = str(p.get("firstName", "")).strip()
+                last = str(p.get("familyName", "")).strip()
+                pname = f"{first} {last}".strip().lower()
+                if pname:
+                    locations[pname] = "away"
+                    opponents[pname] = home_full
+                    own_teams[pname] = away_full
+        except Exception:
+            pass
+    return locations, opponents, own_teams
+
+
 def _detect_mar11_locations(game_ids: list[str]) -> dict[str, str]:
     """Return {player_name_lower: 'home'|'away'} for each player in March 11 games."""
     from nba_api.stats.endpoints.boxscoretraditionalv3 import BoxScoreTraditionalV3
@@ -440,12 +577,12 @@ def _detect_mar11_locations(game_ids: list[str]) -> dict[str, str]:
     return result
 
 
-def _run_mar11_live_validation() -> None:
+def _run_walkforward_validation(test_date: str) -> None:
     """
-    Walk-forward backtest for March 11 2026:
-      1. Fetch actual March 11 box scores (nba_api V3, free)
+    Generic walk-forward backtest for any date:
+      1. Fetch actual box scores for test_date (nba_api V3, free)
       2. For each player who played, fetch their 2025-26 season logs
-      3. EXCLUDE any game played ON or AFTER March 11 (simulate pre-game)
+      3. EXCLUDE any game played ON or AFTER test_date (simulate pre-game)
       4. Compute model projection from remaining history
       5. Apply rest multiplier and home/away location split
       6. Synthetic line = projection rounded to .5
@@ -455,7 +592,7 @@ def _run_mar11_live_validation() -> None:
     """
     from nba_api.stats.static import players as nba_players  # noqa
 
-    TEST_DATE = "2026-03-11"
+    TEST_DATE = test_date
 
     print(f"  Fetching {TEST_DATE} box scores via nba_api (free)...")
     game_ids = _get_game_ids(TEST_DATE)
@@ -467,13 +604,13 @@ def _run_mar11_live_validation() -> None:
     qualifying_players = {n: s for n, s in player_stats.items() if s["MIN"] >= _MIN_MINUTES}
     print(f"  {len(qualifying_players)} players with >= {_MIN_MINUTES}min\n")
 
-    print(f"  Detecting home/away locations and opponents...")
-    player_locations = _detect_mar11_locations(game_ids)
-    player_opponents = _detect_player_opponents(game_ids)
+    print(f"  Detecting home/away locations, opponents, and own teams...")
+    player_locations, player_opponents, own_teams = _detect_player_context(game_ids)
     team_stats = _fetch_team_dreb_and_pace()
     league_avg_dreb = mean([t["dreb_pg"] for t in team_stats.values()]) if team_stats else 34.0
     league_avg_pace = mean([t.get("pace", 100.0) for t in team_stats.values()]) if team_stats else 100.0
     print(f"  Mapped {len(player_locations)} locations, {len(player_opponents)} opponents")
+    print(f"  Mapped {len(own_teams)} player teams for teammate FG% model\n")
     print(f"  League avg DREB/g={league_avg_dreb:.1f}, pace={league_avg_pace:.1f}\n")
 
     print(f"  Fetching 2025-26 season logs to simulate pre-game predictions...")
@@ -545,6 +682,17 @@ def _run_mar11_live_validation() -> None:
                             pace_ratio = opp_pace / league_avg_pace
                             proj *= pace_ratio
 
+            # TEAMMATE-01: 3-signal assist context
+            if stat == "AST":
+                own_team = own_teams.get(actual_name, "")
+                opp_team = player_opponents.get(actual_name, "")
+                if own_team:
+                    fg_mult, ast_rate_mult = _get_team_assist_context(own_team)
+                    opp_ast_pg = team_stats.get(opp_team, {}).get("opp_ast_pg", 25.5)
+                    opp_ast_mult = max(0.92, min(1.08, opp_ast_pg / 25.5))
+                    delta = 0.40 * (fg_mult - 1) + 0.35 * (ast_rate_mult - 1) + 0.25 * (opp_ast_mult - 1)
+                    proj *= max(0.90, min(1.10, 1.0 + delta))
+
             line   = round(proj * 2) / 2
             actual = actual_stats[stat]
             hit    = actual > line
@@ -587,6 +735,8 @@ def _run_mar11_live_validation() -> None:
         label = _MARKET_LABELS.get(stat, stat)
         avg_d = mean(r["diff"] for r in sr)
         print(f"    {label:4s}  {sh}/{len(sr)}  ({sh/len(sr):.1%})  avg diff vs proj: {avg_d:+.1f}")
+
+    _save_results(rows, TEST_DATE)
 
 
 def _run_mar12_live_validation() -> None:
@@ -674,8 +824,8 @@ def _run_mar12_live_validation() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--date", default="2026-03-11",
-        help="Date to validate: 2026-03-11 (cache-only, no API) or 2026-03-12 (nba_api only)",
+        "--date", default="2026-03-12",
+        help="Date to validate (YYYY-MM-DD). Uses nba_api box scores — free, no Odds API.",
     )
     args = parser.parse_args()
 
@@ -693,17 +843,8 @@ def main() -> None:
     _emit_season_verification()
     print()
 
-    if args.date == "2026-03-11":
-        print("Mode: nba_api live box scores + 2025-26 pre-game season logs (free, no Odds API)\n")
-        _run_mar11_live_validation()
-
-    elif args.date == "2026-03-12":
-        print("Mode: nba_api box scores  (free, no Odds API credits)\n")
-        _run_mar12_live_validation()
-
-    else:
-        print(f"No validation data for {args.date}.")
-        print("Supported: 2026-03-11 (cache), 2026-03-12 (nba_api)")
+    print(f"Mode: walk-forward validation — nba_api live box scores + pre-game season logs (free, no Odds API)\n")
+    _run_walkforward_validation(args.date)
 
 
 if __name__ == "__main__":

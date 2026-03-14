@@ -28,7 +28,11 @@
       "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: initialize project\" --files .planning/PROJECT.md 2>&1)",
       "WebFetch(domain:www.sportsline.com)",
       "WebFetch(domain:www.nbastuffer.com)",
-      "WebFetch(domain:squared2020.com)"
+      "WebFetch(domain:squared2020.com)",
+      "Bash(tasklist /fi \"imagename eq python.exe\" 2>/dev/null | head -20)",
+      "Bash(taskkill /F /IM python.exe 2>/dev/null; taskkill /F /IM bash.exe 2>/dev/null; echo \"done\")",
+      "Skill(gsd:debug)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode ml 2>&1 | tee picks/ml_2026-03-14.txt)"
     ]
   }
 }

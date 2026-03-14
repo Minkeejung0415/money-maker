@@ -1,0 +1,29 @@
+ALL PROP LEGS + MONEYLINES — 2026-03-13
+======================================================================
+
+Player                     Stat  Line  Proj  Model% Conf     Odds  Matchup
+──────────────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────────────────────
+Total: 0 legs
+
+
+MONEYLINES
+──────────────────────────────────────────────────────────────────────
+  Team                            Model% Side   ML Odds  vs
+──────────────────────────────────────────────────────────────────────
+  Detroit Pistons                  90.3% home     -1350  vs Memphis Grizzlies
+  New York Knicks                  88.4% away      -950  vs Indiana Pacers
+  Portland Trail Blazers           87.3% home     -1200  vs Utah Jazz
+  Los Angeles Clippers             82.3% home      -670  vs Chicago Bulls
+  Cleveland Cavaliers              71.5% away      -700  vs Dallas Mavericks
+  Houston Rockets                  70.5% home      -260  vs New Orleans Pelicans
+  Toronto Raptors                  52.0% home      -176  vs Phoenix Suns
+  Golden State Warriors            50.9% home      +180  vs Minnesota Timberwolves
+  Minnesota Timberwolves           49.1% away      -220  vs Golden State Warriors
+  Phoenix Suns                     48.0% away      +148  vs Toronto Raptors
+  New Orleans Pelicans             29.4% away      +215  vs Houston Rockets
+  Dallas Mavericks                 28.5% home      +490  vs Cleveland Cavaliers
+  Chicago Bulls                    17.7% away      +490  vs Los Angeles Clippers
+  Utah Jazz                        12.7% away      +750  vs Portland Trail Blazers
+  Indiana Pacers                   11.6% home      +640  vs New York Knicks
+  Memphis Grizzlies                 9.7% away      +810  vs Detroit Pistons

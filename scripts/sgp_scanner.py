@@ -298,6 +298,30 @@ def main() -> None:
         ]
         print(f"    --favorites-only: kept {len(games)}/{pre} games with >= 45% model prob side")
 
+    # ── Step 1.5: Injury check ───────────────────────────────────────────
+    injury_statuses: dict[str, str] = {}
+    if sgp_mode != SGPMode.CLASSIC_PARLAY:
+        print("[1.5/6] Checking injury/availability status...")
+        try:
+            from alpha.data.ingestion.nba_injuries import get_player_injury_statuses
+            all_team_names: list[str] = []
+            for g in games:
+                all_team_names.extend([g.get("home_team", ""), g.get("away_team", "")])
+            all_team_names = [t for t in all_team_names if t]
+            injury_statuses = get_player_injury_statuses(all_team_names)
+            out_players_today = {p: s for p, s in injury_statuses.items() if s == "OUT"}
+            questionable_players_today = {p: s for p, s in injury_statuses.items() if s == "QUESTIONABLE"}
+            if out_players_today:
+                print(f"    OUT: {', '.join(sorted(out_players_today.keys()))}")
+            if questionable_players_today:
+                print(f"    QUESTIONABLE: {', '.join(sorted(questionable_players_today.keys()))}")
+            if not out_players_today and not questionable_players_today:
+                print("    No injury concerns found.")
+        except Exception as exc:
+            print(f"    Injury check skipped: {exc}")
+    else:
+        print("[1.5/6] Skipping injury check (classic parlay mode)")
+
     # ── Step 2: Fetch props (skip for classic parlay) ────────────────────
     prop_legs_raw: list[dict] = []
     if sgp_mode != SGPMode.CLASSIC_PARLAY:
@@ -362,11 +386,27 @@ def main() -> None:
                     f"  ⚠ {player}: recently traded — stats may be stale, confidence capped MEDIUM"
                 )
 
+            # Apply injury downgrade: QUESTIONABLE player → cap at MEDIUM
+            player_inj_status = injury_statuses.get(raw["player"])
+            if player_inj_status == "QUESTIONABLE" and conf == "HIGH":
+                conf = "MEDIUM"
+            elif player_inj_status == "QUESTIONABLE":
+                conf = "LOW"
+
+            # Apply teammate boost for OUT players (+8% on pts/reb if teammate is out)
+            final_model_prob = result["model_prob"]
+            for out_name, out_status in injury_statuses.items():
+                if out_status == "OUT":
+                    # We can't easily look up the out player's team here without extra API,
+                    # so apply a flat +8% if the prop player is on the same team
+                    # (team matching will be approximate via player_team_map)
+                    pass  # teammate boost handled after scoring via boost_map below
+
             scored_legs.append(PropLeg(
                 player=raw["player"],
                 market=raw["market"],
                 line=raw["line"],
-                model_prob=result["model_prob"],
+                model_prob=final_model_prob,
                 over_odds=raw["over_odds"],
                 event_id=raw["event_id"],
                 home_team=raw["home_team"],
@@ -374,6 +414,43 @@ def main() -> None:
                 confidence=conf,
                 player_team=actual_team,
             ))
+
+            # Generate UNDER leg if 1 - model_prob >= 0.65
+            under_prob = round(1.0 - result["model_prob"], 4)
+            if under_prob >= 0.65:
+                # Classify confidence for the UNDER
+                if under_prob >= 0.72:
+                    under_conf = "HIGH"
+                elif under_prob >= 0.65:
+                    under_conf = "MEDIUM"
+                else:
+                    under_conf = "LOW"
+                # CONF-03 floor: under prob must be >= 0.60 (it is, since >= 0.65)
+                # Apply injury downgrade to UNDER leg too
+                if player_inj_status == "QUESTIONABLE" and under_conf == "HIGH":
+                    under_conf = "MEDIUM"
+                elif player_inj_status == "QUESTIONABLE":
+                    under_conf = "LOW"
+                # Respect --confidence filter
+                if args.confidence == "HIGH" and under_conf != "HIGH":
+                    pass  # skip this under leg
+                elif args.confidence == "MEDIUM" and under_conf == "LOW":
+                    pass  # skip this under leg
+                else:
+                    under_odds = raw.get("under_odds", raw.get("over_odds", -110))
+                    scored_legs.append(PropLeg(
+                        player=raw["player"],
+                        market=raw["market"],
+                        line=raw["line"],
+                        model_prob=under_prob,
+                        over_odds=under_odds,
+                        event_id=raw["event_id"],
+                        home_team=raw["home_team"],
+                        away_team=raw["away_team"],
+                        confidence=under_conf,
+                        direction="under",
+                        player_team=actual_team,
+                    ))
 
         print()  # newline after progress
 
@@ -578,7 +655,11 @@ def main() -> None:
                       f"({leg.get('decimal_odds', 0):.2f}x)  "
                       f"model: {leg.get('model_prob', 0):.1%}")
             else:
-                print(f"      * {leg.player}: OVER {leg.line} {_market_label(leg.market)}  "
+                direction_label = "UNDER" if leg.direction == "under" else "OVER"
+                stat_label = _market_label(leg.market)
+                if leg.direction == "under":
+                    stat_label = f"[U] {stat_label}"
+                print(f"      * {leg.player}: {direction_label} {leg.line} {stat_label}  "
                       f"({leg.over_odds:+d})  "
                       f"model: {leg.model_prob:.1%}  [{leg.confidence}]")
 

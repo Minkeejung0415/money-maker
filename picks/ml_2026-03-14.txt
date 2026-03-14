@@ -1,0 +1,6 @@
+WARNING alpha.data.ingestion.odds_api: Odds API HTTP error 401 — skipping sports vertical
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    No NBA games found today (or API error). Exiting.

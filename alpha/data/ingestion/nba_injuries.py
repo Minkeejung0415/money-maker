@@ -224,6 +224,91 @@ def get_team_injury_impact(season: str = "2025-26") -> dict[str, dict]:
     return impact
 
 
+def get_player_injury_statuses(team_names: list[str]) -> dict[str, str]:
+    """
+    Return {player_name: status} where status is one of:
+      "OUT"          - confirmed out (will not play)
+      "QUESTIONABLE" - day-to-day, may not play
+      "PROBABLE"     - likely to play
+
+    Uses ESPN injury endpoint. Only includes players with an active injury entry.
+    Returns {} on any failure.
+    """
+    result: dict[str, str] = {}
+    _QUESTIONABLE_STATUSES = {"questionable", "doubtful", "day-to-day", "dtd"}
+
+    for team_name in team_names:
+        espn_id = _ESPN_TEAM_IDS.get(team_name)
+        if espn_id is None:
+            continue
+        data = _get(f"{_ESPN_API}/teams/{espn_id}/injuries")
+        if not data:
+            continue
+        for injury in data.get("injuries", []):
+            status_raw = injury.get("status", "")
+            status_lower = status_raw.lower()
+            athlete = injury.get("athlete", {})
+            name = athlete.get("displayName", "")
+            if not name:
+                continue
+            if status_lower == "out":
+                result[name] = "OUT"
+            elif status_lower in _QUESTIONABLE_STATUSES:
+                result[name] = "QUESTIONABLE"
+            elif status_lower == "probable":
+                result[name] = "PROBABLE"
+            # skip anything else
+    return result
+
+
+def get_teammate_boost_map(
+    out_players: list[dict],  # list of {"name": str, "pts": float, "reb": float, "ast": float, "min": float, "team": str}
+    team_roster: dict[str, list[str]],  # {team_name: [active_player_names]}
+) -> dict[str, dict[str, float]]:
+    """
+    For each OUT player, distribute their pts/reb/ast proportionally to active teammates.
+    Returns {player_name: {"pts_boost": float, "reb_boost": float, "ast_boost": float}}
+    where each boost is a multiplier (e.g. 1.08 = 8% more production expected).
+
+    Simple heuristic: split the OUT player's stats equally among their top-5 active teammates.
+    Each teammate gets out_player_stat / num_active_teammates as additive boost,
+    expressed as a multiplier on their own projection.
+    """
+    boost_map: dict[str, dict[str, float]] = {}
+
+    for out_player in out_players:
+        team = out_player.get("team", "")
+        if not team:
+            continue
+        active_teammates = team_roster.get(team, [])
+        # exclude the out player themselves
+        active_teammates = [p for p in active_teammates if p != out_player.get("name", "")]
+        top5 = active_teammates[:5]
+        if not top5:
+            continue
+
+        out_pts = float(out_player.get("pts", 0.0))
+        out_reb = float(out_player.get("reb", 0.0))
+        out_ast = float(out_player.get("ast", 0.0))
+        n = len(top5)
+
+        for teammate in top5:
+            existing = boost_map.get(teammate, {"pts_boost": 1.0, "reb_boost": 1.0, "ast_boost": 1.0})
+            # Each teammate gets a share; express as multiplier additive to 1.0
+            # We store cumulative multipliers by multiplying
+            pts_add = out_pts / n if n > 0 else 0.0
+            reb_add = out_reb / n if n > 0 else 0.0
+            ast_add = out_ast / n if n > 0 else 0.0
+            # Convert additive stats to a multiplier: use a flat 8% per out star heuristic
+            # (exact per-stat redistribution would need per-player averages, which we don't have here)
+            existing["pts_boost"] = min(existing["pts_boost"] * (1.0 + (pts_add / 20.0 if pts_add > 0 else 0.0)), 1.30)
+            existing["reb_boost"] = min(existing["reb_boost"] * (1.0 + (reb_add / 10.0 if reb_add > 0 else 0.0)), 1.30)
+            existing["ast_boost"] = min(existing["ast_boost"] * (1.0 + (ast_add / 10.0 if ast_add > 0 else 0.0)), 1.30)
+            boost_map[teammate] = existing
+
+    return boost_map
+
+
 def _fuzzy_match_player(name: str, stats_map: dict) -> dict | None:
     """Try last-name match as fallback for name format differences."""
     last = name.split()[-1].lower()

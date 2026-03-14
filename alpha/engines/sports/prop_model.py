@@ -51,14 +51,13 @@ _REST_DEFAULT: float = 1.02   # 3+ days rest
 _REB_DAMP: float = 0.90
 
 # Markets that use Poisson CDF vs Negative Binomial CDF
-_POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals", "player_threes"}
+_POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals"}
 _NEGBIN_MARKETS  = {"player_points", "player_rebounds"}
 
 _MARKET_COL: dict[str, str] = {
     "player_points":   "PTS",
     "player_rebounds": "REB",
     "player_assists":  "AST",
-    "player_threes":   "FG3M",
 }
 
 _MIN_MINUTES: int = 20
@@ -81,7 +80,6 @@ _OPP_ADJ_CAP: dict[str, float] = {
     "player_points":   0.15,
     "player_rebounds": 0.10,  # tightened from 0.15 — OPP-04
     "player_assists":  0.12,
-    "player_threes":   0.12,
     "player_steals":   0.10,
     "player_blocks":   0.10,
 }
@@ -107,6 +105,7 @@ class PropModel:
         self._team_stats_cache: dict[str, dict] | None = None  # replaces per-market caches
         self._log_cache: dict[str, list[dict]] = {}
         self._stats_cache = stats_cache
+        self._team_fg_cache: dict[str, tuple] = {}
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
@@ -123,6 +122,7 @@ class PropModel:
         location: str = "all",
         position: str = "",
         team_win_prob: float = 0.50,
+        player_team: str = "",
     ) -> dict | None:
         """
         Predict P(player > line) for the given market.
@@ -169,6 +169,20 @@ class PropModel:
         # ALGO-04: Days-rest multiplier
         rest_mult = self._rest_multiplier(qualifying)
         proj_stat *= rest_mult
+
+        # TEAMMATE-01: 3-signal assist context
+        # Signal 1: teammate FG% trend  (40%)
+        # Signal 2: team AST/FGM rate trend  (35%)
+        # Signal 3: opponent ASTs allowed vs league avg  (25%)
+        if market == "player_assists" and player_team:
+            fg_mult, ast_rate_mult = self._fetch_team_assist_context(player_team)
+            ts = self._fetch_team_per_game_stats()
+            opp_data = ts.get(opponent_team, {})
+            opp_ast_pg = opp_data.get("opp_ast_pg", _LEAGUE_AVGS["ast_pg"])
+            league_ast = _LEAGUE_AVGS["ast_pg"]
+            opp_ast_mult = max(0.92, min(1.08, opp_ast_pg / league_ast)) if league_ast > 0 else 1.0
+            delta = 0.40 * (fg_mult - 1) + 0.35 * (ast_rate_mult - 1) + 0.25 * (opp_ast_mult - 1)
+            proj_stat *= max(0.90, min(1.10, 1.0 + delta))
 
         # Rebound volatility dampening
         if market == "player_rebounds":
@@ -394,6 +408,58 @@ class PropModel:
             return 100 / (american_odds + 100)
         return abs(american_odds) / (abs(american_odds) + 100)
 
+    def _fetch_team_assist_context(self, team_name: str) -> tuple[float, float]:
+        """
+        Returns (fg_trend_mult, ast_rate_trend_mult) for the player's team.
+
+        Signal 1 — teammate FG% trend: last-5g FG% / season FG%
+        Signal 2 — team AST rate trend: last-5g (AST/FGM) / season (AST/FGM)
+          High AST rate = ball-movement offense = more assist opportunities.
+
+        Both capped at ±8%. Returns (1.0, 1.0) on any error.
+        Uses one TeamGameLogs API call, cached per team.
+        """
+        if team_name in self._team_fg_cache:
+            return self._team_fg_cache[team_name]
+        try:
+            from nba_api.stats.static import teams as nba_teams  # noqa: PLC0415
+            from nba_api.stats.endpoints.teamgamelogs import TeamGameLogs  # noqa: PLC0415
+            all_teams = nba_teams.get_teams()
+            matched = [t for t in all_teams if t["full_name"].lower() == team_name.lower()
+                       or t["nickname"].lower() == team_name.lower()]
+            if not matched:
+                return 1.0, 1.0
+            tid = matched[0]["id"]
+            time.sleep(_NBA_API_SLEEP)
+            gl = TeamGameLogs(team_id_nullable=str(tid), season_nullable=self._season)
+            df = gl.get_data_frames()[0]
+            if df.empty or len(df) < 5:
+                return 1.0, 1.0
+
+            # Signal 1: FG% trend
+            fg_mult = 1.0
+            if "FG_PCT" in df.columns:
+                season_fg = float(df["FG_PCT"].mean())
+                recent_fg = float(df["FG_PCT"].iloc[:5].mean())
+                if season_fg > 0:
+                    fg_mult = max(0.92, min(1.08, recent_fg / season_fg))
+
+            # Signal 2: AST/FGM rate trend
+            ast_rate_mult = 1.0
+            if "AST" in df.columns and "FGM" in df.columns:
+                fgm = df["FGM"].replace(0, float("nan"))
+                ast_rate = df["AST"] / fgm
+                season_rate = float(ast_rate.mean())
+                recent_rate = float(ast_rate.iloc[:5].mean())
+                if season_rate > 0 and not (season_rate != season_rate):  # nan check
+                    ast_rate_mult = max(0.92, min(1.08, recent_rate / season_rate))
+
+            result = (fg_mult, ast_rate_mult)
+            self._team_fg_cache[team_name] = result
+            return result
+        except Exception:
+            return 1.0, 1.0
+
     # ------------------------------------------------------------------
     # nba_api calls
     # ------------------------------------------------------------------
@@ -528,10 +594,13 @@ class PropModel:
                 def_rtg = row.get("DEF_RATING")
                 opp_fg3m = row.get("OPP_FG3M")
                 gp = float(row.get("GP", 0) or 0)
+                opp_ast = row.get("OPP_AST")
                 if def_rtg is not None:
                     entry["def_rtg"] = float(def_rtg)
                 if opp_fg3m is not None and gp > 0:
                     entry["opp_fg3m_pg"] = float(opp_fg3m) / gp
+                if opp_ast is not None and gp > 0:
+                    entry["opp_ast_pg"] = float(opp_ast) / gp
 
             # ── Pass 3: Advanced stats (PACE) ──
             try:

@@ -98,7 +98,7 @@ def test_market_col_mapping(model):
     assert model._market_col("player_points")   == "PTS"
     assert model._market_col("player_rebounds") == "REB"
     assert model._market_col("player_assists")  == "AST"
-    assert model._market_col("player_threes")   == "FG3M"
+    assert model._market_col("player_threes")   is None
     assert model._market_col("player_steals")   is None
 
 
