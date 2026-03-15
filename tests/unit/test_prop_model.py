@@ -181,3 +181,60 @@ def test_shrinkage_uses_position_prior():
     shrunk_pg = PropModel._james_stein_shrink(5.0, 5, "player_rebounds", "PG")
     # C prior=9 → shrunk up from 5; PG prior=4 → shrunk down from 5
     assert shrunk_c > shrunk_pg
+
+
+# ---------------------------------------------------------------------------
+# Zero-Inflated Poisson tests
+# ---------------------------------------------------------------------------
+
+def test_zip_pi_zero_zero_equals_poisson():
+    """ZIP with π=0 should equal plain Poisson."""
+    from alpha.engines.sports.prop_model import PropModel
+    from scipy.stats import poisson
+    lam = 5.0
+    p_zip = PropModel._zip_p_over(line=4, lam=lam, pi_zero=0.0)
+    p_poi = float(1 - poisson.cdf(4, mu=lam))
+    assert abs(p_zip - p_poi) < 0.001
+
+
+def test_zip_reduces_probability_vs_poisson():
+    """High zero-inflation (π=0.40) → lower P(over) than plain Poisson."""
+    from alpha.engines.sports.prop_model import PropModel
+    from scipy.stats import poisson
+    lam = 3.0
+    p_zip     = PropModel._zip_p_over(line=3, lam=lam, pi_zero=0.40)
+    p_poisson = float(1 - poisson.cdf(3, mu=lam))
+    # ZIP has extra mass at 0 → P(X>3) lower
+    assert p_zip < p_poisson
+
+
+def test_zip_used_for_sf_not_pg(model):
+    """AST prediction: SF with many 0-assist games gets lower P(over) than PG."""
+    from unittest.mock import patch
+
+    # 40% zero-assist games — typical for a wing
+    ast_values = [0, 0, 1, 2, 0, 3, 0, 1, 2, 0, 4, 0, 0, 1, 0, 2, 0, 0, 1, 0]
+    rows_ast = [
+        {"AST": v, "PTS": 15.0, "REB": 5.0, "FG3M": 1.0,
+         "MIN": "30", "MIN_float": 30.0, "MATCHUP": "LAL vs. BOS"}
+        for v in ast_values
+    ]
+
+    def _patch_team_stats():
+        return patch(
+            "alpha.engines.sports.prop_model.PropModel._fetch_team_per_game_stats",
+            return_value={},
+        )
+
+    with _patch_logs(rows_ast), _patch_def_ratings(), _patch_team_stats():
+        result_sf = model.predict_prop(
+            "Test SF", "player_assists", 1.5, "Boston Celtics", position="SF"
+        )
+        result_pg = model.predict_prop(
+            "Test PG", "player_assists", 1.5, "Boston Celtics", position="PG"
+        )
+
+    assert result_sf is not None
+    assert result_pg is not None
+    # SF uses ZIP with pi_zero>0 → lower P(over 1.5) than PG using plain Poisson
+    assert result_sf["model_prob"] < result_pg["model_prob"]

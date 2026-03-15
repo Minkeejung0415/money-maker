@@ -212,7 +212,8 @@ class PropModel:
         )
 
         # ALGO-03: Appropriate CDF per market
-        p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat)
+        p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat,
+                                       position=position, values=values)
         p_over = float(np.clip(p_over, 0.01, 0.99))
 
         # Temperature calibration: reduces overconfidence (T=0.75 per research)
@@ -362,12 +363,50 @@ class PropModel:
         return float(calibrated)
 
     @staticmethod
+    def _zip_p_over(line: float, lam: float, pi_zero: float) -> float:
+        """
+        P(X > line) for a Zero-Inflated Poisson(π, λ).
+
+        P(X=0) = π + (1-π)*exp(-λ)
+        P(X=k) = (1-π) * exp(-λ) * λ^k / k!  for k >= 1
+
+        Since the zero-inflation only adds mass at X=0, for k>0 the
+        relative ratios match Poisson, so:
+        P(X > line) = (1 - π) * P(Poisson(λ) > line)
+
+        Source: ZIP literature for overdispersed count data with excess zeros.
+        Used for player_assists on non-PG positions (many 0-assist games).
+        """
+        if lam <= 0:
+            return 0.0
+        pi_zero = float(np.clip(pi_zero, 0.0, 0.95))
+        p_poisson_over = float(1 - poisson.cdf(int(line), mu=lam))
+        return (1.0 - pi_zero) * p_poisson_over
+
+    @staticmethod
     def _compute_p_over(
-        market: str, line: float, projection: float, std: float, var: float
+        market: str,
+        line: float,
+        projection: float,
+        std: float,
+        var: float,
+        position: str = "",
+        values: list[float] | None = None,
     ) -> float:
-        """Select appropriate CDF based on market type."""
+        """Select appropriate CDF based on market type and player position."""
+        if market == "player_assists":
+            pos = position.upper()
+            if pos in ("SF", "SG", "PF", "C") and values:
+                # Zero-inflated Poisson for non-PG positions.
+                # Research: non-PGs have many 0-assist games (zero-inflation).
+                pi_zero = sum(1 for v in values if v == 0) / len(values)
+                return PropModel._zip_p_over(line=line, lam=projection, pi_zero=pi_zero)
+            # PG or unknown: plain Poisson
+            return float(1 - poisson.cdf(int(line), mu=projection))
+
         if market in _POISSON_MARKETS:
-            return float(1 - poisson.cdf(line, mu=projection))
+            return float(1 - poisson.cdf(int(line), mu=projection))
+
         if market in _NEGBIN_MARKETS:
             mean_ = projection
             if var > mean_ and mean_ > 0:
@@ -376,6 +415,7 @@ class PropModel:
                 if r > 0:
                     return float(1 - nbinom.cdf(int(line), r, p))
             return float(1 - norm.cdf(line, loc=projection, scale=std))
+
         return float(1 - norm.cdf(line, loc=projection, scale=std))
 
     def _apply_opp_adjustment_for_market(
