@@ -147,3 +147,37 @@ def test_american_to_novig_fallback(model):
     """When under_odds=None, assumes symmetric market → 0.50 for -110."""
     novig = model._american_to_novig(-110, None)
     assert abs(novig - 0.50) < 0.001
+
+
+# ---------------------------------------------------------------------------
+# James-Stein shrinkage tests
+# ---------------------------------------------------------------------------
+
+def test_shrinkage_pulls_toward_prior_small_sample():
+    """5-game sample of 30 PTS for a PG (prior=15) → shrunk toward 15."""
+    from alpha.engines.sports.prop_model import PropModel
+    shrunk = PropModel._james_stein_shrink(
+        observed=30.0, n_games=5, market="player_points", position="PG"
+    )
+    # prior=15, B=max(0,1-5/15)=0.667 → shrunk = 15 + 0.333*(30-15) ≈ 20.0
+    assert 15.0 < shrunk < 30.0
+    assert shrunk < 23.0  # heavily shrunk
+
+
+def test_shrinkage_trusts_large_sample():
+    """30-game sample → B=0, return observed unchanged."""
+    from alpha.engines.sports.prop_model import PropModel
+    shrunk = PropModel._james_stein_shrink(
+        observed=28.0, n_games=30, market="player_points", position="PG"
+    )
+    # B = max(0, 1-30/15) = 0 → shrunk = observed
+    assert abs(shrunk - 28.0) < 0.01
+
+
+def test_shrinkage_uses_position_prior():
+    """C prior REB=9 > PG prior REB=4 → same observed pulled differently."""
+    from alpha.engines.sports.prop_model import PropModel
+    shrunk_c  = PropModel._james_stein_shrink(5.0, 5, "player_rebounds", "C")
+    shrunk_pg = PropModel._james_stein_shrink(5.0, 5, "player_rebounds", "PG")
+    # C prior=9 → shrunk up from 5; PG prior=4 → shrunk down from 5
+    assert shrunk_c > shrunk_pg

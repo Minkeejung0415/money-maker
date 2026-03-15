@@ -93,6 +93,23 @@ _POSITION_OPP_WEIGHT: dict[str, float] = {
     "PG": 0.50,
 }
 
+# James-Stein shrinkage: position-level prior means per market.
+# Approximate NBA per-game averages by position (2023-25 seasons).
+# Source: Efron-Morris (1975), Brown (2008) — shrink toward population mean.
+_POSITION_PRIORS: dict[str, dict[str, float]] = {
+    "player_points":   {"PG": 15.0, "SG": 14.0, "SF": 13.0, "PF": 12.0, "C": 12.0},
+    "player_rebounds": {"PG":  4.0, "SG":  4.0, "SF":  5.0, "PF":  7.0, "C":  9.0},
+    "player_assists":  {"PG":  6.0, "SG":  3.0, "SF":  2.0, "PF":  2.0, "C":  2.0},
+}
+_LEAGUE_PRIORS: dict[str, float] = {
+    "player_points": 13.5, "player_rebounds": 5.5, "player_assists": 3.0,
+}
+# Games at which observed data fully trusted (B → 0).
+# Research: PTS stabilizes faster (~15 games), REB/AST need ~20.
+_STABILIZATION_N: dict[str, int] = {
+    "player_points": 15, "player_rebounds": 20, "player_assists": 20,
+}
+
 
 class PropModel:
     def __init__(self, season: str = "2025-26", stats_cache=None):
@@ -159,6 +176,11 @@ class PropModel:
             return None
 
         proj_stat = self._weighted_avg(values)
+
+        # James-Stein shrinkage: pull noisy small-sample estimates toward position prior.
+        # Heavy shrinkage at 5 games, near-zero at 30+ games.
+        n_qualifying = min(len(qualifying), 20)
+        proj_stat = self._james_stein_shrink(proj_stat, n_qualifying, market, position)
 
         # Scale by recent vs season minute trend (research: minutes is #1 predictor)
         proj_stat *= self._compute_minutes_ratio(qualifying)
@@ -298,6 +320,32 @@ class PropModel:
         if season_min <= 0:
             return 1.0
         return max(0.85, min(1.15, recent_min / season_min))
+
+    @staticmethod
+    def _james_stein_shrink(
+        observed: float,
+        n_games: int,
+        market: str,
+        position: str,
+    ) -> float:
+        """
+        James-Stein shrinkage estimator (Efron-Morris 1975, Brown 2008).
+
+        shrunk = prior + (1 - B) * (observed - prior)
+        B = max(0, 1 - n / stabilization_n)
+
+        With few games, B≈1 → heavy pull toward position prior.
+        With 30+ games, B=0 → trust observed data fully.
+        """
+        stab_n = _STABILIZATION_N.get(market)
+        if stab_n is None:
+            return observed  # unknown market — no shrinkage
+
+        pos = position.upper() if position else ""
+        prior = _POSITION_PRIORS.get(market, {}).get(pos, _LEAGUE_PRIORS.get(market, observed))
+
+        B = max(0.0, 1.0 - n_games / stab_n)
+        return prior + (1.0 - B) * (observed - prior)
 
     @staticmethod
     def _apply_temperature_scaling(p: float, temperature: float = 0.75) -> float:
