@@ -117,12 +117,33 @@ def test_confidence_high_when_large_gap(model):
 
 def test_confidence_low_when_small_gap(model):
     """Model ≈ market probability → LOW confidence."""
-    # Use line right at mean so model_prob ≈ 0.50, same as -110 market_implied (~0.524)
-    # gap = |0.50 - 0.524| ≈ 0.024 < 0.04 → LOW
+    # line = mean so model_prob ≈ 0.50, no-vig market_implied = 0.50 for -110/-110
+    # gap = |0.50 - 0.50| = 0.00 < 0.04 → LOW
     rows = _make_log_rows([25.0] * 20)
     with _patch_logs(rows), _patch_def_ratings():
-        # line = 25 = proj_stat → p_over ≈ 0.50
         result = model.predict_prop("Test Player", "player_points", 25.0, "Boston Celtics",
                                     over_odds=-110)
     assert result is not None
     assert result["confidence"] == "LOW"
+
+
+# ---------------------------------------------------------------------------
+# Vig removal tests
+# ---------------------------------------------------------------------------
+
+def test_american_to_novig_symmetric(model):
+    """Symmetric -110/-110 market → no-vig implied = 0.50."""
+    novig = model._american_to_novig(-110, -110)
+    assert abs(novig - 0.50) < 0.001
+
+
+def test_american_to_novig_asymmetric(model):
+    """-115 over / +105 under → no-vig over ≈ 0.523."""
+    novig = model._american_to_novig(-115, 105)
+    assert abs(novig - 0.523) < 0.005
+
+
+def test_american_to_novig_fallback(model):
+    """When under_odds=None, assumes symmetric market → 0.50 for -110."""
+    novig = model._american_to_novig(-110, None)
+    assert abs(novig - 0.50) < 0.001

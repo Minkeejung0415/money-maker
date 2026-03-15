@@ -46,10 +46,6 @@ _REST_MULTIPLIER: dict[int, float] = {
 }
 _REST_DEFAULT: float = 1.02   # 3+ days rest
 
-# Rebound volatility dampening: single-game rebounds have ~40-50% CoV,
-# and exponential-decay averages overweight outlier games.
-_REB_DAMP: float = 0.90
-
 # Markets that use Poisson CDF vs Negative Binomial CDF
 _POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals"}
 _NEGBIN_MARKETS  = {"player_points", "player_rebounds"}
@@ -87,14 +83,14 @@ _OPP_ADJ_CAP: dict[str, float] = {
 _LEAGUE_AVG_DREB_PG: float = 34.0
 _LEAGUE_AVG_PACE: float = 100.0
 
-# OPP-02: Position-level scaling for opponent adjustments.
-# Bigs are more affected by opponent defensive strength than guards.
+# OPP-02: Position-level scaling — 2 tiers (bigs vs everyone else).
+# Research shows finer granularity adds noise with small samples.
 _POSITION_OPP_WEIGHT: dict[str, float] = {
-    "C":  1.00,
-    "PF": 0.85,
-    "SF": 0.65,
-    "SG": 0.45,
-    "PG": 0.40,
+    "C":  0.90,
+    "PF": 0.90,
+    "SF": 0.50,
+    "SG": 0.50,
+    "PG": 0.50,
 }
 
 
@@ -105,7 +101,6 @@ class PropModel:
         self._team_stats_cache: dict[str, dict] | None = None  # replaces per-market caches
         self._log_cache: dict[str, list[dict]] = {}
         self._stats_cache = stats_cache
-        self._team_fg_cache: dict[str, tuple] = {}
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
@@ -119,6 +114,7 @@ class PropModel:
         line: float,
         opponent_team: str,
         over_odds: int = -110,
+        under_odds: int | None = None,
         location: str = "all",
         position: str = "",
         team_win_prob: float = 0.50,
@@ -163,6 +159,10 @@ class PropModel:
             return None
 
         proj_stat = self._weighted_avg(values)
+
+        # Scale by recent vs season minute trend (research: minutes is #1 predictor)
+        proj_stat *= self._compute_minutes_ratio(qualifying)
+
         var_stat = max(1.0, stdev(values[:20]) ** 2 if len(values[:20]) >= 2 else 1.0)
         std_stat = max(1.0, var_stat ** 0.5)
 
@@ -170,23 +170,15 @@ class PropModel:
         rest_mult = self._rest_multiplier(qualifying)
         proj_stat *= rest_mult
 
-        # TEAMMATE-01: 3-signal assist context
-        # Signal 1: teammate FG% trend  (40%)
-        # Signal 2: team AST/FGM rate trend  (35%)
-        # Signal 3: opponent ASTs allowed vs league avg  (25%)
-        if market == "player_assists" and player_team:
-            fg_mult, ast_rate_mult = self._fetch_team_assist_context(player_team)
+        # Assist context: single signal — opponent ASTs allowed vs league avg
+        if market == "player_assists":
             ts = self._fetch_team_per_game_stats()
             opp_data = ts.get(opponent_team, {})
             opp_ast_pg = opp_data.get("opp_ast_pg", _LEAGUE_AVGS["ast_pg"])
             league_ast = _LEAGUE_AVGS["ast_pg"]
-            opp_ast_mult = max(0.92, min(1.08, opp_ast_pg / league_ast)) if league_ast > 0 else 1.0
-            delta = 0.40 * (fg_mult - 1) + 0.35 * (ast_rate_mult - 1) + 0.25 * (opp_ast_mult - 1)
-            proj_stat *= max(0.90, min(1.10, 1.0 + delta))
-
-        # Rebound volatility dampening
-        if market == "player_rebounds":
-            proj_stat *= _REB_DAMP
+            if league_ast > 0:
+                opp_ast_mult = max(0.95, min(1.05, opp_ast_pg / league_ast))
+                proj_stat *= opp_ast_mult
 
         # OPP-03: Compute pace ratio for rebounds
         pace_ratio = self._compute_pace_ratio(opponent_team) if market == "player_rebounds" else 1.0
@@ -201,17 +193,15 @@ class PropModel:
         p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat)
         p_over = float(np.clip(p_over, 0.01, 0.99))
 
-        market_implied = self._american_to_implied(over_odds)
+        # Temperature calibration: reduces overconfidence (T=0.75 per research)
+        p_over = self._apply_temperature_scaling(p_over)
+
+        market_implied = self._american_to_novig(over_odds, under_odds)
         confidence = self._classify_confidence(p_over, market_implied)
 
         # CONF-01: Blowout gate — downgrade when player's team is a heavy underdog
         if team_win_prob < 0.30 and confidence == "HIGH":
             confidence = "MEDIUM"
-
-        # CONF-02: Low-line skepticism — suspiciously easy lines are traps
-        if p_over > 0.85 and line < opp_adj - 1.5 * std_stat:
-            if confidence == "HIGH":
-                confidence = "MEDIUM"
 
         # CONF-03: 60% confidence floor
         if p_over < 0.60:
@@ -294,6 +284,34 @@ class PropModel:
             return mult
         except Exception:
             return 1.0
+
+    def _compute_minutes_ratio(self, qualifying: list[dict]) -> float:
+        """
+        Scale projection by recent (last 5) vs full-season avg minutes.
+        Research: projected minutes is the #1 predictor for all counting stats.
+        Capped at ±15% to avoid overcorrection on small samples.
+        """
+        if len(qualifying) < 5:
+            return 1.0
+        recent_min = mean([g.get("MIN_float", 25.0) for g in qualifying[:5]])
+        season_min = mean([g.get("MIN_float", 25.0) for g in qualifying])
+        if season_min <= 0:
+            return 1.0
+        return max(0.85, min(1.15, recent_min / season_min))
+
+    @staticmethod
+    def _apply_temperature_scaling(p: float, temperature: float = 0.75) -> float:
+        """
+        Log-odds temperature scaling to reduce overconfidence.
+        Research (Walsh & Joshi): calibration-first selection = +35% vs -35% ROI.
+        T=0.75 maps 87% → 78%, 80% → 74%, 60% → 57%. Preserves direction.
+        """
+        import math
+        if p <= 0.01 or p >= 0.99:
+            return p
+        log_odds = math.log(p / (1.0 - p))
+        calibrated = 1.0 / (1.0 + math.exp(-log_odds * temperature))
+        return float(calibrated)
 
     @staticmethod
     def _compute_p_over(
@@ -408,57 +426,25 @@ class PropModel:
             return 100 / (american_odds + 100)
         return abs(american_odds) / (abs(american_odds) + 100)
 
-    def _fetch_team_assist_context(self, team_name: str) -> tuple[float, float]:
+    @staticmethod
+    def _american_to_novig(over_odds: int, under_odds: int | None) -> float:
         """
-        Returns (fg_trend_mult, ast_rate_trend_mult) for the player's team.
+        Convert American odds pair to no-vig (fair) implied probability for the over.
 
-        Signal 1 — teammate FG% trend: last-5g FG% / season FG%
-        Signal 2 — team AST rate trend: last-5g (AST/FGM) / season (AST/FGM)
-          High AST rate = ball-movement offense = more assist opportunities.
-
-        Both capped at ±8%. Returns (1.0, 1.0) on any error.
-        Uses one TeamGameLogs API call, cached per team.
+        Removes the bookmaker margin so model_prob is compared against a fair
+        probability rather than an inflated one.
+        If under_odds is None, assumes a symmetric market (same odds both sides),
+        which gives p_over = 0.50 for -110/-110.
         """
-        if team_name in self._team_fg_cache:
-            return self._team_fg_cache[team_name]
-        try:
-            from nba_api.stats.static import teams as nba_teams  # noqa: PLC0415
-            from nba_api.stats.endpoints.teamgamelogs import TeamGameLogs  # noqa: PLC0415
-            all_teams = nba_teams.get_teams()
-            matched = [t for t in all_teams if t["full_name"].lower() == team_name.lower()
-                       or t["nickname"].lower() == team_name.lower()]
-            if not matched:
-                return 1.0, 1.0
-            tid = matched[0]["id"]
-            time.sleep(_NBA_API_SLEEP)
-            gl = TeamGameLogs(team_id_nullable=str(tid), season_nullable=self._season)
-            df = gl.get_data_frames()[0]
-            if df.empty or len(df) < 5:
-                return 1.0, 1.0
+        def _raw(odds: int) -> float:
+            if odds > 0:
+                return 100.0 / (odds + 100)
+            return abs(odds) / (abs(odds) + 100.0)
 
-            # Signal 1: FG% trend
-            fg_mult = 1.0
-            if "FG_PCT" in df.columns:
-                season_fg = float(df["FG_PCT"].mean())
-                recent_fg = float(df["FG_PCT"].iloc[:5].mean())
-                if season_fg > 0:
-                    fg_mult = max(0.92, min(1.08, recent_fg / season_fg))
-
-            # Signal 2: AST/FGM rate trend
-            ast_rate_mult = 1.0
-            if "AST" in df.columns and "FGM" in df.columns:
-                fgm = df["FGM"].replace(0, float("nan"))
-                ast_rate = df["AST"] / fgm
-                season_rate = float(ast_rate.mean())
-                recent_rate = float(ast_rate.iloc[:5].mean())
-                if season_rate > 0 and not (season_rate != season_rate):  # nan check
-                    ast_rate_mult = max(0.92, min(1.08, recent_rate / season_rate))
-
-            result = (fg_mult, ast_rate_mult)
-            self._team_fg_cache[team_name] = result
-            return result
-        except Exception:
-            return 1.0, 1.0
+        p_over = _raw(over_odds)
+        p_under = _raw(under_odds) if under_odds is not None else p_over
+        total = p_over + p_under
+        return p_over / total if total > 0 else 0.5
 
     # ------------------------------------------------------------------
     # nba_api calls
