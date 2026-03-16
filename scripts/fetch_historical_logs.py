@@ -14,8 +14,13 @@ Usage:
 from __future__ import annotations
 
 import csv
+import sys
 import time
 from pathlib import Path
+
+# Force UTF-8 stdout so player names with accents don't crash on Windows
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 SEASONS = ["2022-23", "2023-24", "2024-25"]
 OUT_FILE = Path("data/historical_logs.csv")
