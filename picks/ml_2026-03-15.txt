@@ -1,0 +1,45 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+RUN_DATE=2026-03-15
+[1/6] Fetching today's NBA games...
+    Found 7 game(s)
+
+=================================================================
+MONEYLINE SCANNER — All Games
+=================================================================
+
+Oklahoma City Thunder vs Minnesota Timberwolves
+  Oklahoma City Thunder           model 57.1%  |  market 78.0%  |  edge -20.9%  |  EV/100: $-26.78  |  Kelly: 0.0% <- SKIP
+  Minnesota Timberwolves          model 42.9%  |  market 26.0%  |  edge +16.9%  |  EV/100: $+65.05  |  Kelly: 5.7% <- VALUE
+
+Cleveland Cavaliers vs Dallas Mavericks
+  Cleveland Cavaliers             model 89.0%  |  market 91.7%  |  edge -2.6%  |  EV/100: $-2.85  |  Kelly: 0.0% <- SKIP
+  Dallas Mavericks                model 10.9%  |  market 12.5%  |  edge -1.6%  |  EV/100: $-12.40  |  Kelly: 0.0% <- SKIP
+
+Toronto Raptors vs Detroit Pistons
+  Toronto Raptors                 model 44.3%  |  market 42.4%  |  edge +2.0%  |  EV/100: $+4.62  |  Kelly: 0.8%
+  Detroit Pistons                 model 55.7%  |  market 61.8%  |  edge -6.2%  |  EV/100: $-9.97  |  Kelly: 0.0% <- SKIP
+
+Milwaukee Bucks vs Indiana Pacers
+  Milwaukee Bucks                 model 72.8%  |  market 74.7%  |  edge -1.9%  |  EV/100: $-2.51  |  Kelly: 0.0% <- SKIP
+  Indiana Pacers                  model 27.2%  |  market 29.4%  |  edge -2.2%  |  EV/100: $-7.55  |  Kelly: 0.0% <- SKIP
+
+Philadelphia 76ers vs Portland Trail Blazers
+  Philadelphia 76ers              model 61.4%  |  market 29.9%  |  edge +31.5%  |  EV/100: $+105.56  |  Kelly: 11.2% <- VALUE
+  Portland Trail Blazers          model 38.6%  |  market 74.4%  |  edge -35.7%  |  EV/100: $-48.04  |  Kelly: 0.0% <- SKIP
+
+New York Knicks vs Golden State Warriors
+  New York Knicks                 model 85.7%  |  market 90.0%  |  edge -4.3%  |  EV/100: $-4.79  |  Kelly: 0.0% <- SKIP
+  Golden State Warriors           model 14.3%  |  market 14.1%  |  edge +0.2%  |  EV/100: $+1.60  |  Kelly: 0.1%
+
+Sacramento Kings vs Utah Jazz
+  Sacramento Kings                model 48.1%  |  market 55.8%  |  edge -7.6%  |  EV/100: $-13.65  |  Kelly: 0.0% <- SKIP
+  Utah Jazz                       model 51.9%  |  market 48.1%  |  edge +3.8%  |  EV/100: $+7.87  |  Kelly: 1.8%
+
+=================================================================
+TOP VALUE ML BETS (edge > 4%) — showing 2 of 2
+=================================================================
+  1. Philadelphia 76ers              edge +31.5%  |  EV/100: $+105.56  |  model: 61.4%
+  2. Minnesota Timberwolves          edge +16.9%  |  EV/100: $+65.05  |  model: 42.9%
+

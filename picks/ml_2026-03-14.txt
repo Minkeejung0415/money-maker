@@ -1,6 +1,45 @@
-WARNING alpha.data.ingestion.odds_api: Odds API HTTP error 401 — skipping sports vertical
 ACTIVE_SEASON=2025-26
 NBAStatsCache active season=2025-26
 PropModel active season=2025-26
 [1/6] Fetching today's NBA games...
-    No NBA games found today (or API error). Exiting.
+    Found 7 game(s)
+
+=================================================================
+MONEYLINE SCANNER — All Games
+=================================================================
+
+Philadelphia 76ers vs Brooklyn Nets
+  Philadelphia 76ers              model 75.4%  |  market 78.9%  |  edge -3.5%  |  EV/100: $-4.43  |  Kelly: 0.0% <- SKIP
+  Brooklyn Nets                   model 24.6%  |  market 25.0%  |  edge -0.5%  |  EV/100: $-1.80  |  Kelly: 0.0% <- SKIP
+
+Atlanta Hawks vs Milwaukee Bucks
+  Atlanta Hawks                   model 64.1%  |  market 74.7%  |  edge -10.6%  |  EV/100: $-14.22  |  Kelly: 0.0% <- SKIP
+  Milwaukee Bucks                 model 35.9%  |  market 29.4%  |  edge +6.5%  |  EV/100: $+22.20  |  Kelly: 2.3% <- VALUE
+
+San Antonio Spurs vs Charlotte Hornets
+  San Antonio Spurs               model 65.0%  |  market 69.7%  |  edge -4.7%  |  EV/100: $-6.78  |  Kelly: 0.0% <- SKIP
+  Charlotte Hornets               model 35.0%  |  market 34.5%  |  edge +0.5%  |  EV/100: $+1.59  |  Kelly: 0.2%
+
+Boston Celtics vs Washington Wizards
+  Boston Celtics                  model 83.7%  |  market 95.7%  |  edge -12.0%  |  EV/100: $-12.55  |  Kelly: 0.0% <- SKIP
+  Washington Wizards              model 16.4%  |  market 8.3%  |  edge +8.0%  |  EV/100: $+96.20  |  Kelly: 2.2% <- VALUE
+
+Los Angeles Lakers vs Denver Nuggets
+  Los Angeles Lakers              model 43.7%  |  market 45.5%  |  edge -1.8%  |  EV/100: $-3.86  |  Kelly: 0.0% <- SKIP
+  Denver Nuggets                  model 56.3%  |  market 58.7%  |  edge -2.4%  |  EV/100: $-4.05  |  Kelly: 0.0% <- SKIP
+
+Miami Heat vs Orlando Magic
+  Miami Heat                      model 59.2%  |  market 62.4%  |  edge -3.2%  |  EV/100: $-5.06  |  Kelly: 0.0% <- SKIP
+  Orlando Magic                   model 40.8%  |  market 41.7%  |  edge -0.9%  |  EV/100: $-2.20  |  Kelly: 0.0% <- SKIP
+
+Los Angeles Clippers vs Sacramento Kings
+  Los Angeles Clippers            model 80.1%  |  market 88.9%  |  edge -8.7%  |  EV/100: $-9.84  |  Kelly: 0.0% <- SKIP
+  Sacramento Kings                model 19.9%  |  market 15.2%  |  edge +4.7%  |  EV/100: $+31.08  |  Kelly: 1.4% <- VALUE
+
+=================================================================
+TOP VALUE ML BETS (edge > 4%) — showing 3 of 3
+=================================================================
+  1. Washington Wizards              edge +8.0%  |  EV/100: $+96.20  |  model: 16.4%
+  2. Milwaukee Bucks                 edge +6.5%  |  EV/100: $+22.20  |  model: 35.9%
+  3. Sacramento Kings                edge +4.7%  |  EV/100: $+31.08  |  model: 19.9%
+

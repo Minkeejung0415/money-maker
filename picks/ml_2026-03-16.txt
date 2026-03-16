@@ -1,0 +1,51 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    Found 8 game(s)
+
+=================================================================
+MONEYLINE SCANNER — All Games
+=================================================================
+
+Atlanta Hawks vs Orlando Magic
+  Atlanta Hawks                   model 48.9%  |  market 59.0%  |  edge -10.2%  |  EV/100: $-17.23  |  Kelly: 0.0% <- SKIP
+  Orlando Magic                   model 51.1%  |  market 44.6%  |  edge +6.5%  |  EV/100: $+14.58  |  Kelly: 2.9% <- VALUE
+
+Washington Wizards vs Golden State Warriors
+  Washington Wizards              model 25.9%  |  market 27.8%  |  edge -1.8%  |  EV/100: $-6.65  |  Kelly: 0.0% <- SKIP
+  Golden State Warriors           model 74.1%  |  market 76.5%  |  edge -2.4%  |  EV/100: $-3.14  |  Kelly: 0.0% <- SKIP
+
+Boston Celtics vs Phoenix Suns
+  Boston Celtics                  model 59.8%  |  market 78.7%  |  edge -18.9%  |  EV/100: $-24.03  |  Kelly: 0.0% <- SKIP
+  Phoenix Suns                    model 40.2%  |  market 25.3%  |  edge +14.9%  |  EV/100: $+58.75  |  Kelly: 5.0% <- VALUE
+
+Brooklyn Nets vs Portland Trail Blazers
+  Brooklyn Nets                   model 31.2%  |  market 22.7%  |  edge +8.5%  |  EV/100: $+37.28  |  Kelly: 2.7% <- VALUE
+  Portland Trail Blazers          model 68.8%  |  market 81.5%  |  edge -12.7%  |  EV/100: $-15.56  |  Kelly: 0.0% <- SKIP
+
+Chicago Bulls vs Memphis Grizzlies
+  Chicago Bulls                   model 46.9%  |  market 70.6%  |  edge -23.7%  |  EV/100: $-33.53  |  Kelly: 0.0% <- SKIP
+  Memphis Grizzlies               model 53.1%  |  market 33.6%  |  edge +19.5%  |  EV/100: $+58.18  |  Kelly: 7.3% <- VALUE
+
+New Orleans Pelicans vs Dallas Mavericks
+  New Orleans Pelicans            model 56.0%  |  market 76.2%  |  edge -20.2%  |  EV/100: $-26.53  |  Kelly: 0.0% <- SKIP
+  Dallas Mavericks                model 44.0%  |  market 27.8%  |  edge +16.2%  |  EV/100: $+58.47  |  Kelly: 5.6% <- VALUE
+
+Houston Rockets vs Los Angeles Lakers
+  Houston Rockets                 model 57.9%  |  market 59.7%  |  edge -1.7%  |  EV/100: $-2.91  |  Kelly: 0.0% <- SKIP
+  Los Angeles Lakers              model 42.1%  |  market 44.2%  |  edge -2.2%  |  EV/100: $-4.94  |  Kelly: 0.0% <- SKIP
+
+Los Angeles Clippers vs San Antonio Spurs
+  Los Angeles Clippers            model 27.0%  |  market 23.8%  |  edge +3.2%  |  EV/100: $+13.32  |  Kelly: 1.0%
+  San Antonio Spurs               model 73.0%  |  market 80.2%  |  edge -7.2%  |  EV/100: $-8.95  |  Kelly: 0.0% <- SKIP
+
+=================================================================
+TOP VALUE ML BETS (edge > 4%) — showing 5 of 5
+=================================================================
+  1. Memphis Grizzlies               edge +19.5%  |  EV/100: $+58.18  |  model: 53.1%
+  2. Dallas Mavericks                edge +16.2%  |  EV/100: $+58.47  |  model: 44.0%
+  3. Phoenix Suns                    edge +14.9%  |  EV/100: $+58.75  |  model: 40.2%
+  4. Brooklyn Nets                   edge +8.5%  |  EV/100: $+37.28  |  model: 31.2%
+  5. Orlando Magic                   edge +6.5%  |  EV/100: $+14.58  |  model: 51.1%
+

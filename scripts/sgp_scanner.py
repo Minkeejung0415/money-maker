@@ -390,6 +390,7 @@ def main() -> None:
                 line=raw["line"],
                 opponent_team=opponent,
                 over_odds=raw.get("over_odds", -110),
+                under_odds=raw.get("under_odds"),
             )
             if result is None:
                 skipped_insufficient += 1
@@ -638,8 +639,9 @@ def main() -> None:
         print("[6/8] Skipping validation  "
               "-- Prop model not validated -- run with --validate to check calibration.")
 
-    # ── Optional: list all scored props ──────────────────────────────────
-    if getattr(args, "list_props", False) and scored_legs:
+    # ── Optional: list all scored props (default ON in props mode) ───────
+    list_props = getattr(args, "list_props", False) or args.mode == "props"
+    if list_props and scored_legs:
         print(f"\n{'='*65}")
         print(f"ALL SCORED PROPS ({len(scored_legs)} legs)  |  sorted by model prob")
         print(f"{'='*65}")

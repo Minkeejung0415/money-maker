@@ -32,7 +32,18 @@
       "Bash(tasklist /fi \"imagename eq python.exe\" 2>/dev/null | head -20)",
       "Bash(taskkill /F /IM python.exe 2>/dev/null; taskkill /F /IM bash.exe 2>/dev/null; echo \"done\")",
       "Skill(gsd:debug)",
-      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode ml 2>&1 | tee picks/ml_2026-03-14.txt)"
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode ml 2>&1 | tee picks/ml_2026-03-14.txt)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode props 2>&1 | tee picks/props_2026-03-14.txt)",
+      "Bash(curl:*)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode props --confidence ALL --show-ev 2>&1 | tee picks/props_all_2026-03-14.txt)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode props --confidence ALL --list-props 2>&1 | tee picks/props_all_2026-03-14.txt)",
+      "WebFetch(domain:www.landofbasketball.com)",
+      "WebFetch(domain:www.covers.com)",
+      "WebFetch(domain:www.espn.com)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode props --list-props --confidence ALL --date 2026-03-15 2>&1 | tee picks/props_all_2026-03-15.txt)",
+      "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode ml --date 2026-03-15 2>&1 | tee picks/ml_2026-03-15.txt)",
+      "Bash(ls:*)",
+      "Bash(cd:*)"
     ]
   }
 }

@@ -1,0 +1,138 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    Found 7 game(s)
+[1.5/6] Checking injury/availability status...
+    No injury concerns found.
+[2/6] Fetching player prop lines...
+    Fetched 302 prop lines across 7 game(s)
+[3/6] Running prop model — 88 players to fetch (cached players are instant)...
+    Fetching: 1/88 players (Quentin Grimes)        Fetching: 2/88 players (Ben Saraf)        Fetching: 3/88 players (VJ Edgecombe)        Fetching: 4/88 players (Danny Wolf)        Fetching: 5/88 players (Nolan Traore)        Fetching: 6/88 players (Cameron Payne)        Fetching: 7/88 players (Adem Bona)        Fetching: 8/88 players (Terance Mann)        Fetching: 9/88 players (Justin Edwards)        Fetching: 10/88 players (Jalen Wilson)        Fetching: 11/88 players (Noah Clowney)        Fetching: 12/88 players (Dominick Barlow)        Fetching: 13/88 players (Dyson Daniels)        Fetching: 14/88 players (Kevin Porter Jr.)        Fetching: 15/88 players (Ousmane Dieng)        Fetching: 16/88 players (Onyeka Okongwu)        Fetching: 17/88 players (Nickeil Alexander-Walker)        Fetching: 18/88 players (Kyle Kuzma)        Fetching: 19/88 players (C.J. McCollum)        Fetching: 20/88 players (Giannis Antetokounmpo)        Fetching: 21/88 players (Jalen Johnson)        Fetching: 22/88 players (Zaccharie Risacher)        Fetching: 23/88 players (Jock Landale)        Fetching: 24/88 players (Myles Turner)        Fetching: 25/88 players (Stephon Castle)        Fetching: 26/88 players (Moussa Diabate)        Fetching: 27/88 players (Dylan Harper)        Fetching: 28/88 players (De'Aaron Fox)        Fetching: 29/88 players (Kon Knueppel)        Fetching: 30/88 players (Coby White)        Fetching: 31/88 players (Devin Vassell)        Fetching: 32/88 players (Miles Bridges)        Fetching: 33/88 players (Brandon Miller)        Fetching: 34/88 players (Victor Wembanyama)        Fetching: 35/88 players (LaMelo Ball)        Fetching: 36/88 players (Ryan Kalkbrenner)        Fetching: 37/88 players (Julian Champagnie)        Fetching: 38/88 players (Jaylen Brown)        Fetching: 39/88 players (Trae Young)        Fetching: 40/88 players (Carlton Carrington)        Fetching: 41/88 players (Payton Pritchard)        Fetching: 42/88 players (Jayson Tatum)        Fetching: 43/88 players (Derrick White)        Fetching: 44/88 players (Tre Johnson)        Fetching: 45/88 players (Alex Sarr)        Fetching: 46/88 players (Will Riley)        Fetching: 47/88 players (Bilal Coulibaly)        Fetching: 48/88 players (Sam Hauser)        Fetching: 49/88 players (Neemias Queta)        Fetching: 50/88 players (Aaron Gordon)        Fetching: 51/88 players (Luka Doncic)        Fetching: 52/88 players (LeBron James)        Fetching: 53/88 players (Austin Reaves)        Fetching: 54/88 players (Nikola Jokic)        Fetching: 55/88 players (Cameron Johnson)        Fetching: 56/88 players (Jamal Murray)        Fetching: 57/88 players (Christian Braun)        Fetching: 58/88 players (Jonas Valanciunas)        Fetching: 59/88 players (Deandre Ayton)        Fetching: 60/88 players (Marcus Smart)        Fetching: 61/88 players (Rui Hachimura)        Fetching: 62/88 players (Jaxson Hayes)        Fetching: 63/88 players (Luke Kennard)        Fetching: 64/88 players (Tim Hardaway Jr)        Fetching: 65/88 players (Davion Mitchell)        Fetching: 66/88 players (Paolo Banchero)        Fetching: 67/88 players (Jevon Carter)        Fetching: 68/88 players (Jalen Suggs)        Fetching: 69/88 players (Tyler Herro)        Fetching: 70/88 players (Desmond Bane)        Fetching: 71/88 players (Bam Adebayo)        Fetching: 72/88 players (Wendell Carter Jr)        Fetching: 73/88 players (Tristan da Silva)        Fetching: 74/88 players (Jett Howard)        Fetching: 75/88 players (Norman Powell)        Fetching: 76/88 players (Jaime Jaquez Jr)        Fetching: 77/88 players (Bennedict Mathurin)        Fetching: 78/88 players (Kris Dunn)        Fetching: 79/88 players (Darius Garland)        Fetching: 80/88 players (Russell Westbrook)        Fetching: 81/88 players (DeMar DeRozan)        Fetching: 82/88 players (Nique Clifford)        Fetching: 83/88 players (Kawhi Leonard)        Fetching: 84/88 players (Derrick Jones)        Fetching: 85/88 players (Brook Lopez)        Fetching: 86/88 players (Precious Achiuwa)        Fetching: 87/88 players (Dylan Cardwell)        Fetching: 88/88 players (Maxime Raynaud)    
+    Min-prob filter (60%): dropped 146 weak legs
+    Scored 86 legs  (33 skipped: insufficient data, 0 skipped: low confidence)
+
+  RECENTLY TRADED PLAYERS (stats may be stale):
+  ⚠ Trae Young: recently traded — stats may be stale, confidence capped MEDIUM
+
+[4/8] Skipping contextual evaluators (disabled by default (use --context to enable))
+[5/8] Building correlation matrix...
+    Correlation matrix ready (56 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+
+=================================================================
+ALL SCORED PROPS (86 legs)  |  sorted by model prob
+=================================================================
+  Ryan Kalkbrenner: OVER 5.5 pts  (+100)  model: 92.0%  [HIGH]
+  Coby White: OVER 11.5 pts  (-106)  model: 89.5%  [HIGH]
+  Quentin Grimes: UNDER 20.5 pts  (-110)  model: 87.1%  [HIGH]
+  Precious Achiuwa: OVER 5.5 reb  (-112)  model: 87.1%  [HIGH]
+  Ryan Kalkbrenner: OVER 4.5 reb  (+134)  model: 84.8%  [HIGH]
+  Quentin Grimes: UNDER 4.5 ast  (-174)  model: 84.6%  [HIGH]
+  Coby White: OVER 2.5 ast  (-168)  model: 84.0%  [HIGH]
+  VJ Edgecombe: UNDER 4.5 ast  (-136)  model: 83.9%  [HIGH]
+  Giannis Antetokounmpo: UNDER 28.5 pts  (-112)  model: 83.2%  [HIGH]
+  Jock Landale: OVER 4.5 reb  (+112)  model: 83.2%  [HIGH]
+  Davion Mitchell: UNDER 6.5 ast  (-152)  model: 82.4%  [HIGH]
+  Luke Kennard: OVER 7.5 pts  (-114)  model: 81.4%  [HIGH]
+  Terance Mann: OVER 2.5 reb  (+132)  model: 79.1%  [HIGH]
+  Jaxson Hayes: OVER 6.5 pts  (+106)  model: 79.1%  [HIGH]
+  Trae Young: OVER 6.5 ast  (+124)  model: 78.9%  [MEDIUM]
+  Precious Achiuwa: OVER 8.5 pts  (-125)  model: 78.3%  [HIGH]
+  Dominick Barlow: UNDER 11.5 pts  (-138)  model: 77.3%  [HIGH]
+  Quentin Grimes: UNDER 4.5 reb  (-161)  model: 77.3%  [HIGH]
+  Jalen Wilson: UNDER 9.5 pts  (-136)  model: 77.1%  [HIGH]
+  Zaccharie Risacher: OVER 3.5 reb  (-127)  model: 77.0%  [HIGH]
+  VJ Edgecombe: UNDER 19.5 pts  (-107)  model: 74.6%  [HIGH]
+  Jett Howard: OVER 2.5 reb  (+122)  model: 74.6%  [HIGH]
+  Dominick Barlow: UNDER 5.5 reb  (-125)  model: 73.7%  [HIGH]
+  Miles Bridges: UNDER 5.5 reb  (-172)  model: 73.0%  [HIGH]
+  Norman Powell: OVER 17.5 pts  (-106)  model: 72.1%  [HIGH]
+  Desmond Bane: UNDER 4.5 reb  (-180)  model: 72.1%  [HIGH]
+  Jalen Suggs: UNDER 6.5 ast  (-150)  model: 72.0%  [HIGH]
+  Ben Saraf: UNDER 2.5 reb  (-144)  model: 71.9%  [MEDIUM]
+  Bennedict Mathurin: UNDER 2.5 ast  (-180)  model: 71.8%  [MEDIUM]
+  Jaxson Hayes: OVER 3.5 reb  (-112)  model: 71.4%  [HIGH]
+  Ousmane Dieng: OVER 2.5 ast  (-112)  model: 71.4%  [HIGH]
+  Aaron Gordon: OVER 2.5 ast  (+148)  model: 71.4%  [HIGH]
+  Danny Wolf: UNDER 13.5 pts  (+100)  model: 71.3%  [MEDIUM]
+  Sam Hauser: OVER 3.5 reb  (-116)  model: 71.1%  [HIGH]
+  Dylan Harper: OVER 9.5 pts  (-110)  model: 71.0%  [HIGH]
+  Kris Dunn: UNDER 7.5 pts  (-136)  model: 71.0%  [MEDIUM]
+  Danny Wolf: UNDER 7.5 reb  (-154)  model: 70.8%  [MEDIUM]
+  Dylan Harper: OVER 3.5 ast  (+102)  model: 70.7%  [HIGH]
+  Jaylen Brown: UNDER 26.5 pts  (-124)  model: 70.4%  [MEDIUM]
+  De'Aaron Fox: UNDER 3.5 reb  (-192)  model: 70.0%  [MEDIUM]
+  Jalen Johnson: UNDER 10.5 reb  (-141)  model: 69.9%  [MEDIUM]
+  Giannis Antetokounmpo: UNDER 9.5 reb  (-106)  model: 69.9%  [MEDIUM]
+  Adem Bona: UNDER 8.5 pts  (-112)  model: 69.7%  [MEDIUM]
+  Jock Landale: OVER 7.5 pts  (-107)  model: 69.7%  [HIGH]
+  Will Riley: UNDER 2.5 ast  (-177)  model: 69.1%  [MEDIUM]
+  Alex Sarr: OVER 11.5 pts  (-118)  model: 69.0%  [HIGH]
+  Alex Sarr: OVER 5.5 reb  (+114)  model: 68.7%  [HIGH]
+  Paolo Banchero: UNDER 9.5 reb  (-136)  model: 68.5%  [MEDIUM]
+  Jevon Carter: UNDER 2.5 reb  (-169)  model: 68.4%  [MEDIUM]
+  Austin Reaves: OVER 4.5 ast  (-145)  model: 68.1%  [HIGH]
+  Aaron Gordon: UNDER 15.5 pts  (-136)  model: 67.9%  [MEDIUM]
+  Aaron Gordon: OVER 4.5 reb  (-128)  model: 67.9%  [HIGH]
+  De'Aaron Fox: OVER 6.5 ast  (+100)  model: 67.8%  [HIGH]
+  Stephon Castle: OVER 6.5 ast  (-114)  model: 67.5%  [HIGH]
+  Dylan Harper: UNDER 3.5 reb  (-192)  model: 67.0%  [MEDIUM]
+  Miles Bridges: OVER 2.5 ast  (-155)  model: 66.2%  [MEDIUM]
+  Payton Pritchard: UNDER 15.5 pts  (-109)  model: 66.2%  [MEDIUM]
+  Kyle Kuzma: OVER 11.5 pts  (-103)  model: 66.0%  [HIGH]
+  Jaylen Brown: OVER 6.5 reb  (-127)  model: 66.0%  [HIGH]
+  LeBron James: OVER 6.5 ast  (-116)  model: 65.9%  [HIGH]
+  Jalen Wilson: OVER 2.5 reb  (-156)  model: 65.5%  [MEDIUM]
+  Darius Garland: UNDER 2.5 reb  (-114)  model: 65.5%  [MEDIUM]
+  Brandon Miller: OVER 4.5 reb  (-154)  model: 65.2%  [MEDIUM]
+  Austin Reaves: UNDER 4.5 reb  (-180)  model: 65.2%  [MEDIUM]
+  Julian Champagnie: OVER 4.5 reb  (-141)  model: 64.7%  [MEDIUM]
+  Cameron Johnson: OVER 2.5 reb  (-161)  model: 63.9%  [LOW]
+  Nolan Traore: OVER 1.5 reb  (-182)  model: 63.8%  [LOW]
+  Dylan Cardwell: OVER 8.5 reb  (-104)  model: 63.1%  [HIGH]
+  Nique Clifford: OVER 4.5 reb  (-152)  model: 62.9%  [LOW]
+  De'Aaron Fox: OVER 16.5 pts  (-103)  model: 62.6%  [HIGH]
+  Nolan Traore: OVER 10.5 pts  (-122)  model: 62.5%  [MEDIUM]
+  Christian Braun: OVER 2.5 ast  (-136)  model: 62.1%  [MEDIUM]
+  Norman Powell: OVER 1.5 ast  (-164)  model: 62.1%  [LOW]
+  Jaylen Brown: OVER 5.5 ast  (-113)  model: 61.9%  [HIGH]
+  Trae Young: OVER 13.5 pts  (+102)  model: 61.9%  [MEDIUM]
+  Bam Adebayo: OVER 22.5 pts  (-110)  model: 61.6%  [HIGH]
+  Tre Johnson: OVER 2.5 reb  (-120)  model: 61.6%  [MEDIUM]
+  Kon Knueppel: OVER 2.5 ast  (-154)  model: 61.4%  [LOW]
+  Brook Lopez: OVER 3.5 reb  (-136)  model: 61.0%  [LOW]
+  Davion Mitchell: OVER 2.5 reb  (+122)  model: 61.0%  [HIGH]
+  Kevin Porter Jr.: OVER 5.5 ast  (-141)  model: 60.7%  [LOW]
+  Bilal Coulibaly: OVER 2.5 ast  (+122)  model: 60.5%  [HIGH]
+  Kris Dunn: OVER 3.5 reb  (+102)  model: 60.5%  [HIGH]
+  Norman Powell: OVER 2.5 reb  (-132)  model: 60.4%  [LOW]
+  Tristan da Silva: OVER 11.5 pts  (-112)  model: 60.4%  [MEDIUM]
+  Jett Howard: OVER 7.5 pts  (-130)  model: 60.1%  [LOW]
+
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: PROPS  |  Min edge: 5.0%
+=================================================================
+
+#1  EV: 750.8%  |  Edge: 51.7%  |  Odds: 14.51x  |  Stake: $500.00
+    Model Prob: 58.6%  vs  Market Implied: 6.9%
+    Confidence: 4x HIGH
+    Correlation: Coby White vs Ryan Kalkbrenner: r=0.00 (neutral); Coby White (ast + pts): same player — r=0.65 (positive); Coby White vs Ryan Kalkbrenner: r=0.00 (neutral); Ryan Kalkbrenner vs Coby White: r=0.00 (neutral); Ryan Kalkbrenner (pts + reb): same player — r=0.65 (positive); Coby White vs Ryan Kalkbrenner: r=0.00 (neutral)
+    Legs:
+      * Coby White: OVER 2.5 ast  (-168)  model: 84.0%  [HIGH]
+      * Ryan Kalkbrenner: OVER 5.5 pts  (+100)  model: 92.0%  [HIGH]
+      * Coby White: OVER 11.5 pts  (-106)  model: 89.5%  [HIGH]
+      * Ryan Kalkbrenner: OVER 4.5 reb  (+134)  model: 84.8%  [HIGH]
+
+#2  EV: 534.9%  |  Edge: 58.8%  |  Odds: 9.10x  |  Stake: $500.00
+    Model Prob: 69.8%  vs  Market Implied: 11.0%
+    Confidence: 3x HIGH
+    Correlation: Ryan Kalkbrenner vs Coby White: r=0.00 (neutral); Ryan Kalkbrenner (pts + reb): same player — r=0.65 (positive); Coby White vs Ryan Kalkbrenner: r=0.00 (neutral)
+    Legs:
+      * Ryan Kalkbrenner: OVER 5.5 pts  (+100)  model: 92.0%  [HIGH]
+      * Coby White: OVER 11.5 pts  (-106)  model: 89.5%  [HIGH]
+      * Ryan Kalkbrenner: OVER 4.5 reb  (+134)  model: 84.8%  [HIGH]
+

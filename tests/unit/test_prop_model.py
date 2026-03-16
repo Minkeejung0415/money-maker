@@ -17,7 +17,12 @@ def _make_log_rows(pts_values: list[float], min_val: float = 30.0) -> list[dict]
 @pytest.fixture
 def model():
     from alpha.engines.sports.prop_model import PropModel
-    return PropModel(season="2024-25")
+    # Disable XGBoost models so unit tests use the weighted-avg path only.
+    # XGBoost pkl files on disk should not affect unit test assertions.
+    with patch("alpha.engines.sports.xgb_prop_model.XGBoostPropModel.load", return_value=None):
+        m = PropModel(season="2024-25")
+    m._xgb_models = {}
+    return m
 
 
 def _patch_logs(log_rows: list[dict]):

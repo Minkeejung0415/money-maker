@@ -1,0 +1,104 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    Found 8 game(s)
+[1.5/6] Checking injury/availability status...
+    No injury concerns found.
+[2/6] Fetching player prop lines...
+    Fetched 349 prop lines across 8 game(s)
+[3/6] Running prop model — 99 players to fetch (cached players are instant)...
+    Fetching: 1/99 players (Desmond Bane)        Fetching: 2/99 players (Paolo Banchero)        Fetching: 3/99 players (Nickeil Alexander-Walker)        Fetching: 4/99 players (Jalen Suggs)        Fetching: 5/99 players (Dyson Daniels)        Fetching: 6/99 players (Jalen Johnson)        Fetching: 7/99 players (C.J. McCollum)        Fetching: 8/99 players (Onyeka Okongwu)        Fetching: 9/99 players (Jevon Carter)        Fetching: 10/99 players (Tristan da Silva)        Fetching: 11/99 players (Jonathan Kuminga)        Fetching: 12/99 players (Wendell Carter Jr)        Fetching: 13/99 players (Zaccharie Risacher)        Fetching: 14/99 players (Trae Young)        Fetching: 15/99 players (Draymond Green)        Fetching: 16/99 players (Brandin Podziemski)        Fetching: 17/99 players (Carlton Carrington)        Fetching: 18/99 players (Gui Santos)        Fetching: 19/99 players (De'Anthony Melton)        Fetching: 20/99 players (Bilal Coulibaly)        Fetching: 21/99 players (Will Riley)        Fetching: 22/99 players (Kristaps Porzingis)        Fetching: 23/99 players (Tre Johnson)        Fetching: 24/99 players (Tristan Vukcevic)        Fetching: 25/99 players (Baylor Scheierman)        Fetching: 26/99 players (Payton Pritchard)        Fetching: 27/99 players (Jayson Tatum)        Fetching: 28/99 players (Devin Booker)        Fetching: 29/99 players (Grayson Allen)        Fetching: 30/99 players (Derrick White)        Fetching: 31/99 players (Jaylen Brown)        Fetching: 32/99 players (Collin Gillespie)        Fetching: 33/99 players (Jordan Goodwin)        Fetching: 34/99 players (Sam Hauser)        Fetching: 35/99 players (Neemias Queta)        Fetching: 36/99 players (Jalen Green)        Fetching: 37/99 players (Royce O'Neale)        Fetching: 38/99 players (Oso Ighodaro)        Fetching: 39/99 players (Deni Avdija)        Fetching: 40/99 players (Jrue Holiday)        Fetching: 41/99 players (Nolan Traore)        Fetching: 42/99 players (Nicolas Claxton)        Fetching: 43/99 players (Danny Wolf)        Fetching: 44/99 players (Toumani Camara)        Fetching: 45/99 players (Donovan Clingan)        Fetching: 46/99 players (Jerami Grant)        Fetching: 47/99 players (Josh Minott)        Fetching: 48/99 players (Ziaire Williams)        Fetching: 49/99 players (Drake Powell)        Fetching: 50/99 players (Josh Giddey)        Fetching: 51/99 players (Tre Jones)        Fetching: 52/99 players (Cam Spencer)        Fetching: 53/99 players (Walter Clayton Jr.)        Fetching: 54/99 players (Jalen Smith)        Fetching: 55/99 players (Taylor Hendricks)        Fetching: 56/99 players (Matas Buzelis)        Fetching: 57/99 players (Collin Sexton)        Fetching: 58/99 players (Jaylen Wells)        Fetching: 59/99 players (Cedric Coward)        Fetching: 60/99 players (Guerschon Yabusele)        Fetching: 61/99 players (Nick Richards)        Fetching: 62/99 players (Olivier-Maxence Prosper)        Fetching: 63/99 players (Zion Williamson)        Fetching: 64/99 players (Cooper Flagg)        Fetching: 65/99 players (Naji Marshall)        Fetching: 66/99 players (Dejounte Murray)        Fetching: 67/99 players (Max Christie)        Fetching: 68/99 players (Trey Murphy III)        Fetching: 69/99 players (Saddiq Bey)        Fetching: 70/99 players (Herb Jones)        Fetching: 71/99 players (P.J. Washington)        Fetching: 72/99 players (Daniel Gafford)        Fetching: 73/99 players (Reed Sheppard)        Fetching: 74/99 players (Austin Reaves)        Fetching: 75/99 players (Luka Doncic)        Fetching: 76/99 players (Amen Thompson)        Fetching: 77/99 players (Kevin Durant)        Fetching: 78/99 players (LeBron James)        Fetching: 79/99 players (Alperen Sengun)        Fetching: 80/99 players (Luke Kennard)        Fetching: 81/99 players (Tari Eason)        Fetching: 82/99 players (Jabari Smith Jr)        Fetching: 83/99 players (Rui Hachimura)        Fetching: 84/99 players (Marcus Smart)        Fetching: 85/99 players (Deandre Ayton)        Fetching: 86/99 players (Darius Garland)        Fetching: 87/99 players (Bennedict Mathurin)        Fetching: 88/99 players (De'Aaron Fox)        Fetching: 89/99 players (Kris Dunn)        Fetching: 90/99 players (Stephon Castle)        Fetching: 91/99 players (Devin Vassell)        Fetching: 92/99 players (Victor Wembanyama)        Fetching: 93/99 players (Julian Champagnie)        Fetching: 94/99 players (Keldon Johnson)        Fetching: 95/99 players (Harrison Barnes)        Fetching: 96/99 players (Derrick Jones)        Fetching: 97/99 players (Isaiah Jackson)        Fetching: 98/99 players (Brook Lopez)        Fetching: 99/99 players (John Collins)    
+    Scored 56 legs  (29 skipped: insufficient data, 175 skipped: low confidence)
+
+  RECENTLY TRADED PLAYERS (stats may be stale):
+  ⚠ Jonathan Kuminga: recently traded — stats may be stale, confidence capped MEDIUM
+
+[4/8] Skipping contextual evaluators (disabled by default (use --context to enable))
+[5/8] Building correlation matrix...
+    Correlation matrix ready (42 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+
+=================================================================
+ALL SCORED PROPS (56 legs)  |  sorted by model prob
+=================================================================
+  Luke Kennard: OVER 6.5 pts  (-125)  model: 85.3%  [HIGH]
+  Jevon Carter: OVER 1.5 reb  (-156)  model: 82.0%  [HIGH]
+  Isaiah Jackson: OVER 6.5 reb  (+104)  model: 81.1%  [HIGH]
+  Zaccharie Risacher: OVER 3.5 reb  (-141)  model: 80.1%  [HIGH]
+  Collin Sexton: OVER 15.5 pts  (-108)  model: 79.8%  [HIGH]
+  Oso Ighodaro: OVER 5.5 pts  (-125)  model: 79.8%  [HIGH]
+  Jordan Goodwin: OVER 5.5 pts  (+100)  model: 79.3%  [HIGH]
+  Matas Buzelis: OVER 5.5 reb  (-122)  model: 78.7%  [HIGH]
+  Jonathan Kuminga: OVER 4.5 reb  (-136)  model: 75.6%  [MEDIUM]
+  Luke Kennard: OVER 1.5 reb  (-156)  model: 75.5%  [HIGH]
+  Jevon Carter: OVER 7.5 pts  (-102)  model: 74.5%  [HIGH]
+  Reed Sheppard: OVER 3.5 reb  (+142)  model: 74.3%  [HIGH]
+  Baylor Scheierman: OVER 6.5 pts  (-116)  model: 72.3%  [HIGH]
+  Sam Hauser: OVER 3.5 reb  (-137)  model: 72.2%  [HIGH]
+  Baylor Scheierman: OVER 4.5 reb  (-130)  model: 71.6%  [HIGH]
+  Neemias Queta: OVER 8.5 reb  (-141)  model: 71.2%  [HIGH]
+  Marcus Smart: OVER 2.5 reb  (+130)  model: 70.6%  [HIGH]
+  Isaiah Jackson: OVER 7.5 pts  (-113)  model: 70.5%  [HIGH]
+  Guerschon Yabusele: OVER 4.5 reb  (-119)  model: 70.0%  [HIGH]
+  Victor Wembanyama: OVER 2.5 ast  (-149)  model: 69.5%  [HIGH]
+  Daniel Gafford: OVER 7.5 reb  (-133)  model: 69.4%  [HIGH]
+  Devin Booker: OVER 3.5 reb  (-152)  model: 68.7%  [HIGH]
+  Walter Clayton Jr.: OVER 4.5 ast  (+123)  model: 68.5%  [HIGH]
+  Marcus Smart: OVER 7.5 pts  (-120)  model: 67.9%  [HIGH]
+  Jordan Goodwin: OVER 3.5 reb  (+112)  model: 67.8%  [HIGH]
+  Tristan Vukcevic: OVER 5.5 reb  (+110)  model: 67.6%  [HIGH]
+  Brandin Podziemski: OVER 6.5 reb  (+103)  model: 66.3%  [HIGH]
+  LeBron James: OVER 4.5 reb  (-135)  model: 66.2%  [HIGH]
+  Dejounte Murray: OVER 18.5 pts  (-116)  model: 65.8%  [HIGH]
+  Tre Jones: OVER 2.5 reb  (-169)  model: 65.8%  [HIGH]
+  Jaylen Brown: OVER 6.5 reb  (+108)  model: 65.2%  [HIGH]
+  Devin Booker: OVER 24.5 pts  (-102)  model: 65.1%  [HIGH]
+  Tristan da Silva: OVER 11.5 pts  (-114)  model: 64.7%  [HIGH]
+  Collin Gillespie: OVER 4.5 reb  (+121)  model: 64.2%  [HIGH]
+  John Collins: OVER 12.5 pts  (-102)  model: 63.1%  [HIGH]
+  Amen Thompson: OVER 7.5 reb  (+112)  model: 62.9%  [HIGH]
+  Tari Eason: OVER 5.5 reb  (-108)  model: 62.8%  [HIGH]
+  Cam Spencer: OVER 2.5 reb  (-101)  model: 62.8%  [HIGH]
+  Tre Jones: OVER 14.5 pts  (-108)  model: 62.4%  [HIGH]
+  Bilal Coulibaly: OVER 11.5 pts  (-122)  model: 62.3%  [HIGH]
+  Jalen Green: OVER 19.5 pts  (+100)  model: 62.0%  [HIGH]
+  Jonathan Kuminga: OVER 10.5 pts  (-114)  model: 61.8%  [MEDIUM]
+  John Collins: OVER 4.5 reb  (-146)  model: 61.5%  [HIGH]
+  De'Anthony Melton: OVER 3.5 reb  (-112)  model: 61.4%  [HIGH]
+  Draymond Green: OVER 9.5 pts  (-110)  model: 61.2%  [HIGH]
+  Danny Wolf: OVER 6.5 reb  (+106)  model: 61.1%  [HIGH]
+  Draymond Green: OVER 5.5 reb  (-118)  model: 61.0%  [HIGH]
+  Jaylen Brown: OVER 23.5 pts  (-114)  model: 60.7%  [HIGH]
+  Austin Reaves: OVER 4.5 ast  (+105)  model: 60.6%  [HIGH]
+  Brook Lopez: OVER 8.5 pts  (-120)  model: 60.6%  [HIGH]
+  Austin Reaves: OVER 20.5 pts  (-104)  model: 60.5%  [HIGH]
+  Gui Santos: OVER 15.5 pts  (+100)  model: 60.4%  [HIGH]
+  Grayson Allen: OVER 14.5 pts  (-106)  model: 60.2%  [HIGH]
+  Payton Pritchard: OVER 3.5 reb  (-118)  model: 60.2%  [HIGH]
+  Nick Richards: OVER 8.5 reb  (-114)  model: 60.2%  [HIGH]
+  Jalen Green: OVER 4.5 reb  (-101)  model: 60.1%  [HIGH]
+
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: PROPS  |  Min edge: 5.0%
+=================================================================
+
+#1  EV: 134.9%  |  Edge: 31.4%  |  Odds: 4.29x  |  Stake: $500.00
+    Model Prob: 54.7%  vs  Market Implied: 23.3%
+    Confidence: 2x HIGH
+    Correlation: Collin Sexton vs Walter Clayton Jr.: r=0.00 (neutral)
+    Legs:
+      * Collin Sexton: OVER 15.5 pts  (-108)  model: 79.8%  [HIGH]
+      * Walter Clayton Jr.: OVER 4.5 ast  (+123)  model: 68.5%  [HIGH]
+
+#2  EV: 92.1%  |  Edge: 27.0%  |  Odds: 3.41x  |  Stake: $500.00
+    Model Prob: 56.3%  vs  Market Implied: 29.3%
+    Confidence: 2x HIGH
+    Correlation: Isaiah Jackson vs Victor Wembanyama: r=0.00 (neutral)
+    Legs:
+      * Isaiah Jackson: OVER 6.5 reb  (+104)  model: 81.1%  [HIGH]
+      * Victor Wembanyama: OVER 2.5 ast  (-149)  model: 69.5%  [HIGH]
+

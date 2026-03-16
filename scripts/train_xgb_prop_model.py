@@ -99,7 +99,7 @@ def build_features(
 
 def train_model(stat_name: str, stat_col: str, out_path: str) -> None:
     print(f"\nTraining {stat_name.upper()} model...")
-    df = pd.read_csv(LOG_FILE)
+    df = pd.read_csv(LOG_FILE, encoding="utf-8")
     df = df[df["min_float"] >= MIN_MINUTES].copy()
     df["game_date"] = pd.to_datetime(df["game_date"])
     df = df.sort_values(
@@ -131,7 +131,7 @@ def train_model(stat_name: str, stat_col: str, out_path: str) -> None:
     print(f"  Top features: " + ", ".join(
         f"{k}={v:.3f}" for k, v in sorted(imp.items(), key=lambda x: -x[1])[:4]
     ))
-    print(f"  Saved → {out_path}")
+    print(f"  Saved -> {out_path}")
 
 
 if __name__ == "__main__":
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         print("Run fetch_historical_logs.py first.")
         raise SystemExit(1)
 
-    rows = sum(1 for _ in open(LOG_FILE)) - 1  # subtract header
+    rows = sum(1 for _ in open(LOG_FILE, encoding="utf-8")) - 1  # subtract header
     print(f"Loaded {rows:,} game log rows from {LOG_FILE}")
 
     for stat_name, (stat_col, out_path) in _STAT_COLS.items():
