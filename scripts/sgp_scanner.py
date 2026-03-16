@@ -27,6 +27,7 @@ import logging
 import io
 import os
 import sys
+from datetime import date
 from pathlib import Path
 
 # Ensure repo root is on the path
@@ -40,6 +41,7 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() not in ("utf-8", "utf8"):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 from dotenv import load_dotenv
+from scripts.log_predictions import log_prediction
 load_dotenv()
 
 logging.basicConfig(
@@ -163,6 +165,16 @@ Examples:
         action="store_true",
         help="Print startup checks only, then exit before API calls.",
     )
+    parser.add_argument(
+        "--list-props",
+        action="store_true",
+        help="Print all individually scored prop legs sorted by model probability.",
+    )
+    parser.add_argument(
+        "--team",
+        default=None,
+        help="Filter to a single game containing this team name substring (case-insensitive).",
+    )
     return parser.parse_args()
 
 
@@ -268,6 +280,19 @@ def main() -> None:
         print("    No NBA games found today (or API error). Exiting.")
         sys.exit(0)
     print(f"    Found {len(games)} game(s)")
+
+    # ── --team filter ─────────────────────────────────────────────────────
+    if getattr(args, "team", None):
+        team_filter = args.team.lower()
+        games = [
+            g for g in games
+            if team_filter in g.get("home_team", "").lower()
+            or team_filter in g.get("away_team", "").lower()
+        ]
+        if not games:
+            print(f"    No game found containing team '{args.team}'. Exiting.")
+            sys.exit(0)
+        print(f"    Filtered to {len(games)} game(s) matching '{args.team}'")
     if getattr(args, "verbose", False):
         for g in games:
             print(f"      {g.get('away_team','?')} @ {g.get('home_team','?')}  "
@@ -414,6 +439,16 @@ def main() -> None:
                 confidence=conf,
                 player_team=actual_team,
             ))
+            log_prediction(
+                player=raw["player"],
+                market=raw["market"],
+                line=raw["line"],
+                direction="over",
+                model_prob=final_model_prob,
+                market_implied=result.get("market_implied", 0.5),
+                confidence=conf,
+                game_date=str(date.today()),
+            )
 
             # Generate UNDER leg if 1 - model_prob >= 0.65
             under_prob = round(1.0 - result["model_prob"], 4)
@@ -451,6 +486,16 @@ def main() -> None:
                         direction="under",
                         player_team=actual_team,
                     ))
+                    log_prediction(
+                        player=raw["player"],
+                        market=raw["market"],
+                        line=raw["line"],
+                        direction="under",
+                        model_prob=under_prob,
+                        market_implied=round(1.0 - result.get("market_implied", 0.5), 4),
+                        confidence=under_conf,
+                        game_date=str(date.today()),
+                    )
 
         print()  # newline after progress
 
@@ -592,6 +637,19 @@ def main() -> None:
     elif not args.validate:
         print("[6/8] Skipping validation  "
               "-- Prop model not validated -- run with --validate to check calibration.")
+
+    # ── Optional: list all scored props ──────────────────────────────────
+    if getattr(args, "list_props", False) and scored_legs:
+        print(f"\n{'='*65}")
+        print(f"ALL SCORED PROPS ({len(scored_legs)} legs)  |  sorted by model prob")
+        print(f"{'='*65}")
+        sorted_legs = sorted(scored_legs, key=lambda l: l.model_prob, reverse=True)
+        for leg in sorted_legs:
+            direction_label = "UNDER" if leg.direction == "under" else "OVER"
+            stat_label = _market_label(leg.market)
+            print(f"  {leg.player}: {direction_label} {leg.line} {stat_label}  "
+                  f"({leg.over_odds:+d})  model: {leg.model_prob:.1%}  [{leg.confidence}]")
+        print()
 
     # ── Step 7: Build combinations ───────────────────────────────────────
     print("[7/8] Building SGP combinations...")

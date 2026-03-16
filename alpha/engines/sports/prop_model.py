@@ -248,6 +248,7 @@ class PropModel:
             "proj_stat": round(opp_adj, 2),
             "std_stat": round(std_stat, 2),
             "model_prob": round(p_over, 4),
+            "market_implied": round(market_implied, 4),
             "games_used": min(len(qualifying), 20),
             "source": "nba_api",
             "confidence": confidence,
