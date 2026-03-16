@@ -120,6 +120,22 @@ class PropModel:
         self._stats_cache = stats_cache
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+        # XGBoost projection models — loaded if pkl files exist after training.
+        # Falls back to weighted average when not available.
+        from alpha.engines.sports.xgb_prop_model import XGBoostPropModel
+        _XGB_PATHS = {
+            "player_points":   Path("data/xgb_pts_model.pkl"),
+            "player_rebounds": Path("data/xgb_reb_model.pkl"),
+            "player_assists":  Path("data/xgb_ast_model.pkl"),
+        }
+        self._xgb_models: dict[str, XGBoostPropModel] = {
+            market: XGBoostPropModel.load(path)
+            for market, path in _XGB_PATHS.items()
+            if path.exists()
+        }
+        if self._xgb_models:
+            logger.info("XGBoost models loaded for: %s", list(self._xgb_models))
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -175,12 +191,13 @@ class PropModel:
         if len(values) < _MIN_GAMES:
             return None
 
-        proj_stat = self._weighted_avg(values)
-
-        # James-Stein shrinkage: pull noisy small-sample estimates toward position prior.
-        # Heavy shrinkage at 5 games, near-zero at 30+ games.
-        n_qualifying = min(len(qualifying), 20)
-        proj_stat = self._james_stein_shrink(proj_stat, n_qualifying, market, position)
+        # XGBoost projection when model available, weighted avg as fallback.
+        proj_stat = self._xgb_project(market, values, qualifying, opponent_team, location)
+        if proj_stat is None:
+            proj_stat = self._weighted_avg(values)
+            # James-Stein shrinkage only applied to weighted avg (XGBoost learned this).
+            n_qualifying = min(len(qualifying), 20)
+            proj_stat = self._james_stein_shrink(proj_stat, n_qualifying, market, position)
 
         # Scale by recent vs season minute trend (research: minutes is #1 predictor)
         proj_stat *= self._compute_minutes_ratio(qualifying)
@@ -322,6 +339,45 @@ class PropModel:
         if season_min <= 0:
             return 1.0
         return max(0.85, min(1.15, recent_min / season_min))
+
+    def _xgb_project(
+        self,
+        market: str,
+        values: list[float],
+        qualifying: list[dict],
+        opponent_team: str,
+        location: str,
+    ) -> float | None:
+        """
+        Use trained XGBoost model to produce projection.
+        Returns None if model not available for this market (falls back to weighted avg).
+        """
+        xgb = self._xgb_models.get(market)
+        if xgb is None:
+            return None
+
+        roll5  = self._weighted_avg(values[:5])
+        roll10 = self._weighted_avg(values[:10])
+        roll20 = self._weighted_avg(values[:20])
+        min_recent = mean([g.get("MIN_float", 25.0) for g in qualifying[:5]])
+
+        ts = self._fetch_team_per_game_stats()
+        opp = ts.get(opponent_team, {})
+        opp_def_rtg = opp.get("def_rtg", _LEAGUE_AVG_DEF_RTG)
+        opp_pace    = opp.get("pace",    _LEAGUE_AVG_PACE)
+        is_home     = 1 if location == "home" else 0
+        rest_days   = int(max(0, min(4, (self._rest_multiplier(qualifying) - 1) * 10)))
+
+        return xgb.predict({
+            "roll5":       roll5,
+            "roll10":      roll10,
+            "roll20":      roll20,
+            "min_recent":  min_recent,
+            "opp_def_rtg": opp_def_rtg,
+            "is_home":     is_home,
+            "rest_days":   rest_days,
+            "pace":        opp_pace,
+        })
 
     @staticmethod
     def _james_stein_shrink(
