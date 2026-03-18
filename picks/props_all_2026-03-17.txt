@@ -1,0 +1,90 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    Found 8 game(s)
+[1.5/6] Checking injury/availability status...
+    No injury concerns found.
+[2/6] Fetching player prop lines...
+    Fetched 348 prop lines across 8 game(s)
+[3/6] Running prop model — 105 players to fetch (cached players are instant)...
+    Fetching: 1/105 players (Norman Powell)        Fetching: 2/105 players (Brandon Miller)        Fetching: 3/105 players (Coby White)        Fetching: 4/105 players (LaMelo Ball)        Fetching: 5/105 players (Miles Bridges)        Fetching: 6/105 players (Pelle Larsson)        Fetching: 7/105 players (Jaime Jaquez Jr)        Fetching: 8/105 players (Kon Knueppel)        Fetching: 9/105 players (Davion Mitchell)        Fetching: 10/105 players (Bam Adebayo)        Fetching: 11/105 players (Tyler Herro)        Fetching: 12/105 players (Ryan Kalkbrenner)        Fetching: 13/105 players (Kel'el Ware)        Fetching: 14/105 players (Moussa Diabate)        Fetching: 15/105 players (Grant Williams)        Fetching: 16/105 players (Carlton Carrington)        Fetching: 17/105 players (Cade Cunningham)        Fetching: 18/105 players (Bilal Coulibaly)        Fetching: 19/105 players (Will Riley)        Fetching: 20/105 players (Ausar Thompson)        Fetching: 21/105 players (Caris LeVert)        Fetching: 22/105 players (Tobias Harris)        Fetching: 23/105 players (Jalen Duren)        Fetching: 24/105 players (Duncan Robinson)        Fetching: 25/105 players (Javonte Green)        Fetching: 26/105 players (Alex Sarr)        Fetching: 27/105 players (Tre Johnson)        Fetching: 28/105 players (Chet Holmgren)        Fetching: 29/105 players (Isaiah Hartenstein)        Fetching: 30/105 players (Cason Wallace)        Fetching: 31/105 players (Paolo Banchero)        Fetching: 32/105 players (Desmond Bane)        Fetching: 33/105 players (Shai Gilgeous-Alexander)        Fetching: 34/105 players (Jalen Suggs)        Fetching: 35/105 players (Ajay Mitchell)        Fetching: 36/105 players (Wendell Carter Jr)        Fetching: 37/105 players (Tristan da Silva)        Fetching: 38/105 players (Jared McCain)        Fetching: 39/105 players (Luguentz Dort)        Fetching: 40/105 players (Alex Caruso)        Fetching: 41/105 players (Jevon Carter)        Fetching: 42/105 players (Jett Howard)        Fetching: 43/105 players (Karl-Anthony Towns)        Fetching: 44/105 players (OG Anunoby)        Fetching: 45/105 players (Mikal Bridges)        Fetching: 46/105 players (Jalen Brunson)        Fetching: 47/105 players (Andrew Nembhard)        Fetching: 48/105 players (Jarace Walker)        Fetching: 49/105 players (Josh Hart)        Fetching: 50/105 players (Mitchell Robinson)        Fetching: 51/105 players (Kobe Brown)        Fetching: 52/105 players (Ivica Zubac)        Fetching: 53/105 players (Landry Shamet)        Fetching: 54/105 players (Aaron Nesmith)        Fetching: 55/105 players (Dennis Schroder)        Fetching: 56/105 players (Giannis Antetokounmpo)        Fetching: 57/105 players (Ryan Rollins)        Fetching: 58/105 players (Donovan Mitchell)        Fetching: 59/105 players (James Harden)        Fetching: 60/105 players (Myles Turner)        Fetching: 61/105 players (Evan Mobley)        Fetching: 62/105 players (Sam Merrill)        Fetching: 63/105 players (Kevin Porter Jr.)        Fetching: 64/105 players (Dean Wade)        Fetching: 65/105 players (Kyle Kuzma)        Fetching: 66/105 players (Julius Randle)        Fetching: 67/105 players (Jaden McDaniels)        Fetching: 68/105 players (Royce O'Neale)        Fetching: 69/105 players (Grayson Allen)        Fetching: 70/105 players (Devin Booker)        Fetching: 71/105 players (Collin Gillespie)        Fetching: 72/105 players (Donte DiVincenzo)        Fetching: 73/105 players (Ayo Dosunmu)        Fetching: 74/105 players (Jalen Green)        Fetching: 75/105 players (Oso Ighodaro)        Fetching: 76/105 players (Naz Reid)        Fetching: 77/105 players (Jordan Goodwin)        Fetching: 78/105 players (Rudy Gobert)        Fetching: 79/105 players (Jamal Murray)        Fetching: 80/105 players (Cameron Payne)        Fetching: 81/105 players (Nikola Jokic)        Fetching: 82/105 players (Christian Braun)        Fetching: 83/105 players (Trendon Watford)        Fetching: 84/105 players (Quentin Grimes)        Fetching: 85/105 players (VJ Edgecombe)        Fetching: 86/105 players (Justin Edwards)        Fetching: 87/105 players (Bruce Brown)        Fetching: 88/105 players (Cameron Johnson)        Fetching: 89/105 players (Adem Bona)        Fetching: 90/105 players (Aaron Gordon)        Fetching: 91/105 players (Dominick Barlow)        Fetching: 92/105 players (Tim Hardaway Jr)        Fetching: 93/105 players (Devin Vassell)        Fetching: 94/105 players (Russell Westbrook)        Fetching: 95/105 players (DeMar DeRozan)        Fetching: 96/105 players (Dylan Harper)        Fetching: 97/105 players (Stephon Castle)        Fetching: 98/105 players (Victor Wembanyama)        Fetching: 99/105 players (De'Aaron Fox)        Fetching: 100/105 players (Malik Monk)        Fetching: 101/105 players (Maxime Raynaud)        Fetching: 102/105 players (Keldon Johnson)        Fetching: 103/105 players (Precious Achiuwa)        Fetching: 104/105 players (Julian Champagnie)        Fetching: 105/105 players (Nique Clifford)    
+    Scored 56 legs  (17 skipped: insufficient data, 198 skipped: low confidence)
+
+  RECENTLY TRADED PLAYERS (stats may be stale):
+  ⚠ Ivica Zubac: recently traded — stats may be stale, confidence capped MEDIUM
+
+[4/8] Skipping contextual evaluators (disabled by default (use --context to enable))
+[5/8] Building correlation matrix...
+    Correlation matrix ready (42 player(s))
+[6/8] Skipping validation  -- Prop model not validated -- run with --validate to check calibration.
+
+=================================================================
+ALL SCORED PROPS (56 legs)  |  sorted by model prob
+=================================================================
+  Ryan Kalkbrenner: OVER 5.5 pts  (-108)  model: 93.0%  [HIGH]
+  Jared McCain: OVER 7.5 pts  (-105)  model: 90.3%  [HIGH]
+  Ryan Kalkbrenner: OVER 4.5 reb  (-132)  model: 90.0%  [HIGH]
+  Malik Monk: OVER 10.5 pts  (-120)  model: 88.5%  [HIGH]
+  Bruce Brown: OVER 2.5 reb  (-154)  model: 87.5%  [HIGH]
+  Jevon Carter: OVER 6.5 pts  (-112)  model: 85.2%  [HIGH]
+  Jordan Goodwin: OVER 5.5 pts  (-130)  model: 79.2%  [HIGH]
+  Collin Gillespie: OVER 3.5 reb  (-132)  model: 77.6%  [HIGH]
+  Dean Wade: OVER 3.5 reb  (-143)  model: 75.8%  [HIGH]
+  Russell Westbrook: OVER 13.5 pts  (-128)  model: 75.2%  [HIGH]
+  Tristan da Silva: OVER 10.5 pts  (-106)  model: 74.7%  [HIGH]
+  Adem Bona: OVER 6.5 pts  (-112)  model: 74.6%  [HIGH]
+  Adem Bona: OVER 6.5 reb  (+113)  model: 74.3%  [HIGH]
+  Jarace Walker: OVER 5.5 reb  (-138)  model: 74.0%  [HIGH]
+  Pelle Larsson: OVER 11.5 pts  (+102)  model: 73.3%  [HIGH]
+  Alex Caruso: OVER 6.5 pts  (-106)  model: 72.9%  [HIGH]
+  Cason Wallace: OVER 2.5 ast  (-108)  model: 71.7%  [HIGH]
+  Precious Achiuwa: OVER 12.5 pts  (-122)  model: 71.5%  [HIGH]
+  Jarace Walker: OVER 2.5 ast  (-146)  model: 71.4%  [HIGH]
+  Oso Ighodaro: OVER 6.5 pts  (-107)  model: 71.3%  [HIGH]
+  DeMar DeRozan: OVER 3.5 ast  (-154)  model: 71.1%  [HIGH]
+  Jalen Brunson: OVER 6.5 ast  (-154)  model: 70.3%  [HIGH]
+  Bruce Brown: OVER 6.5 pts  (+100)  model: 70.3%  [HIGH]
+  Paolo Banchero: OVER 21.5 pts  (-102)  model: 69.9%  [HIGH]
+  Jett Howard: OVER 6.5 pts  (+109)  model: 68.8%  [HIGH]
+  Luguentz Dort: OVER 3.5 reb  (+120)  model: 68.8%  [HIGH]
+  Jamal Murray: OVER 3.5 reb  (-124)  model: 68.8%  [HIGH]
+  Desmond Bane: OVER 19.5 pts  (-111)  model: 68.6%  [HIGH]
+  Coby White: OVER 12.5 pts  (-130)  model: 67.8%  [HIGH]
+  Jordan Goodwin: OVER 3.5 reb  (+134)  model: 67.7%  [HIGH]
+  Cason Wallace: OVER 2.5 reb  (-154)  model: 67.6%  [HIGH]
+  Quentin Grimes: OVER 3.5 reb  (-149)  model: 67.5%  [HIGH]
+  Oso Ighodaro: OVER 5.5 reb  (-125)  model: 67.4%  [HIGH]
+  Royce O'Neale: OVER 7.5 pts  (-114)  model: 66.7%  [HIGH]
+  Dean Wade: OVER 5.5 pts  (-104)  model: 66.2%  [HIGH]
+  Ivica Zubac: OVER 7.5 reb  (+120)  model: 66.2%  [MEDIUM]
+  Luguentz Dort: OVER 7.5 pts  (-112)  model: 65.8%  [HIGH]
+  Coby White: OVER 2.5 reb  (-108)  model: 65.8%  [HIGH]
+  Grayson Allen: OVER 13.5 pts  (-122)  model: 65.5%  [HIGH]
+  Sam Merrill: OVER 2.5 reb  (-140)  model: 65.4%  [HIGH]
+  Dylan Harper: OVER 10.5 pts  (-112)  model: 64.8%  [HIGH]
+  Cameron Payne: OVER 2.5 reb  (+158)  model: 64.7%  [HIGH]
+  Grant Williams: OVER 5.5 pts  (-130)  model: 64.1%  [HIGH]
+  VJ Edgecombe: OVER 5.5 reb  (+118)  model: 63.5%  [HIGH]
+  Brandon Miller: OVER 5.5 reb  (+106)  model: 63.2%  [HIGH]
+  Christian Braun: OVER 4.5 reb  (-118)  model: 62.9%  [HIGH]
+  Ausar Thompson: OVER 2.5 ast  (-133)  model: 62.8%  [HIGH]
+  Jalen Brunson: OVER 3.5 reb  (+110)  model: 62.1%  [HIGH]
+  Precious Achiuwa: OVER 7.5 reb  (-128)  model: 61.9%  [HIGH]
+  Chet Holmgren: OVER 8.5 reb  (-108)  model: 61.5%  [HIGH]
+  Sam Merrill: OVER 1.5 ast  (-158)  model: 61.4%  [MEDIUM]
+  Dylan Harper: OVER 3.5 ast  (-144)  model: 61.1%  [MEDIUM]
+  Bilal Coulibaly: OVER 12.5 pts  (-103)  model: 60.2%  [HIGH]
+  Aaron Gordon: OVER 5.5 reb  (+112)  model: 60.2%  [HIGH]
+  Javonte Green: OVER 7.5 pts  (-102)  model: 60.2%  [HIGH]
+  Jalen Green: OVER 4.5 reb  (+128)  model: 60.1%  [HIGH]
+
+[7/8] Building SGP combinations...
+[8/8] Skipping detailed EV analysis (use --show-ev to enable)
+
+=================================================================
+SGP SCANNER — Mode: PROPS  |  Min edge: 5.0%
+=================================================================
+
+No combinations found with >= 5.0% edge today.
+  (Scored 56 legs -- try --min-edge 0.02 or --no-corr)

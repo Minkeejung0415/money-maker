@@ -54,3 +54,23 @@ def test_risk_off_reduces_weights():
     full_w = sum(full["weights"].values())
     reduced_w = sum(reduced["weights"].values())
     assert reduced_w <= full_w + 1e-9
+
+
+def test_price_confirms_bullish():
+    engine = CryptoEngine()
+    rows = [{"close": 100 + i} for i in range(5)]
+    assert engine._price_confirms(rows, "bullish") is True
+    assert engine._price_confirms(rows, "bearish") is False
+
+
+def test_price_confirms_bearish():
+    engine = CryptoEngine()
+    rows = [{"close": 100 - i} for i in range(5)]
+    assert engine._price_confirms(rows, "bearish") is True
+    assert engine._price_confirms(rows, "bullish") is False
+
+
+def test_price_confirms_insufficient_rows():
+    engine = CryptoEngine()
+    rows = [{"close": 100.0}, {"close": 101.0}]
+    assert engine._price_confirms(rows, "bullish", lookback=3) is False

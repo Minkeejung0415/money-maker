@@ -9,11 +9,16 @@ error, rate limit, unexpected response format).
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
+from datetime import date
+from pathlib import Path
 from typing import Any
 
 import requests
+
+_CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "cache" / "odds"
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +28,9 @@ _ODDS_API_URL = (
 
 
 class OddsAPIClient:
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: str | None = None, cache_dir: Path | None = _CACHE_DIR):
         self.api_key: str = api_key or os.environ.get("ODDS_API_KEY", "")
+        self._cache_dir = cache_dir
 
     def is_configured(self) -> bool:
         """Return True if an API key is set and non-empty."""
@@ -87,8 +93,16 @@ class OddsAPIClient:
                 "commence_time": str,
             }
 
+        Results are cached to disk for the current date — re-runs within the
+        same day read from cache and consume zero API credits.
         Returns [] on any failure (no key, network error, rate limit).
         """
+        if self._cache_dir is not None:
+            cache_file = self._cache_dir / f"games_{date.today()}.json"
+            if cache_file.exists():
+                logger.info("Odds API games cache hit — reading %s", cache_file.name)
+                return json.loads(cache_file.read_text(encoding="utf-8"))
+
         if not self.is_configured():
             logger.warning("ODDS_API_KEY not set — NBA odds fetch skipped")
             return []
@@ -106,7 +120,13 @@ class OddsAPIClient:
             )
             resp.raise_for_status()
             data: list[dict[str, Any]] = resp.json()
-            return self._parse_games(data)
+            games = self._parse_games(data)
+            if self._cache_dir is not None:
+                self._cache_dir.mkdir(parents=True, exist_ok=True)
+                (self._cache_dir / f"games_{date.today()}.json").write_text(
+                    json.dumps(games), encoding="utf-8"
+                )
+            return games
         except requests.exceptions.HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else "?"
             logger.warning("Odds API HTTP error %s — skipping sports vertical", status)

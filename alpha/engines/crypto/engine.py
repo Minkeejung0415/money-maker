@@ -18,14 +18,37 @@ class CryptoEngine:
         self.strategy_runner = CryptoStrategyRunner(strategy=strategy)
         self.whale_tracker = WhaleTracker(zscore_threshold=whale_threshold)
 
+    def _price_confirms(
+        self, rows: list[dict], direction: str, lookback: int = 3
+    ) -> bool:
+        """
+        Require multi-bar price confirmation before trusting whale signal.
+
+        Research (2026-03-17): single-bar volume anomalies don't reliably
+        predict direction. Requiring the price trend over the last `lookback`
+        bars to align with the whale direction filters most false positives.
+        """
+        if len(rows) < lookback + 1:
+            return False
+        prices = [r.get("close", 0.0) for r in rows[-(lookback + 1):]]
+        trend = prices[-1] - prices[0]
+        if direction == "bullish":
+            return trend > 0
+        if direction == "bearish":
+            return trend < 0
+        return False
+
     def analyze_symbol(self, symbol: str, rows: list[dict]) -> dict:
         """Combine strategy signal + whale signal into final action."""
         strategy_sig = self.strategy_runner.run(rows)
         whale_sig = self.whale_tracker.get_signal(rows)
 
-        # Whale confirmation: boost score if whale direction aligns
+        # Whale confirmation: only boost when multi-bar price action agrees.
+        # A whale volume spike alone is noisy (per exchange-inflow research).
         score = strategy_sig["score"]
-        if whale_sig["whale_detected"]:
+        if whale_sig["whale_detected"] and self._price_confirms(
+            rows, whale_sig["direction"]
+        ):
             if whale_sig["direction"] == "bullish" and score > 0:
                 score = min(1.0, score * 1.3)
             elif whale_sig["direction"] == "bearish" and score < 0:

@@ -35,8 +35,7 @@ def test_fetch_ohlcv_returns_correct_row_format():
     mock_exchange = MagicMock()
     mock_exchange.fetch_ohlcv.return_value = _mock_raw_candles()
 
-    with patch("alpha.data.ingestion.crypto_feeds.ccxt") as mock_ccxt:
-        mock_ccxt.binance.return_value = mock_exchange
+    with patch("alpha.data.ingestion.crypto_feeds._make_exchange", return_value=mock_exchange):
         rows = fetch_ohlcv("BTC/USDT", exchange_id="binance", timeframe="1d", limit=100)
 
     assert len(rows) == 2
@@ -52,8 +51,7 @@ def test_fetch_ohlcv_passes_timeframe_and_limit():
     mock_exchange = MagicMock()
     mock_exchange.fetch_ohlcv.return_value = _mock_raw_candles()
 
-    with patch("alpha.data.ingestion.crypto_feeds.ccxt") as mock_ccxt:
-        mock_ccxt.binance.return_value = mock_exchange
+    with patch("alpha.data.ingestion.crypto_feeds._make_exchange", return_value=mock_exchange):
         fetch_ohlcv("ETH/USDT", exchange_id="binance", timeframe="1d", limit=50)
 
     mock_exchange.fetch_ohlcv.assert_called_once_with("ETH/USDT", timeframe="1d", limit=50)

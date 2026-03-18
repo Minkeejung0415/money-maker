@@ -83,6 +83,7 @@ def builder():
         bankroll=10_000,
         min_edge=0.0,   # set to 0 so all positive-ev combos pass through
         max_legs=4,
+        min_legs=2,     # tests use 2-leg combos by design
     )
 
 
@@ -108,13 +109,16 @@ def test_low_confidence_legs_excluded(builder):
     assert result == []
 
 
-def test_props_only_2_legs_ev_calculation(builder):
+def test_props_only_2_legs_ev_calculation():
     """Verify EV formula: ev = p*(odds-1) - (1-p)."""
+    two_leg_builder = SGPBuilder(
+        correlation_engine=_null_corr(), bankroll=10_000, min_edge=0.0, max_legs=4, min_legs=2
+    )
     leg_a = _make_leg(player="PlayerA", model_prob=0.65, over_odds=-110, confidence="HIGH")
     leg_b = _make_leg(player="PlayerB", market="player_rebounds", model_prob=0.60,
                       over_odds=-110, confidence="HIGH")
 
-    result = builder.build([leg_a, leg_b], mode=SGPMode.PROPS_ONLY)
+    result = two_leg_builder.build([leg_a, leg_b], mode=SGPMode.PROPS_ONLY)
     assert len(result) >= 1
 
     combo = result[0]
@@ -185,6 +189,7 @@ def test_moneyline_same_team_prop_flags_warning():
         bankroll=10_000,
         min_edge=0.0,
         max_legs=4,
+        min_legs=2,
     )
     lebron_leg = _make_leg(
         player="LeBron James",
@@ -232,7 +237,7 @@ def test_kelly_stake_attached_to_results(builder):
 def test_corr_note_same_player_skipped():
     """Same-player pair (pts + ast) should show 'same player — r=0.65', never 'vs'."""
     corr = _null_corr()
-    builder = SGPBuilder(correlation_engine=corr, bankroll=10_000, min_edge=0.0, max_legs=4)
+    builder = SGPBuilder(correlation_engine=corr, bankroll=10_000, min_edge=0.0, max_legs=4, min_legs=2)
     trae_pts = _make_leg(player="Trae Young", market="player_points", model_prob=0.65,
                          over_odds=-110, event_id="e1", confidence="HIGH")
     trae_ast = _make_leg(player="Trae Young", market="player_assists", model_prob=0.62,

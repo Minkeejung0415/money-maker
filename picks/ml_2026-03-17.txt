@@ -1,0 +1,50 @@
+ACTIVE_SEASON=2025-26
+NBAStatsCache active season=2025-26
+PropModel active season=2025-26
+[1/6] Fetching today's NBA games...
+    Found 8 game(s)
+
+=================================================================
+MONEYLINE SCANNER — All Games
+=================================================================
+
+Charlotte Hornets vs Miami Heat
+  Charlotte Hornets               model 64.3%  |  market 62.7%  |  edge +1.6%  |  EV/100: $+2.61  |  Kelly: 1.1%
+  Miami Heat                      model 35.7%  |  market 41.3%  |  edge -5.6%  |  EV/100: $-13.65  |  Kelly: 0.0% <- SKIP
+
+Washington Wizards vs Detroit Pistons
+  Washington Wizards              model 17.4%  |  market 10.0%  |  edge +7.4%  |  EV/100: $+74.50  |  Kelly: 2.1% <- VALUE
+  Detroit Pistons                 model 82.5%  |  market 94.1%  |  edge -11.6%  |  EV/100: $-12.29  |  Kelly: 0.0% <- SKIP
+
+Orlando Magic vs Oklahoma City Thunder
+  Orlando Magic                   model 35.9%  |  market 22.7%  |  edge +13.1%  |  EV/100: $+57.78  |  Kelly: 4.2% <- VALUE
+  Oklahoma City Thunder           model 64.1%  |  market 81.1%  |  edge -17.0%  |  EV/100: $-20.94  |  Kelly: 0.0% <- SKIP
+
+New York Knicks vs Indiana Pacers
+  New York Knicks                 model 89.1%  |  market 90.9%  |  edge -1.8%  |  EV/100: $-1.96  |  Kelly: 0.0% <- SKIP
+  Indiana Pacers                  model 10.9%  |  market 13.2%  |  edge -2.3%  |  EV/100: $-17.39  |  Kelly: 0.0% <- SKIP
+
+Milwaukee Bucks vs Cleveland Cavaliers
+  Milwaukee Bucks                 model 35.8%  |  market 23.3%  |  edge +12.6%  |  EV/100: $+54.03  |  Kelly: 4.1% <- VALUE
+  Cleveland Cavaliers             model 64.2%  |  market 80.8%  |  edge -16.6%  |  EV/100: $-20.54  |  Kelly: 0.0% <- SKIP
+
+Minnesota Timberwolves vs Phoenix Suns
+  Minnesota Timberwolves          model 61.2%  |  market 64.8%  |  edge -3.6%  |  EV/100: $-5.57  |  Kelly: 0.0% <- SKIP
+  Phoenix Suns                    model 38.8%  |  market 39.4%  |  edge -0.6%  |  EV/100: $-1.40  |  Kelly: 0.0% <- SKIP
+
+Denver Nuggets vs Philadelphia 76ers
+  Denver Nuggets                  model 83.8%  |  market 90.9%  |  edge -7.1%  |  EV/100: $-7.81  |  Kelly: 0.0% <- SKIP
+  Philadelphia 76ers              model 16.2%  |  market 13.2%  |  edge +3.0%  |  EV/100: $+23.04  |  Kelly: 0.9%
+
+Sacramento Kings vs San Antonio Spurs
+  Sacramento Kings                model 20.4%  |  market 15.6%  |  edge +4.8%  |  EV/100: $+30.43  |  Kelly: 1.4% <- VALUE
+  San Antonio Spurs               model 79.6%  |  market 88.5%  |  edge -8.9%  |  EV/100: $-10.04  |  Kelly: 0.0% <- SKIP
+
+=================================================================
+TOP VALUE ML BETS (edge > 4%) — showing 4 of 4
+=================================================================
+  1. Orlando Magic                   edge +13.1%  |  EV/100: $+57.78  |  model: 35.9%
+  2. Milwaukee Bucks                 edge +12.6%  |  EV/100: $+54.03  |  model: 35.8%
+  3. Washington Wizards              edge +7.4%  |  EV/100: $+74.50  |  model: 17.4%
+  4. Sacramento Kings                edge +4.8%  |  EV/100: $+30.43  |  model: 20.4%
+

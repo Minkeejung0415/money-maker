@@ -11,7 +11,7 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-PICKS_FILE = ROOT / "picks" / "props_all_2026-03-15.txt"
+PICKS_FILE = ROOT / "picks" / "props_all_2026-03-16.txt"
 SEASON = "2025-26"
 NBA_API_SLEEP = 0.6
 

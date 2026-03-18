@@ -70,7 +70,7 @@ def test_is_configured_reads_env(monkeypatch):
 
 def test_fetch_returns_empty_when_no_key():
     """No API key → no network call, returns []."""
-    client = OddsAPIClient(api_key="")
+    client = OddsAPIClient(api_key="", cache_dir=None)
     with patch("alpha.data.ingestion.odds_api.requests.get") as mock_get:
         result = client.fetch_nba_games()
     mock_get.assert_not_called()
@@ -82,7 +82,7 @@ def test_fetch_returns_empty_when_no_key():
 # ---------------------------------------------------------------------------
 
 def test_fetch_parses_single_event():
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
     event = _make_event(
         home_team="Boston Celtics",
         away_team="Miami Heat",
@@ -108,7 +108,7 @@ def test_fetch_parses_single_event():
 
 
 def test_fetch_parses_multiple_events():
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
     events = [
         _make_event("e1", "Los Angeles Lakers", "Golden State Warriors", -120, 100),
         _make_event("e2", "Denver Nuggets", "Dallas Mavericks", -200, 170),
@@ -131,7 +131,7 @@ def test_fetch_parses_multiple_events():
 
 def test_fetch_returns_empty_on_http_error():
     import requests as req_lib
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
     mock_resp = MagicMock()
     mock_resp.status_code = 429
     http_err = req_lib.exceptions.HTTPError(response=mock_resp)
@@ -144,7 +144,7 @@ def test_fetch_returns_empty_on_http_error():
 
 def test_fetch_returns_empty_on_network_error():
     import requests as req_lib
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
 
     with patch(
         "alpha.data.ingestion.odds_api.requests.get",
@@ -156,7 +156,7 @@ def test_fetch_returns_empty_on_network_error():
 
 
 def test_fetch_returns_empty_on_unexpected_exception():
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
 
     with patch(
         "alpha.data.ingestion.odds_api.requests.get",
@@ -172,7 +172,7 @@ def test_fetch_returns_empty_on_unexpected_exception():
 # ---------------------------------------------------------------------------
 
 def test_fallback_odds_when_no_bookmakers():
-    client = OddsAPIClient(api_key="key")
+    client = OddsAPIClient(api_key="key", cache_dir=None)
     event_no_books = {
         "id": "x",
         "home_team": "Team A",

@@ -11,11 +11,16 @@ Degrades gracefully: returns [] on any failure.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
+from datetime import date
+from pathlib import Path
 from typing import Any
 
 import requests
+
+_CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "cache" / "odds"
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +38,9 @@ SUPPORTED_MARKETS = {
 
 
 class PlayerPropsClient:
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: str | None = None, cache_dir: Path | None = _CACHE_DIR):
         self.api_key: str = api_key or os.environ.get("ODDS_API_KEY", "")
+        self._cache_dir = cache_dir
 
     def is_configured(self) -> bool:
         return bool(self.api_key)
@@ -78,7 +84,16 @@ class PlayerPropsClient:
         """
         Fetch props for all games. Each game dict must have event_id, home_team, away_team.
         Returns flat list of all canonical prop dicts.
+
+        Results are cached to disk for the current date — re-runs within the
+        same day read from cache and consume zero API credits.
         """
+        if self._cache_dir is not None:
+            cache_file = self._cache_dir / f"props_{date.today()}.json"
+            if cache_file.exists():
+                logger.info("Odds API props cache hit — reading %s", cache_file.name)
+                return json.loads(cache_file.read_text(encoding="utf-8"))
+
         all_props: list[dict] = []
         for game in games:
             event_id = game.get("event_id", "")
@@ -88,6 +103,12 @@ class PlayerPropsClient:
                 continue
             props = self.fetch_game_props(event_id, home_team, away_team)
             all_props.extend(props)
+
+        if self._cache_dir is not None:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            (self._cache_dir / f"props_{date.today()}.json").write_text(
+                json.dumps(all_props), encoding="utf-8"
+            )
         return all_props
 
     # ------------------------------------------------------------------

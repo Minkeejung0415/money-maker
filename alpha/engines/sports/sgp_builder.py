@@ -126,11 +126,13 @@ class SGPBuilder:
         bankroll: float = 10_000.0,
         min_edge: float = 0.05,
         max_legs: int = 4,
+        min_legs: int = 3,
     ):
         self._corr = correlation_engine
         self._bankroll = bankroll
         self._min_edge = min_edge
         self._max_legs = max_legs
+        self._min_legs = min_legs
 
     # ------------------------------------------------------------------
     # Public API
@@ -219,13 +221,13 @@ class SGPBuilder:
     # ------------------------------------------------------------------
 
     def _build_props_only(self, legs: list[PropLeg]) -> list[ParlayCombination]:
-        """2–4 prop legs from the same game, with category diversity enforced."""
+        """min_legs–4 prop legs from the same game, with category diversity enforced."""
         legs = self._enforce_category_diversity(legs)
-        if len(legs) < 2:
+        if len(legs) < self._min_legs:
             return []
 
         results: list[ParlayCombination] = []
-        for n_legs in range(2, min(self._max_legs, 4) + 1):
+        for n_legs in range(self._min_legs, min(self._max_legs, 4) + 1):
             for combo_legs in itertools.combinations(legs, n_legs):
                 event_ids = {leg.event_id for leg in combo_legs}
                 if len(event_ids) > 1:
@@ -248,7 +250,7 @@ class SGPBuilder:
                 [leg for leg in prop_legs if leg.event_id == event_id]
             )
 
-            for n_prop_legs in range(1, min(self._max_legs - 1, 3) + 1):
+            for n_prop_legs in range(max(1, self._min_legs - 1), min(self._max_legs - 1, 3) + 1):
                 for prop_combo in itertools.combinations(game_legs, n_prop_legs):
                     if not self._passes_category_diversity(list(prop_combo)):
                         continue
@@ -275,7 +277,7 @@ class SGPBuilder:
             game_legs = self._enforce_category_diversity(by_event.get(event_id, []))
             ml_leg = self._best_ml_leg(game)
 
-            for n in range(2, min(self._max_legs, 5) + 1):
+            for n in range(self._min_legs, min(self._max_legs, 5) + 1):
                 for prop_combo in itertools.combinations(game_legs, n):
                     if not self._passes_category_diversity(list(prop_combo)):
                         continue
@@ -284,7 +286,7 @@ class SGPBuilder:
                         results.append(combo)
 
             if ml_leg is not None:
-                for n_prop in range(1, min(self._max_legs - 1, 4) + 1):
+                for n_prop in range(max(1, self._min_legs - 1), min(self._max_legs - 1, 4) + 1):
                     for prop_combo in itertools.combinations(game_legs, n_prop):
                         if not self._passes_category_diversity(list(prop_combo)):
                             continue

@@ -43,7 +43,12 @@
       "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode props --list-props --confidence ALL --date 2026-03-15 2>&1 | tee picks/props_all_2026-03-15.txt)",
       "Bash(./venv/Scripts/python.exe scripts/sgp_scanner.py --mode ml --date 2026-03-15 2>&1 | tee picks/ml_2026-03-15.txt)",
       "Bash(ls:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(tee picks/props_all_2026-03-17.txt)",
+      "Bash(tee picks/ml_2026-03-17.txt)",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(grep -E \"\\\\.toml$\")",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /c/Users/justi/Documents/money-maker/alpha --include=*.py)"
     ]
   }
 }

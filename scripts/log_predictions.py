@@ -45,7 +45,25 @@ def log_prediction(
     outcome: bool | None = None,
     log_file: Path = DEFAULT_LOG,
 ) -> None:
-    """Append one prediction record to the JSONL log file."""
+    """Append one prediction record to the JSONL log file (deduped by key)."""
+    log_file = Path(log_file)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Dedup: skip if (player, market, line, direction, game_date) already logged
+    dedup_key = (player, market, float(line), direction, game_date)
+    if log_file.exists():
+        with open(log_file, encoding="utf-8") as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    r = json.loads(raw)
+                    if (r["player"], r["market"], float(r["line"]), r["direction"], r["game_date"]) == dedup_key:
+                        return  # already logged
+                except Exception:
+                    continue
+
     record = {
         "player": player,
         "market": market,
@@ -58,7 +76,5 @@ def log_prediction(
         "logged_at": datetime.now(timezone.utc).isoformat(),
         "outcome": outcome,  # True=hit, False=miss, None=ungraded
     }
-    log_file = Path(log_file)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")

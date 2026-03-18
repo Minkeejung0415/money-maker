@@ -227,12 +227,14 @@ def main() -> int:
     else:
         daily_results, tracker = _simulate_sports(days)
 
-    # Build equity curve from daily_results
-    equity = [v for _, v in daily_results] if daily_results else [100_000.0]
+    # Build equity curve — exclude 0.0 placeholder entries (days with no signals)
+    equity = [v for _, v in daily_results if v > 0.0] if daily_results else []
+    if not equity:
+        equity = [100_000.0]
     max_dd = _compute_max_drawdown(equity)
 
     total_return_pct = 0.0
-    if equity:
+    if len(equity) >= 2:
         total_return_pct = (equity[-1] / equity[0] - 1.0) * 100
 
     win_rate = tracker.win_rate()

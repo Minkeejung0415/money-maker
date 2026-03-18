@@ -108,6 +108,10 @@ Examples:
         help="Maximum legs per parlay combination (default: 4)",
     )
     parser.add_argument(
+        "--min-legs", type=int, default=3,
+        help="Minimum legs per parlay combination (default: 3)",
+    )
+    parser.add_argument(
         "--markets",
         default="player_points,player_rebounds,player_assists",
         help="Comma-separated prop markets (default: player_points,player_rebounds,player_assists)",
@@ -660,6 +664,7 @@ def main() -> None:
         bankroll=args.bankroll,
         min_edge=args.min_edge,
         max_legs=args.max_legs,
+        min_legs=args.min_legs,
     )
     results = builder.build(
         prop_legs=scored_legs,

@@ -3,6 +3,19 @@ import ccxt
 from alpha.config.settings import Settings
 
 
+def _make_exchange(exchange_id: str, params: dict | None = None):
+    """Instantiate a ccxt exchange, compatible with ccxt v4+ submodule layout."""
+    import importlib  # noqa: PLC0415
+    try:
+        # ccxt v4+: exchange classes live in ccxt.<exchange_id>.<exchange_id>
+        mod = importlib.import_module(f"ccxt.{exchange_id}")
+        ExchangeClass = getattr(mod, exchange_id)
+    except (ModuleNotFoundError, AttributeError):
+        # Fallback for older ccxt versions
+        ExchangeClass = getattr(ccxt, exchange_id)
+    return ExchangeClass(params or {"enableRateLimit": True})
+
+
 def fetch_ohlcv(
     symbol: str,
     exchange_id: str = "binance",
@@ -15,8 +28,7 @@ def fetch_ohlcv(
 
     Returns rows with keys: symbol, date, open, high, low, close, volume, asset_type.
     """
-    ExchangeClass = getattr(ccxt, exchange_id)
-    exchange = ExchangeClass({"enableRateLimit": True})
+    exchange = _make_exchange(exchange_id, {"enableRateLimit": True})
     raw = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
     rows = []
     for candle in raw:
@@ -46,8 +58,7 @@ class CryptoFeedClient:
     ):
         settings = Settings()
         self.exchange_name = exchange_name or settings.exchange_name
-        ExchangeClass = getattr(ccxt, self.exchange_name)
-        self.exchange = ExchangeClass({
+        self.exchange = _make_exchange(self.exchange_name, {
             "apiKey": api_key or settings.exchange_api_key,
             "secret": api_secret or settings.exchange_api_secret,
             "sandbox": sandbox,
