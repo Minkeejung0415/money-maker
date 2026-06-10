@@ -346,8 +346,11 @@ def fetch_today_games(date_str: str | None = None) -> list[dict]:
             games.append({
                 "home_team": home,
                 "away_team": away,
+                # StatsAPI carries no odds; these are PLACEHOLDERS and must
+                # never be bet on — has_real_odds gates paper bets off.
                 "home_odds": -110,
                 "away_odds": -110,
+                "has_real_odds": False,
                 "league": "mlb",
                 "event_id": game_id,
                 "commence_time": commence,
