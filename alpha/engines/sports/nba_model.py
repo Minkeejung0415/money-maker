@@ -149,9 +149,37 @@ _SCHEDULE_CSVS = [
 
 
 class NBAModel:
-    def __init__(self, min_edge: float = 0.04, kelly_fraction: float = 0.25):
+    def __init__(
+        self,
+        min_edge: float = 0.04,
+        kelly_fraction: float = 0.25,
+        allow_market_fallback_bets: bool = False,
+        enable_paint_deterrence: bool = True,
+        enable_foul_exposure: bool = True,
+        enable_recent_form: bool = True,
+        enable_h2h: bool = False,
+        enable_tanking_guard: bool = True,
+        enable_injury_adjustment: bool = True,
+        enable_rest_features: bool = True,
+    ):
         self.ev_calc = EVCalculator(min_edge=min_edge)
         self._kelly_fraction = kelly_fraction
+
+        # The market-implied fallback is a BENCHMARK, not an independent
+        # model — by default it never emits bets (there is no edge in
+        # betting the market against itself).  Enable only for research.
+        self.allow_market_fallback_bets = allow_market_fallback_bets
+
+        # Heuristic adjustment feature flags (for ablation studies).
+        # enable_h2h defaults to False: small-sample head-to-head records
+        # are noise more often than signal.
+        self.enable_paint_deterrence = enable_paint_deterrence
+        self.enable_foul_exposure = enable_foul_exposure
+        self.enable_recent_form = enable_recent_form
+        self.enable_h2h = enable_h2h
+        self.enable_tanking_guard = enable_tanking_guard
+        self.enable_injury_adjustment = enable_injury_adjustment
+        self.enable_rest_features = enable_rest_features
 
         self._xgb_ml = None
         self._xgb_ml_calibrator = None
@@ -210,7 +238,7 @@ class NBAModel:
         home_adj = 0.0
         away_adj = 0.0
 
-        if self._paint_deterrence:
+        if self._paint_deterrence and self.enable_paint_deterrence:
             for team, opp, sign in [(home_team, away_team, 1), (away_team, home_team, -1)]:
                 protectors = self._paint_deterrence.get_elite_protectors_for_team(opp)
                 if protectors:
@@ -223,7 +251,7 @@ class NBAModel:
                             away_adj -= discount
 
         # Foul trouble: team-level adjustment
-        if self._foul_trouble:
+        if self._foul_trouble and self.enable_foul_exposure:
             home_foul = self._foul_trouble.get_team_foul_exposure(home_team)
             away_foul = self._foul_trouble.get_team_foul_exposure(away_team)
             home_adj += home_foul.get("adjustment", 0.0)
@@ -241,7 +269,7 @@ class NBAModel:
             away_adj += (away_opp.get("def_factor", 1.0) - 1.0) * 0.03
 
         # Recent form blending
-        if self._stats_cache:
+        if self._stats_cache and self.enable_recent_form:
             team_stats = self._get_team_stats_summary()
             for team, sign in [(home_team, 1), (away_team, -1)]:
                 form = self._stats_cache.fetch_team_recent_form(team)
@@ -254,8 +282,8 @@ class NBAModel:
                     else:
                         away_adj += delta
 
-        # Head-to-head history nudge
-        if self._stats_cache:
+        # Head-to-head history nudge (OFF by default: small-sample noise)
+        if self._stats_cache and self.enable_h2h:
             h2h_weight = 0.15
             try:
                 h2h = self._stats_cache.fetch_head_to_head(home_team, away_team)
@@ -354,15 +382,37 @@ class NBAModel:
     # Public: predict / evaluate
     # ------------------------------------------------------------------
 
+    def _market_consensus_prob(self, game: dict) -> float:
+        """
+        Home-side market benchmark probability.
+
+        Prefers the median per-book no-vig consensus computed by
+        OddsAPIClient (``consensus_home_prob``); falls back to the no-vig
+        probability of the single odds pair on the game dict.
+        """
+        consensus = game.get("consensus_home_prob")
+        if consensus is not None:
+            return float(consensus)
+        return self._market_implied_predict(game)["home_win_prob"]
+
     def predict(self, game: dict) -> dict:
         """
         Estimate win probabilities for a game.
 
-        Tries the XGBoost 68.9 % model first; falls back to
-        market-implied probabilities blended toward 50/50 on any failure.
+        Returns three explicitly separated probabilities (home side):
+          - market_consensus_prob: market benchmark (no-vig consensus)
+          - independent_model_prob: the model's own estimate (None when
+            only the market benchmark is available)
+          - final_calibrated_prob: probability after credibility filter
+            and contextual adjustments — equals home_win_prob
+
+        Tries the XGBoost model first; on any failure returns
+        source="market_benchmark".  The benchmark is NOT an independent
+        model and never represents edge by itself.
         """
         home_team = self._normalize_team(game.get("home_team", ""))
         away_team = self._normalize_team(game.get("away_team", ""))
+        market_prob = self._market_consensus_prob(game)
 
         if self._xgb_models_loaded:
             try:
@@ -375,6 +425,7 @@ class NBAModel:
                     elif away_prob > MAX_XGB_CONF:
                         away_prob = MAX_XGB_CONF
                         home_prob = 1.0 - MAX_XGB_CONF
+                    independent_prob = home_prob
                     home_prob, away_prob = self._credibility_filter(
                         home_team, away_team, home_prob, away_prob, game
                     )
@@ -388,9 +439,12 @@ class NBAModel:
                         "home_win_prob": round(home_prob, 4),
                         "away_win_prob": round(away_prob, 4),
                         "source": "xgboost",
+                        "market_consensus_prob": round(market_prob, 4),
+                        "independent_model_prob": round(independent_prob, 4),
+                        "final_calibrated_prob": round(home_prob, 4),
                     }
             except Exception as exc:
-                logger.debug("XGBoost prediction failed, using market-implied: %s", exc)
+                logger.debug("XGBoost prediction failed, using market benchmark: %s", exc)
 
         result = self._market_implied_predict(game)
         home_prob = result["home_win_prob"]
@@ -401,6 +455,10 @@ class NBAModel:
         )
         result["home_win_prob"] = round(home_prob, 4)
         result["away_win_prob"] = round(away_prob, 4)
+        result["source"] = "market_benchmark"
+        result["market_consensus_prob"] = round(market_prob, 4)
+        result["independent_model_prob"] = None
+        result["final_calibrated_prob"] = round(home_prob, 4)
         return result
 
     def evaluate_bet(self, game: dict) -> dict:
@@ -409,6 +467,19 @@ class NBAModel:
         Returns opportunity dict with bet_side, model_prob, decimal_odds, ev.
         """
         probs = self.predict(game)
+
+        # The market benchmark cannot beat itself — never claim edge when
+        # only the benchmark probability is available (research opt-in only).
+        if probs.get("source") == "market_benchmark" and not self.allow_market_fallback_bets:
+            return {
+                "bet_side": "no_bet",
+                "team": "",
+                "model_prob": 0.0,
+                "decimal_odds": 0.0,
+                "ev": 0.0,
+                "reason": "market_benchmark_only",
+            }
+
         home_odds = game.get("home_odds", -110)
         away_odds = game.get("away_odds", -110)
 
@@ -509,19 +580,75 @@ class NBAModel:
             logger.debug("XGBoost model load skipped: %s", exc)
 
     def _select_model_path(self, kind: str) -> Path | None:
-        """Return the best model path for *kind* ('ML' or 'UO') by accuracy then mtime."""
+        """
+        Return the best model path for *kind* ('ML' or 'UO').
+
+        Selection order: validated metric FIRST (sidecar .meta.json
+        accuracy, else the accuracy embedded in the filename), modified
+        time only as a tie-breaker — a newer file must never beat a
+        better-validated one.
+        """
         if not _MODEL_DIR.exists():
             return None
-        candidates = list(_MODEL_DIR.glob(f"*{kind}*.json"))
+        candidates = [
+            p for p in _MODEL_DIR.glob(f"*{kind}*.json")
+            if not p.name.endswith(".meta.json")
+        ]
         if not candidates:
             return None
 
         def _score(p: Path):
-            m = _ACCURACY_RE.search(p.name)
-            acc = float(m.group(1)) if m else 0.0
-            return (p.stat().st_mtime, acc)
+            acc = self._validated_accuracy(p)
+            return (acc, p.stat().st_mtime)
 
         return max(candidates, key=_score)
+
+    @staticmethod
+    def _validated_accuracy(model_path: Path) -> float:
+        """Validated accuracy from the .meta.json sidecar, else filename."""
+        meta_path = model_path.with_name(model_path.stem + ".meta.json")
+        if meta_path.exists():
+            try:
+                import json  # noqa: PLC0415
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                acc = meta.get("accuracy")
+                if acc is None:
+                    acc = meta.get("validation_metrics", {}).get("accuracy")
+                if acc is not None:
+                    return float(acc)
+            except Exception as exc:
+                logger.debug("Unreadable model metadata %s: %s", meta_path.name, exc)
+        m = _ACCURACY_RE.search(model_path.name)
+        return float(m.group(1)) if m else 0.0
+
+    @staticmethod
+    def save_model_metadata(
+        model_path: Path,
+        model_version: str,
+        trained_at: str,
+        feature_schema_version: str,
+        validation_period: dict,
+        brier_score: float,
+        log_loss: float,
+        accuracy: float,
+        sample_count: int,
+        **extra,
+    ) -> Path:
+        """Write the .meta.json sidecar used by _select_model_path()."""
+        import json  # noqa: PLC0415
+        meta_path = Path(model_path).with_name(Path(model_path).stem + ".meta.json")
+        meta_path.write_text(json.dumps({
+            "model_version": model_version,
+            "trained_at": trained_at,
+            "feature_schema_version": feature_schema_version,
+            "validation_period": validation_period,
+            "brier_score": brier_score,
+            "log_loss": log_loss,
+            "accuracy": accuracy,
+            "sample_count": sample_count,
+            **extra,
+        }, indent=2), encoding="utf-8")
+        return meta_path
 
     # ------------------------------------------------------------------
     # Internal: XGBoost prediction pipeline
@@ -546,13 +673,10 @@ class NBAModel:
             return None
 
         # Adjust team stats for today's injuries/inactive players
-        team_df = self._apply_injury_adjustment(team_df, home_team, away_team)
+        if self.enable_injury_adjustment:
+            team_df = self._apply_injury_adjustment(team_df, home_team, away_team)
 
-        index_map = self._get_team_index_map()
-        if index_map is None:
-            return None
-
-        game_series = self._build_game_features(team_df, home_team, away_team, index_map)
+        game_series = self._build_game_features(team_df, home_team, away_team)
         if game_series is None:
             logger.debug(
                 "Could not build XGBoost feature vector for %s vs %s",
@@ -569,19 +693,31 @@ class NBAModel:
         X = X.apply(pd.to_numeric, errors="coerce")
         X = X.dropna(axis=1, how="all")
 
-        # Inject days-rest features (missing from live team stats but in training data)
-        home_rest, away_rest = self._get_days_rest(home_team, away_team)
+        # Inject days-rest features (missing from live team stats but in
+        # training data).  With rest features ablated, the neutral value 2
+        # is used so the model schema stays intact.
+        if self.enable_rest_features:
+            home_rest, away_rest = self._get_days_rest(home_team, away_team)
+        else:
+            home_rest, away_rest = 2, 2
         X["Days-Rest-Home"] = float(home_rest)
         X["Days-Rest-Away"] = float(away_rest)
 
-        # Align columns to model's expected feature order
+        # Validate the model's expected feature schema.  A missing required
+        # feature means the live data no longer matches what the model was
+        # trained on — fail closed to the market benchmark instead of
+        # silently predicting on a partial (misaligned) feature set.
         fn = getattr(self._xgb_ml, "feature_names", None)
         if fn:
-            available = [f for f in fn if f in X.columns]
-            if not available:
-                logger.debug("No overlapping features between game data and model")
+            missing = [f for f in fn if f not in X.columns]
+            if missing:
+                logger.warning(
+                    "XGBoost feature schema mismatch: %d/%d expected features "
+                    "missing (e.g. %s) — failing closed to market benchmark",
+                    len(missing), len(fn), missing[:5],
+                )
                 return None
-            X = X[available]
+            X = X[fn]
 
         try:
             X = X.astype(float)
@@ -759,25 +895,35 @@ class NBAModel:
         team_df,
         home_team: str,
         away_team: str,
-        index_map: dict,
     ):
         """
         Replicate Create_Games.build_game_features() locally to avoid
         importing from a directory with a hyphenated name.
 
-        Returns a pandas Series or None.
+        Rows are located by TEAM_NAME — never by positional index, which
+        silently pairs the wrong teams whenever the snapshot ordering
+        differs from team_index_current.
+
+        Returns a pandas Series or None (fail closed on unknown teams).
         """
         try:
-            home_index = index_map.get(home_team)
-            away_index = index_map.get(away_team)
-            if home_index is None or away_index is None:
-                return None
-            if len(team_df.index) != 30:
+            import pandas as pd  # noqa: PLC0415
+
+            if "TEAM_NAME" not in team_df.columns:
+                logger.warning("TeamData snapshot has no TEAM_NAME column — failing closed")
                 return None
 
-            import pandas as pd  # noqa: PLC0415
-            home_series = team_df.iloc[home_index]
-            away_series = team_df.iloc[away_index].rename(
+            home_rows = team_df[team_df["TEAM_NAME"] == home_team]
+            away_rows = team_df[team_df["TEAM_NAME"] == away_team]
+            if home_rows.empty or away_rows.empty:
+                logger.debug(
+                    "Team not found in snapshot: home=%s (%d) away=%s (%d)",
+                    home_team, len(home_rows), away_team, len(away_rows),
+                )
+                return None
+
+            home_series = home_rows.iloc[0]
+            away_series = away_rows.iloc[0].rename(
                 index={col: f"{col}.1" for col in team_df.columns}
             )
             return pd.concat([home_series, away_series])
@@ -857,8 +1003,8 @@ class NBAModel:
 
             decimal_odds = self.ev_calc.american_to_decimal(game.get(odds_key, -110))
 
-            # Check 1: tanking discount
-            if wins < 20 and gp > 50:
+            # Check 1: tanking discount (flag-gated for ablation)
+            if self.enable_tanking_guard and wins < 20 and gp > 50:
                 adj = 0.5 * adj + 0.5 * mkt_p
                 logger.debug(
                     "Tanking discount: %s (%dW/%dGP) model=%.3f -> %.3f",

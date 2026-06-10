@@ -55,7 +55,7 @@ def test_min_prob_filter():
 
 
 def test_h2h_nudges_home_prob():
-    """Mock H2H data where home team dominates → home_prob should increase."""
+    """With enable_h2h=True (off by default), H2H dominance nudges home prob up."""
     from alpha.engines.sports.nba_model import NBAModel
 
     model = NBAModel.__new__(NBAModel)
@@ -67,6 +67,12 @@ def test_h2h_nudges_home_prob():
     model._paint_deterrence = None
     model._foul_trouble = None
     model._opp_stats = None
+    # Heuristic flags (normally set by __init__): opt in to H2H for this test.
+    model.enable_paint_deterrence = True
+    model.enable_foul_exposure = True
+    model.enable_recent_form = True
+    model.enable_h2h = True
+    model.enable_tanking_guard = True
 
     mock_cache = MagicMock()
     mock_cache.fetch_team_recent_form.return_value = None

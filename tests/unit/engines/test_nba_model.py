@@ -62,7 +62,7 @@ def test_predict_returns_source_field():
     model = NBAModel()
     result = model.predict(_GAME)
     assert "source" in result
-    assert result["source"] in ("xgboost", "market_implied")
+    assert result["source"] in ("xgboost", "market_benchmark")
 
 
 def test_predict_probs_sum_to_one_regardless_of_source():
@@ -84,7 +84,7 @@ def test_predict_market_implied_when_sqlite_unavailable():
     with patch.object(model, "_get_latest_team_df", return_value=None):
         result = model.predict(_GAME)
 
-    assert result["source"] == "market_implied"
+    assert result["source"] == "market_benchmark"
     assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
 
 
@@ -94,7 +94,7 @@ def test_predict_market_implied_when_xgb_not_loaded():
     model._xgb_models_loaded = False  # force fallback
 
     result = model.predict(_GAME)
-    assert result["source"] == "market_implied"
+    assert result["source"] == "market_benchmark"
     assert 0.0 <= result["home_win_prob"] <= 1.0
     assert 0.0 <= result["away_win_prob"] <= 1.0
 
@@ -107,7 +107,7 @@ def test_predict_fallback_when_xgb_raises():
     with patch.object(model, "_predict_xgb", side_effect=RuntimeError("boom")):
         result = model.predict(_GAME)
 
-    assert result["source"] == "market_implied"
+    assert result["source"] == "market_benchmark"
     assert abs(result["home_win_prob"] + result["away_win_prob"] - 1.0) < 1e-6
 
 

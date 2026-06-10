@@ -47,13 +47,17 @@ _REST_MULTIPLIER: dict[int, float] = {
 _REST_DEFAULT: float = 1.02   # 3+ days rest
 
 # Markets that use Poisson CDF vs Negative Binomial CDF
-_POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals"}
+_POISSON_MARKETS = {"player_assists", "player_blocks", "player_steals", "player_threes"}
 _NEGBIN_MARKETS  = {"player_points", "player_rebounds"}
 
+# player_threes -> FG3M is mapped here so the model CAN score threes, but
+# the market stays disabled by default in PlayerPropsClient.DEFAULT_MARKETS
+# until it has been validated end to end.
 _MARKET_COL: dict[str, str] = {
     "player_points":   "PTS",
     "player_rebounds": "REB",
     "player_assists":  "AST",
+    "player_threes":   "FG3M",
 }
 
 _MIN_MINUTES: int = 20
@@ -121,18 +125,28 @@ class PropModel:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
         # XGBoost projection models — loaded if pkl files exist after training.
-        # Falls back to weighted average when not available.
+        # Falls back to weighted average when not available.  Legacy models
+        # without feature schema metadata are rejected (fail closed).
         from alpha.engines.sports.xgb_prop_model import XGBoostPropModel
         _XGB_PATHS = {
             "player_points":   Path("data/xgb_pts_model.pkl"),
             "player_rebounds": Path("data/xgb_reb_model.pkl"),
             "player_assists":  Path("data/xgb_ast_model.pkl"),
+            "player_threes":   Path("data/xgb_fg3m_model.pkl"),
         }
-        self._xgb_models: dict[str, XGBoostPropModel] = {
-            market: XGBoostPropModel.load(path)
-            for market, path in _XGB_PATHS.items()
-            if path.exists()
-        }
+        self._xgb_models: dict[str, XGBoostPropModel] = {}
+        for market, path in _XGB_PATHS.items():
+            if not path.exists():
+                continue
+            try:
+                loaded = XGBoostPropModel.load(path)
+                if loaded is not None:
+                    self._xgb_models[market] = loaded
+            except Exception as exc:
+                logger.warning(
+                    "XGBoost model for %s rejected (%s) — using rule-based fallback",
+                    market, exc,
+                )
         if self._xgb_models:
             logger.info("XGBoost models loaded for: %s", list(self._xgb_models))
 
@@ -152,15 +166,20 @@ class PropModel:
         position: str = "",
         team_win_prob: float = 0.50,
         player_team: str = "",
+        is_home: bool | None = None,
     ) -> dict | None:
         """
         Predict P(player > line) for the given market.
 
         Parameters:
             location: "home", "away", or "all" — filters game logs to matching
-                      venue before computing the projection.
+                      venue before computing the projection (rule-based path).
             position: Player position (C, PF, SF, SG, PG) for OPP-02
                       position-level opponent scaling.
+            is_home:  explicit home/away flag for TODAY's game.  Required for
+                      the XGBoost path — when None, the XGBoost path is
+                      skipped (fail closed to the rule-based path) rather
+                      than guessing from the ``location`` filter.
 
         Returns dict with model_prob or None if insufficient data.
         """
@@ -191,42 +210,56 @@ class PropModel:
         if len(values) < _MIN_GAMES:
             return None
 
-        # XGBoost projection when model available, weighted avg as fallback.
-        proj_stat = self._xgb_project(market, values, qualifying, opponent_team, location)
-        if proj_stat is None:
+        var_stat = max(1.0, stdev(values[:20]) ** 2 if len(values[:20]) >= 2 else 1.0)
+        std_stat = max(1.0, var_stat ** 0.5)
+
+        # ── Path 1: XGBoost projection on the shared pregame features ──
+        # Minutes, rest, opponent, pace, and home/away are model FEATURES,
+        # so NO rule-based multipliers may be applied on top of the output
+        # (that would double-count those inputs).
+        source = "weighted_avg"
+        rest_mult = 1.0
+        missing_features: list[str] = []
+        opp_adj: float | None = None
+
+        xgb_result = self._xgb_project(market, logs, opponent_team, is_home)
+        if xgb_result is not None:
+            opp_adj, missing_features = xgb_result
+            source = "xgb"
+            rest_mult = self._rest_multiplier(qualifying)  # reported, NOT applied
+
+        # ── Path 2: rule-based fallback (weighted avg + adjustments) ──
+        if opp_adj is None:
             proj_stat = self._weighted_avg(values)
             # James-Stein shrinkage only applied to weighted avg (XGBoost learned this).
             n_qualifying = min(len(qualifying), 20)
             proj_stat = self._james_stein_shrink(proj_stat, n_qualifying, market, position)
 
-        # Scale by recent vs season minute trend (research: minutes is #1 predictor)
-        proj_stat *= self._compute_minutes_ratio(qualifying)
+            # Scale by recent vs season minute trend (research: minutes is #1 predictor)
+            proj_stat *= self._compute_minutes_ratio(qualifying)
 
-        var_stat = max(1.0, stdev(values[:20]) ** 2 if len(values[:20]) >= 2 else 1.0)
-        std_stat = max(1.0, var_stat ** 0.5)
+            # ALGO-04: Days-rest multiplier
+            rest_mult = self._rest_multiplier(qualifying)
+            proj_stat *= rest_mult
 
-        # ALGO-04: Days-rest multiplier
-        rest_mult = self._rest_multiplier(qualifying)
-        proj_stat *= rest_mult
+            # Assist context: single signal — opponent ASTs allowed vs league avg
+            if market == "player_assists":
+                ts = self._fetch_team_per_game_stats()
+                opp_data = ts.get(opponent_team, {})
+                opp_ast_pg = opp_data.get("opp_ast_pg", _LEAGUE_AVGS["ast_pg"])
+                league_ast = _LEAGUE_AVGS["ast_pg"]
+                if league_ast > 0:
+                    opp_ast_mult = max(0.95, min(1.05, opp_ast_pg / league_ast))
+                    proj_stat *= opp_ast_mult
 
-        # Assist context: single signal — opponent ASTs allowed vs league avg
-        if market == "player_assists":
-            ts = self._fetch_team_per_game_stats()
-            opp_data = ts.get(opponent_team, {})
-            opp_ast_pg = opp_data.get("opp_ast_pg", _LEAGUE_AVGS["ast_pg"])
-            league_ast = _LEAGUE_AVGS["ast_pg"]
-            if league_ast > 0:
-                opp_ast_mult = max(0.95, min(1.05, opp_ast_pg / league_ast))
-                proj_stat *= opp_ast_mult
+            # OPP-03: Compute pace ratio for rebounds
+            pace_ratio = self._compute_pace_ratio(opponent_team) if market == "player_rebounds" else 1.0
 
-        # OPP-03: Compute pace ratio for rebounds
-        pace_ratio = self._compute_pace_ratio(opponent_team) if market == "player_rebounds" else 1.0
-
-        # Opponent adjustment (OPP-02: position-level scaling)
-        opp_adj = self._apply_opp_adjustment_for_market(
-            proj_stat, opponent_team, market, pace_ratio=pace_ratio,
-            position=position,
-        )
+            # Opponent adjustment (OPP-02: position-level scaling)
+            opp_adj = self._apply_opp_adjustment_for_market(
+                proj_stat, opponent_team, market, pace_ratio=pace_ratio,
+                position=position,
+            )
 
         # ALGO-03: Appropriate CDF per market
         p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat,
@@ -258,6 +291,9 @@ class PropModel:
             except Exception:
                 pass
 
+        from alpha.engines.sports.prop_features import FEATURE_SCHEMA_VERSION
+        from alpha.engines.sports.xgb_prop_model import MODEL_VERSION
+
         return {
             "player": player_name,
             "market": market,
@@ -268,6 +304,10 @@ class PropModel:
             "market_implied": round(market_implied, 4),
             "games_used": min(len(qualifying), 20),
             "source": "nba_api",
+            "projection_source": source,
+            "model_version": MODEL_VERSION if source == "xgb" else "rule_based_v1",
+            "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "missing_features": missing_features,
             "confidence": confidence,
             "recent_trade": recent_trade,
             "rest_multiplier": rest_mult,
@@ -343,41 +383,67 @@ class PropModel:
     def _xgb_project(
         self,
         market: str,
-        values: list[float],
-        qualifying: list[dict],
+        logs: list[dict],
         opponent_team: str,
-        location: str,
-    ) -> float | None:
+        is_home: bool | None,
+    ) -> tuple[float, list[str]] | None:
         """
-        Use trained XGBoost model to produce projection.
-        Returns None if model not available for this market (falls back to weighted avg).
+        Use the trained XGBoost model on the SHARED pregame feature builder
+        (alpha.engines.sports.prop_features) — identical to training.
+
+        Returns (projection, missing_optional_features) or None when the
+        model is unavailable, is_home is not explicit, the history is
+        insufficient, or the feature schema validation fails (fail closed
+        to the rule-based path; the reason is logged).
         """
         xgb = self._xgb_models.get(market)
         if xgb is None:
             return None
+        if is_home is None:
+            logger.info(
+                "XGBoost path skipped for %s: explicit is_home not provided", market,
+            )
+            return None
 
-        roll5  = self._weighted_avg(values[:5])
-        roll10 = self._weighted_avg(values[:10])
-        roll20 = self._weighted_avg(values[:20])
-        min_recent = mean([g.get("MIN_float", 25.0) for g in qualifying[:5]])
+        from alpha.engines.sports.prop_features import (
+            build_pregame_features, normalize_history_row,
+        )
+        from alpha.engines.sports.xgb_prop_model import PropSchemaError
+
+        col = self._market_col(market)
+        history = [
+            r for r in (normalize_history_row(g, col) for g in logs) if r is not None
+        ]
+        if not history:
+            logger.info(
+                "XGBoost path skipped for %s: game logs missing dated rows", market,
+            )
+            return None
 
         ts = self._fetch_team_per_game_stats()
         opp = ts.get(opponent_team, {})
-        opp_def_rtg = opp.get("def_rtg", _LEAGUE_AVG_DEF_RTG)
-        opp_pace    = opp.get("pace",    _LEAGUE_AVG_PACE)
-        is_home     = 1 if location == "home" else 0
-        rest_days   = int(max(0, min(4, (self._rest_multiplier(qualifying) - 1) * 10)))
+        # Missing opponent context stays NaN (tracked) — never a constant.
+        result = build_pregame_features(
+            history=history,
+            market=market,
+            game_date=date.today(),
+            is_home=is_home,
+            opp_def_rtg=opp.get("def_rtg"),
+            opp_pace=opp.get("pace"),
+        )
+        if result is None:
+            return None
+        if result.missing:
+            logger.info(
+                "XGBoost %s: missing optional features %s (NaN passed to model)",
+                market, result.missing,
+            )
 
-        return xgb.predict({
-            "roll5":       roll5,
-            "roll10":      roll10,
-            "roll20":      roll20,
-            "min_recent":  min_recent,
-            "opp_def_rtg": opp_def_rtg,
-            "is_home":     is_home,
-            "rest_days":   rest_days,
-            "pace":        opp_pace,
-        })
+        try:
+            return xgb.predict(result.features), result.missing
+        except PropSchemaError as exc:
+            logger.warning("XGBoost schema validation failed — rule fallback: %s", exc)
+            return None
 
     @staticmethod
     def _james_stein_shrink(
