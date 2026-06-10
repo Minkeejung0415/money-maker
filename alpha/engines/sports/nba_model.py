@@ -159,6 +159,8 @@ class NBAModel:
         enable_recent_form: bool = True,
         enable_h2h: bool = False,
         enable_tanking_guard: bool = True,
+        enable_injury_adjustment: bool = True,
+        enable_rest_features: bool = True,
     ):
         self.ev_calc = EVCalculator(min_edge=min_edge)
         self._kelly_fraction = kelly_fraction
@@ -176,6 +178,8 @@ class NBAModel:
         self.enable_recent_form = enable_recent_form
         self.enable_h2h = enable_h2h
         self.enable_tanking_guard = enable_tanking_guard
+        self.enable_injury_adjustment = enable_injury_adjustment
+        self.enable_rest_features = enable_rest_features
 
         self._xgb_ml = None
         self._xgb_ml_calibrator = None
@@ -669,7 +673,8 @@ class NBAModel:
             return None
 
         # Adjust team stats for today's injuries/inactive players
-        team_df = self._apply_injury_adjustment(team_df, home_team, away_team)
+        if self.enable_injury_adjustment:
+            team_df = self._apply_injury_adjustment(team_df, home_team, away_team)
 
         game_series = self._build_game_features(team_df, home_team, away_team)
         if game_series is None:
@@ -688,8 +693,13 @@ class NBAModel:
         X = X.apply(pd.to_numeric, errors="coerce")
         X = X.dropna(axis=1, how="all")
 
-        # Inject days-rest features (missing from live team stats but in training data)
-        home_rest, away_rest = self._get_days_rest(home_team, away_team)
+        # Inject days-rest features (missing from live team stats but in
+        # training data).  With rest features ablated, the neutral value 2
+        # is used so the model schema stays intact.
+        if self.enable_rest_features:
+            home_rest, away_rest = self._get_days_rest(home_team, away_team)
+        else:
+            home_rest, away_rest = 2, 2
         X["Days-Rest-Home"] = float(home_rest)
         X["Days-Rest-Away"] = float(away_rest)
 
