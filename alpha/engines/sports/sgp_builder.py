@@ -12,11 +12,21 @@ ACCURACY SAFEGUARDS (enforced in code):
   3. Classic parlay legs are independent (different games) — no correlation engine.
   4. Category diversity cap: max 2 props of the same stat category per parlay.
 
-Modes:
-  PROPS_ONLY   : 2–4 props, same game
-  MONEYLINE_SGP: ML + 1–3 props, same game
-  MIXED_SGP    : 2–5 any combo, same game
-  CLASSIC_PARLAY: 2–4 ML bets, different games
+REAL-MONEY SAFETY GATES (enforced in code):
+  5. Max 2 legs by default; max 3 in research_mode; 4-leg recommendations
+     are disabled with no override.
+  6. Redundant legs rejected: no two legs on the same (player, market) —
+     nested alt lines and opposite sides can never share an SGP.
+  7. Same-game EV requires an ACTUAL sportsbook SGP quote
+     (apply_sgp_quote); standalone-odds products are diagnostic only.
+  8. Any rule_fallback leg makes the combo research_only: no Kelly stake,
+     never a recommendation.
+
+Modes (leg ranges subject to the caps above):
+  PROPS_ONLY   : props, same game
+  MONEYLINE_SGP: ML + props, same game
+  MIXED_SGP    : any combo, same game
+  CLASSIC_PARLAY: ML bets, different games
 """
 from __future__ import annotations
 
@@ -103,6 +113,16 @@ class PropLeg:
     confidence: str       # "HIGH" / "MEDIUM" / "LOW"
     direction: str = "over"
     player_team: str = ""
+    # Prediction source: "xgb" or "rule_fallback".  Defaults to the SAFE
+    # value — callers must explicitly mark XGBoost-backed legs.
+    source: str = "rule_fallback"
+
+
+# Messages shown by consumers — exported so displays and tests stay in sync.
+RESEARCH_ONLY_MSG = (
+    "RESEARCH ONLY — fallback model is not eligible for real-money recommendations"
+)
+EV_UNAVAILABLE_MSG = "EV unavailable — enter actual sportsbook SGP quote"
 
 
 @dataclass
@@ -111,28 +131,53 @@ class ParlayCombination:
     mode: SGPMode
     combined_model_prob: float
     combined_market_prob: float
+    # Product of standalone leg odds — a DIAGNOSTIC ceiling only.  Books
+    # reprice same-game correlation, so this is NOT a payable SGP price
+    # and must never be presented as one.
     combined_decimal_odds: float
-    ev: float
-    edge: float
+    # Real EV exists only after an actual sportsbook SGP quote is applied
+    # (apply_sgp_quote).  None means: EV unavailable.
+    ev: float | None = None
+    edge: float = 0.0
     correlation_note: str = ""
     stake: float = 0.0
     confidence_summary: str = ""
+    # True when any prop leg uses the rule-based fallback model: diagnostic
+    # display only — no Kelly stake, never a recommendation.
+    research_only: bool = False
+    sgp_quote_odds: float | None = None
 
 
 class SGPBuilder:
+    # Hard leg-count ceilings: 2 by default, 3 in research mode.  4-leg
+    # real-money recommendations are disabled — there is no configuration
+    # that re-enables them.
+    MAX_LEGS_DEFAULT = 2
+    MAX_LEGS_RESEARCH = 3
+
     def __init__(
         self,
         correlation_engine=None,
         bankroll: float = 10_000.0,
         min_edge: float = 0.05,
-        max_legs: int = 4,
-        min_legs: int = 3,
+        max_legs: int = 2,
+        min_legs: int = 2,
+        research_mode: bool = False,
     ):
         self._corr = correlation_engine
         self._bankroll = bankroll
         self._min_edge = min_edge
-        self._max_legs = max_legs
-        self._min_legs = min_legs
+        self._research_mode = research_mode
+
+        cap = self.MAX_LEGS_RESEARCH if research_mode else self.MAX_LEGS_DEFAULT
+        if max_legs > cap:
+            logger.warning(
+                "max_legs=%d exceeds the %s cap of %d — clamped",
+                max_legs, "research" if research_mode else "default", cap,
+            )
+            max_legs = cap
+        self._max_legs = max(2, max_legs)
+        self._min_legs = max(2, min(min_legs, self._max_legs))
 
     # ------------------------------------------------------------------
     # Public API
@@ -167,17 +212,22 @@ class SGPBuilder:
         else:
             combos = []
 
-        # Attach Kelly stakes
-        for combo in combos:
-            combo.stake = _KELLY.bet_size(
-                win_prob=combo.combined_model_prob,
-                decimal_odds=combo.combined_decimal_odds,
-                bankroll=self._bankroll,
-            )
+        # No Kelly stakes for same-game combos: their EV/stakes require an
+        # actual sportsbook SGP quote (apply_sgp_quote), and research-only
+        # combos never receive stakes at all.  Classic parlays are priced
+        # as the true product of independent legs, so Kelly applies there.
+        if mode == SGPMode.CLASSIC_PARLAY:
+            for combo in combos:
+                combo.stake = _KELLY.bet_size(
+                    win_prob=combo.combined_model_prob,
+                    decimal_odds=combo.combined_decimal_odds,
+                    bankroll=self._bankroll,
+                )
 
-        # Filter to positive edge and sort
+        # Filter to positive probability edge and sort.  EV cannot be the
+        # sort key — it does not exist until a real quote is supplied.
         positive = [c for c in combos if c.edge >= self._min_edge]
-        positive.sort(key=lambda c: c.ev, reverse=True)
+        positive.sort(key=lambda c: c.edge, reverse=True)
 
         # Apply player diversity cap: max 2 SGPs featuring any single player
         diverse = _cap_per_player(positive, max_per_player=2)
@@ -339,11 +389,56 @@ class SGPBuilder:
     # Scoring helpers
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _legs_compatible(legs: list[PropLeg]) -> bool:
+        """
+        Reject incompatible/redundant legs in one SGP: any two legs on the
+        same (player, market) — nested alternative lines (OVER 1.5 pts +
+        OVER 2.5 pts), duplicate lines, and opposite sides of the same
+        player-market line are all invalid combinations.
+        """
+        seen: set[tuple[str, str]] = set()
+        for leg in legs:
+            key = (leg.player, leg.market)
+            if key in seen:
+                return False
+            seen.add(key)
+        return True
+
+    @staticmethod
+    def _is_research_only(legs: list[PropLeg]) -> bool:
+        """True when any prop leg is not XGBoost-backed."""
+        return any(leg.source != "xgb" for leg in legs)
+
+    def apply_sgp_quote(self, combo: ParlayCombination, quote_decimal_odds: float) -> ParlayCombination:
+        """
+        Attach an ACTUAL sportsbook SGP quote to a combination.  Only then
+        do EV (vs the quoted price) and a Kelly stake (non-research combos
+        only) exist — standalone-odds products are never used for either.
+        """
+        if quote_decimal_odds <= 1.0:
+            raise ValueError(f"Invalid SGP quote odds: {quote_decimal_odds}")
+        combo.sgp_quote_odds = quote_decimal_odds
+        combo.ev = round(
+            _EV_CALC.expected_value(combo.combined_model_prob, quote_decimal_odds), 4,
+        )
+        if combo.research_only:
+            combo.stake = 0.0
+        else:
+            combo.stake = _KELLY.bet_size(
+                win_prob=combo.combined_model_prob,
+                decimal_odds=quote_decimal_odds,
+                bankroll=self._bankroll,
+            )
+        return combo
+
     def _score_prop_combo(
         self, legs: list[PropLeg], mode: SGPMode
     ) -> ParlayCombination | None:
         """Score a combination of prop legs only."""
         if len(legs) < 2:
+            return None
+        if not self._legs_compatible(legs):
             return None
 
         if self._corr is not None:
@@ -361,7 +456,6 @@ class SGPBuilder:
             combined_market *= _EV_CALC.implied_prob(dec)
             combined_odds   *= dec
 
-        ev   = _EV_CALC.expected_value(combined_model, combined_odds)
         edge = combined_model - combined_market
         corr_note = self._build_corr_note(legs)
         conf_str = self._confidence_summary(legs)
@@ -372,10 +466,11 @@ class SGPBuilder:
             combined_model_prob=round(combined_model, 5),
             combined_market_prob=round(combined_market, 5),
             combined_decimal_odds=round(combined_odds, 4),
-            ev=round(ev, 4),
+            ev=None,  # real EV requires an actual sportsbook SGP quote
             edge=round(edge, 4),
             correlation_note=corr_note,
             confidence_summary=conf_str,
+            research_only=self._is_research_only(legs),
         )
 
     def _score_mixed_combo(
@@ -386,7 +481,10 @@ class SGPBuilder:
         combined_market = 1.0
         combined_odds = 1.0
 
-        prop_legs_only: list[PropLeg] = []
+        prop_legs_only = [leg for leg in all_legs if isinstance(leg, PropLeg)]
+        if not self._legs_compatible(prop_legs_only):
+            return None
+        prop_legs_only = []
         ml_legs_only: list[dict] = []
 
         # First pass: separate and accumulate market/odds products
@@ -432,7 +530,6 @@ class SGPBuilder:
                         )
                         break
 
-        ev   = _EV_CALC.expected_value(combined_model, combined_odds)
         edge = combined_model - combined_market
         conf_str = self._confidence_summary(prop_legs_only)
 
@@ -442,10 +539,11 @@ class SGPBuilder:
             combined_model_prob=round(combined_model, 5),
             combined_market_prob=round(combined_market, 5),
             combined_decimal_odds=round(combined_odds, 4),
-            ev=round(ev, 4),
+            ev=None,  # real EV requires an actual sportsbook SGP quote
             edge=round(edge, 4),
             correlation_note=" ".join(set(corr_note_parts)),
             confidence_summary=conf_str,
+            research_only=self._is_research_only(prop_legs_only),
         )
 
     def _best_ml_leg(self, game: dict) -> dict | None:

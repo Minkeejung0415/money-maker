@@ -29,6 +29,7 @@ def _make_leg(
     away_team: str = "Boston Celtics",
     confidence: str = "HIGH",
     player_team: str = "",
+    source: str = "xgb",
 ) -> PropLeg:
     return PropLeg(
         player=player,
@@ -41,6 +42,7 @@ def _make_leg(
         away_team=away_team,
         confidence=confidence,
         player_team=player_team,
+        source=source,
     )
 
 
@@ -81,9 +83,9 @@ def builder():
     return SGPBuilder(
         correlation_engine=_null_corr(),
         bankroll=10_000,
-        min_edge=0.0,   # set to 0 so all positive-ev combos pass through
-        max_legs=4,
-        min_legs=2,     # tests use 2-leg combos by design
+        min_edge=0.0,   # set to 0 so all positive-edge combos pass through
+        max_legs=2,     # default safety cap
+        min_legs=2,
     )
 
 
@@ -109,10 +111,10 @@ def test_low_confidence_legs_excluded(builder):
     assert result == []
 
 
-def test_props_only_2_legs_ev_calculation():
-    """Verify EV formula: ev = p*(odds-1) - (1-p)."""
+def test_props_only_2_legs_quote_ev_calculation():
+    """EV exists only after an actual SGP quote; verifies ev = p*(q-1)-(1-p)."""
     two_leg_builder = SGPBuilder(
-        correlation_engine=_null_corr(), bankroll=10_000, min_edge=0.0, max_legs=4, min_legs=2
+        correlation_engine=_null_corr(), bankroll=10_000, min_edge=0.0, max_legs=2, min_legs=2
     )
     leg_a = _make_leg(player="PlayerA", model_prob=0.65, over_odds=-110, confidence="HIGH")
     leg_b = _make_leg(player="PlayerB", market="player_rebounds", model_prob=0.60,
@@ -122,34 +124,33 @@ def test_props_only_2_legs_ev_calculation():
     assert len(result) >= 1
 
     combo = result[0]
-    # Verify combined_decimal_odds is product of individual decimal odds
+    # Naive standalone-odds product is exposed as a diagnostic only.
     dec_a = 1 + 100 / 110  # -110 → 1.909...
     dec_b = 1 + 100 / 110
-    expected_odds = dec_a * dec_b
-    assert combo.combined_decimal_odds == pytest.approx(expected_odds, rel=1e-3)
+    assert combo.combined_decimal_odds == pytest.approx(dec_a * dec_b, rel=1e-3)
+    assert combo.ev is None  # no quote → no EV
 
-    # Verify EV formula
-    expected_ev = combo.combined_model_prob * (combo.combined_decimal_odds - 1) - (
-        1 - combo.combined_model_prob
-    )
+    # With an actual sportsbook quote, EV uses the QUOTE, not the product.
+    two_leg_builder.apply_sgp_quote(combo, quote_decimal_odds=3.20)
+    expected_ev = combo.combined_model_prob * (3.20 - 1) - (1 - combo.combined_model_prob)
     assert combo.ev == pytest.approx(expected_ev, abs=0.001)
+    assert combo.sgp_quote_odds == 3.20
 
 
-def test_ev_positive_when_model_beats_market(builder):
-    """model_joint=0.50, market_joint≈0.275 → EV > 0."""
-    # -110 each → market_implied = 1/1.909 ≈ 0.524 each → joint ≈ 0.275
-    # model prob per leg set so joint ≈ 0.50
+def test_edge_positive_when_model_beats_market(builder):
+    """model_joint=0.50, market_joint≈0.275 → probability edge > 0."""
     leg_a = _make_leg(player="PlayerA", model_prob=0.75, over_odds=-110, confidence="HIGH")
     leg_b = _make_leg(player="PlayerB", market="player_rebounds", model_prob=0.67,
                       over_odds=-110, confidence="HIGH")
 
     result = builder.build([leg_a, leg_b], mode=SGPMode.PROPS_ONLY)
     assert len(result) >= 1
-    assert result[0].ev > 0
+    assert result[0].edge > 0
+    assert result[0].ev is None  # never an EV claim without a real quote
 
 
-def test_results_sorted_ev_descending(builder):
-    """Multiple combos should be sorted by EV from highest to lowest."""
+def test_results_sorted_edge_descending(builder):
+    """Multiple combos should be sorted by probability edge, high to low."""
     legs = [
         _make_leg(player="P1", model_prob=0.70, over_odds=-110, confidence="HIGH"),
         _make_leg(player="P2", market="player_rebounds", model_prob=0.68, over_odds=-110, confidence="HIGH"),
@@ -158,7 +159,7 @@ def test_results_sorted_ev_descending(builder):
     result = builder.build(legs, mode=SGPMode.PROPS_ONLY, top_n=10)
     if len(result) >= 2:
         for i in range(len(result) - 1):
-            assert result[i].ev >= result[i + 1].ev
+            assert result[i].edge >= result[i + 1].edge
 
 
 def test_classic_parlay_uses_product_not_corr(builder):
@@ -188,7 +189,7 @@ def test_moneyline_same_team_prop_flags_warning():
         correlation_engine=_null_corr(),
         bankroll=10_000,
         min_edge=0.0,
-        max_legs=4,
+        max_legs=2,
         min_legs=2,
     )
     lebron_leg = _make_leg(
@@ -218,15 +219,36 @@ def test_moneyline_same_team_prop_flags_warning():
     assert "⚠" in result[0].correlation_note
 
 
-def test_kelly_stake_attached_to_results(builder):
-    """All returned combos must have stake > 0 when there is positive EV."""
+def test_kelly_stake_only_after_quote_on_xgb_combos(builder):
+    """Stakes require an actual quote AND fully XGBoost-backed legs."""
     leg_a = _make_leg(player="P1", model_prob=0.75, over_odds=-110, confidence="HIGH")
     leg_b = _make_leg(player="P2", market="player_rebounds", model_prob=0.70,
                       over_odds=-110, confidence="HIGH")
 
     result = builder.build([leg_a, leg_b], mode=SGPMode.PROPS_ONLY, top_n=5)
-    for combo in result:
-        assert combo.stake > 0
+    assert len(result) >= 1
+    combo = result[0]
+    assert combo.stake == 0.0          # no quote yet → no stake
+    assert combo.research_only is False  # all legs source="xgb"
+
+    builder.apply_sgp_quote(combo, quote_decimal_odds=3.50)
+    assert combo.stake > 0
+
+
+def test_classic_parlay_keeps_kelly_stake(builder):
+    """Classic parlays are priced as true independent products → Kelly OK."""
+    game1 = _make_ml_game(home_team="Lakers", away_team="Celtics",
+                          home_odds=-150, away_odds=130, event_id="g1")
+    game1["home_model_prob"] = 0.70
+    game2 = _make_ml_game(home_team="Warriors", away_team="Nuggets",
+                          home_odds=-120, away_odds=100, event_id="g2")
+    game2["home_model_prob"] = 0.65
+
+    result = builder.build([], ml_games=[game1, game2],
+                           mode=SGPMode.CLASSIC_PARLAY, top_n=10)
+    assert len(result) >= 1
+    assert result[0].ev is not None
+    assert result[0].stake > 0
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +259,7 @@ def test_kelly_stake_attached_to_results(builder):
 def test_corr_note_same_player_skipped():
     """Same-player pair (pts + ast) should show 'same player — r=0.65', never 'vs'."""
     corr = _null_corr()
-    builder = SGPBuilder(correlation_engine=corr, bankroll=10_000, min_edge=0.0, max_legs=4, min_legs=2)
+    builder = SGPBuilder(correlation_engine=corr, bankroll=10_000, min_edge=0.0, max_legs=2, min_legs=2)
     trae_pts = _make_leg(player="Trae Young", market="player_points", model_prob=0.65,
                          over_odds=-110, event_id="e1", confidence="HIGH")
     trae_ast = _make_leg(player="Trae Young", market="player_assists", model_prob=0.62,
@@ -258,7 +280,7 @@ def test_corr_note_same_player_skipped():
 
 def test_ml_leg_negative_ev_returns_none():
     """When both sides of a game have negative EV, _best_ml_leg returns None."""
-    builder = SGPBuilder(bankroll=10_000, min_edge=0.0, max_legs=4)
+    builder = SGPBuilder(bankroll=10_000, min_edge=0.0, max_legs=2)
     # Home: -400 → dec 1.25, implied 80%. Model 78% → EV = 0.78*0.25-0.22 = -0.025
     # Away: +300 → dec 4.0, implied 25%. Model 22% → EV = 0.22*3.0-0.78 = -0.12
     game = {

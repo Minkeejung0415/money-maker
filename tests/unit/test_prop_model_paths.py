@@ -105,7 +105,7 @@ def test_xgb_path_requires_explicit_is_home(model, monkeypatch):
         result = model.predict_prop("Test Player", "player_points", 22.5, "Boston Celtics")
 
     assert result is not None
-    assert result["projection_source"] == "weighted_avg"
+    assert result["projection_source"] == "rule_fallback"
     assert stub.seen_features is None  # model never invoked
 
 
@@ -121,7 +121,7 @@ def test_undated_logs_fall_back_to_rule_path(model):
             "Test Player", "player_points", 22.5, "Boston Celtics", is_home=True,
         )
     assert result is not None
-    assert result["projection_source"] == "weighted_avg"
+    assert result["projection_source"] == "rule_fallback"
 
 
 def test_schema_error_fails_closed_to_rule_path(model, monkeypatch):
@@ -139,7 +139,7 @@ def test_schema_error_fails_closed_to_rule_path(model, monkeypatch):
             "Test Player", "player_points", 22.5, "Boston Celtics", is_home=True,
         )
     assert result is not None
-    assert result["projection_source"] == "weighted_avg"
+    assert result["projection_source"] == "rule_fallback"
 
 
 def test_rule_path_unchanged_without_xgb(model):
@@ -148,7 +148,7 @@ def test_rule_path_unchanged_without_xgb(model):
     with _patch_logs(rows), _patch_team_stats():
         result = model.predict_prop("Test Player", "player_points", 25.0, "Boston Celtics")
     assert result is not None
-    assert result["projection_source"] == "weighted_avg"
+    assert result["projection_source"] == "rule_fallback"
     assert result["model_prob"] > 0.5
     assert result["model_version"] == "rule_based_v1"
     assert result["feature_schema_version"]

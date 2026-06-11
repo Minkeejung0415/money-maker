@@ -213,11 +213,15 @@ class PropModel:
         var_stat = max(1.0, stdev(values[:20]) ** 2 if len(values[:20]) >= 2 else 1.0)
         std_stat = max(1.0, var_stat ** 0.5)
 
+        # Minutes profile from ALL played games — never only the MIN>=20
+        # subset, which hides bench demotions and low-minute risk.
+        minutes_profile = self._minutes_profile(logs)
+
         # ── Path 1: XGBoost projection on the shared pregame features ──
         # Minutes, rest, opponent, pace, and home/away are model FEATURES,
         # so NO rule-based multipliers may be applied on top of the output
         # (that would double-count those inputs).
-        source = "weighted_avg"
+        source = "rule_fallback"
         rest_mult = 1.0
         missing_features: list[str] = []
         opp_adj: float | None = None
@@ -235,8 +239,14 @@ class PropModel:
             n_qualifying = min(len(qualifying), 20)
             proj_stat = self._james_stein_shrink(proj_stat, n_qualifying, market, position)
 
-            # Scale by recent vs season minute trend (research: minutes is #1 predictor)
-            proj_stat *= self._compute_minutes_ratio(qualifying)
+            # Scale to PROJECTED minutes (from all played games) vs the
+            # minutes behind the qualifying sample — a player whose recent
+            # role shrank gets projected down even if old 30-minute games
+            # dominate the qualifying window.
+            qual_minutes = mean([g.get("MIN_float", 25.0) for g in qualifying[:10]])
+            if qual_minutes > 0 and minutes_profile["projected_minutes"] > 0:
+                ratio = minutes_profile["projected_minutes"] / qual_minutes
+                proj_stat *= max(0.5, min(1.15, ratio))
 
             # ALGO-04: Days-rest multiplier
             rest_mult = self._rest_multiplier(qualifying)
@@ -261,13 +271,42 @@ class PropModel:
                 position=position,
             )
 
+        # Minutes uncertainty inflates the distribution (delta method:
+        # var += (rate * minutes_std)^2) so volatile roles can't produce
+        # razor-sharp probabilities.
+        pm = minutes_profile["projected_minutes"]
+        if source == "rule_fallback" and pm > 0:
+            rate = opp_adj / pm
+            var_stat = var_stat + (rate * minutes_profile["minutes_std"]) ** 2
+            std_stat = max(1.0, var_stat ** 0.5)
+
         # ALGO-03: Appropriate CDF per market
         p_over = self._compute_p_over(market, line, opp_adj, std_stat, var_stat,
                                        position=position, values=values)
+
+        # Low-minute / DNP risk mixture (fallback only): with probability
+        # p_low the player gets a short stint and the projection scales to
+        # the typical low-minute workload.
+        p_low = minutes_profile["low_minutes_risk"]
+        if source == "rule_fallback" and p_low > 0 and pm > 0:
+            low_proj = opp_adj * (minutes_profile["low_minutes_avg"] / pm)
+            p_over_low = self._compute_p_over(
+                market, line, low_proj, std_stat, var_stat,
+                position=position, values=values,
+            )
+            p_over = (1.0 - p_low) * p_over + p_low * p_over_low
+
         p_over = float(np.clip(p_over, 0.01, 0.99))
 
         # Temperature calibration: reduces overconfidence (T=0.75 per research)
         p_over = self._apply_temperature_scaling(p_over)
+
+        # Safety caps: the rule fallback is unvalidated and may never claim
+        # more than 75% certainty in either direction; XGBoost above 85%
+        # requires validated (early-stopped, held-out) training evidence.
+        xgb_model = self._xgb_models.get(market)
+        xgb_validated = bool(getattr(xgb_model, "validation_metrics", None))
+        p_over = self._apply_probability_caps(p_over, source, xgb_validated)
 
         market_implied = self._american_to_novig(over_odds, under_odds)
         confidence = self._classify_confidence(p_over, market_implied)
@@ -303,8 +342,13 @@ class PropModel:
             "model_prob": round(p_over, 4),
             "market_implied": round(market_implied, 4),
             "games_used": min(len(qualifying), 20),
-            "source": "nba_api",
+            # "xgb" or "rule_fallback" — downstream consumers must treat
+            # rule_fallback results as research-only (no stakes, no recs).
+            "source": source,
             "projection_source": source,
+            "projected_minutes": round(minutes_profile["projected_minutes"], 1),
+            "minutes_std": round(minutes_profile["minutes_std"], 2),
+            "low_minutes_risk": round(minutes_profile["low_minutes_risk"], 3),
             "model_version": MODEL_VERSION if source == "xgb" else "rule_based_v1",
             "feature_schema_version": FEATURE_SCHEMA_VERSION,
             "missing_features": missing_features,
@@ -366,19 +410,56 @@ class PropModel:
         except Exception:
             return 1.0
 
-    def _compute_minutes_ratio(self, qualifying: list[dict]) -> float:
+    # Minutes below this count as a "low-minute" outcome for risk purposes.
+    _LOW_MINUTES_CUTOFF: float = 10.0
+    # Fallback path may never claim more than this in either direction.
+    _FALLBACK_MAX_PROB: float = 0.75
+    # Unvalidated XGBoost models are capped here; >0.85 requires validated
+    # (held-out) training evidence.
+    _UNVALIDATED_XGB_MAX_PROB: float = 0.85
+
+    @staticmethod
+    def _minutes_profile(logs: list[dict]) -> dict:
         """
-        Scale projection by recent (last 5) vs full-season avg minutes.
-        Research: projected minutes is the #1 predictor for all counting stats.
-        Capped at ±15% to avoid overcorrection on small samples.
+        Playing-time profile from ALL played games (DNPs don't appear in
+        nba_api player logs, so low-minute stints are the observable proxy
+        for rotation risk):
+
+          projected_minutes  decay-weighted minutes over the last 10 games
+          minutes_std        stdev of those minutes (role volatility)
+          low_minutes_risk   share of the last 15 games under 10 minutes
+          low_minutes_avg    average minutes in those low-minute games
         """
-        if len(qualifying) < 5:
-            return 1.0
-        recent_min = mean([g.get("MIN_float", 25.0) for g in qualifying[:5]])
-        season_min = mean([g.get("MIN_float", 25.0) for g in qualifying])
-        if season_min <= 0:
-            return 1.0
-        return max(0.85, min(1.15, recent_min / season_min))
+        played = [g.get("MIN_float", 0.0) for g in logs if g.get("MIN_float", 0) > 0]
+        if not played:
+            return {"projected_minutes": 0.0, "minutes_std": 0.0,
+                    "low_minutes_risk": 0.0, "low_minutes_avg": 6.0}
+        recent = played[:10]
+        projected = PropModel._weighted_avg(recent)
+        minutes_std = stdev(recent) if len(recent) >= 2 else 0.0
+        window = played[:15]
+        lows = [m for m in window if m < PropModel._LOW_MINUTES_CUTOFF]
+        return {
+            "projected_minutes": projected,
+            "minutes_std": minutes_std,
+            "low_minutes_risk": len(lows) / len(window),
+            "low_minutes_avg": mean(lows) if lows else 6.0,
+        }
+
+    @classmethod
+    def _apply_probability_caps(cls, p: float, source: str, xgb_validated: bool) -> float:
+        """
+        Conservative caps on unvalidated probability paths.  The symmetric
+        clip also bounds derived UNDER probabilities (1 - p): no unvalidated
+        path can ever output 0.99 on either side.
+        """
+        if source == "rule_fallback":
+            lo, hi = 1.0 - cls._FALLBACK_MAX_PROB, cls._FALLBACK_MAX_PROB
+        elif source == "xgb" and not xgb_validated:
+            lo, hi = 1.0 - cls._UNVALIDATED_XGB_MAX_PROB, cls._UNVALIDATED_XGB_MAX_PROB
+        else:
+            lo, hi = 0.01, 0.99
+        return float(np.clip(p, lo, hi))
 
     def _xgb_project(
         self,

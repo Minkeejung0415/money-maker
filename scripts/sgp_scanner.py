@@ -104,12 +104,17 @@ Examples:
         help="Minimum edge (model - market) to include a combo (default: 0.05)",
     )
     parser.add_argument(
-        "--max-legs", type=int, default=4,
-        help="Maximum legs per parlay combination (default: 4)",
+        "--max-legs", type=int, default=2,
+        help="Maximum legs per combination (default: 2; hard cap 2, or 3 with --research)",
     )
     parser.add_argument(
-        "--min-legs", type=int, default=3,
-        help="Minimum legs per parlay combination (default: 3)",
+        "--min-legs", type=int, default=2,
+        help="Minimum legs per parlay combination (default: 2)",
+    )
+    parser.add_argument(
+        "--research", action="store_true",
+        help="Research mode: allows 3-leg combinations (diagnostic only — "
+             "4-leg real-money recommendations are disabled entirely)",
     )
     parser.add_argument(
         "--markets",
@@ -443,6 +448,7 @@ def main() -> None:
                 away_team=raw["away_team"],
                 confidence=conf,
                 player_team=actual_team,
+                source=result.get("source", "rule_fallback"),
             ))
             log_prediction(
                 player=raw["player"],
@@ -490,6 +496,7 @@ def main() -> None:
                         confidence=under_conf,
                         direction="under",
                         player_team=actual_team,
+                        source=result.get("source", "rule_fallback"),
                     ))
                     log_prediction(
                         player=raw["player"],
@@ -665,6 +672,7 @@ def main() -> None:
         min_edge=args.min_edge,
         max_legs=args.max_legs,
         min_legs=args.min_legs,
+        research_mode=args.research,
     )
     results = builder.build(
         prop_legs=scored_legs,
@@ -698,10 +706,23 @@ def main() -> None:
             print(f"  (Scored {len(scored_legs)} legs -- try --min-edge 0.02 or --no-corr)")
         return
 
+    from alpha.engines.sports.sgp_builder import EV_UNAVAILABLE_MSG, RESEARCH_ONLY_MSG
+
     for rank, combo in enumerate(results, 1):
-        print(f"\n#{rank}  EV: {combo.ev:.1%}  |  Edge: {combo.edge:.1%}  |  "
-              f"Odds: {combo.combined_decimal_odds:.2f}x  |  "
-              f"Stake: ${combo.stake:.2f}")
+        if combo.ev is not None:
+            ev_label = f"EV: {combo.ev:.1%}"
+        else:
+            ev_label = EV_UNAVAILABLE_MSG
+        odds_label = (f"Quoted odds: {combo.sgp_quote_odds:.2f}x"
+                      if combo.sgp_quote_odds is not None
+                      else f"Naive odds product (not an SGP quote): "
+                           f"{combo.combined_decimal_odds:.2f}x")
+        print(f"\n#{rank}  Edge: {combo.edge:.1%}  |  {odds_label}")
+        print(f"    {ev_label}")
+        if combo.research_only:
+            print(f"    {RESEARCH_ONLY_MSG}")
+        elif combo.stake > 0:
+            print(f"    Stake: ${combo.stake:.2f}")
         print(f"    Model Prob: {combo.combined_model_prob:.1%}  vs  "
               f"Market Implied: {combo.combined_market_prob:.1%}")
 
