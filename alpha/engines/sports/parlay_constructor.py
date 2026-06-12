@@ -18,6 +18,70 @@ logger = logging.getLogger(__name__)
 
 _EV_CALC = EVCalculator(min_edge=0.0)
 
+# Displayed messages — exported so output code and tests stay in sync.
+RESEARCH_ONLY_FALLBACK_MSG = (
+    "RESEARCH ONLY — fallback model is not eligible for real-money recommendations"
+)
+RESEARCH_ONLY_UNVALIDATED_MSG = "RESEARCH ONLY — model validation incomplete"
+DIAGNOSTIC_EDGE_LABEL = "Diagnostic edge only"
+
+# Above this recent low-minute share a pick is not recommendation-eligible.
+# Fixed policy constant — never tuned on the current slate.
+MAX_LOW_MINUTES_RISK = 0.30
+
+
+def assess_pick_eligibility(pick: dict) -> tuple[bool, list[str]]:
+    """
+    Decide whether a standalone prop pick may be presented as an actionable
+    wager.  FAIL SAFE: a pick missing safety fields is treated as
+    research-only, never as eligible.
+
+    Refusal reasons (stable identifiers):
+      fallback_model              source != "xgb"
+      model_metadata_missing      model lacks feature-schema metadata, or an
+                                  xgb pick arrived without model-side
+                                  eligibility info (cannot verify)
+      calibration_missing         no held-out validation metrics
+      required_features_missing   required live features unavailable
+      projected_minutes_unreliable  projected minutes absent or <= 0
+      low_minutes_risk_too_high   recent low-minute share above policy max
+    """
+    reasons: list[str] = []
+
+    def _add(reason: str) -> None:
+        if reason not in reasons:
+            reasons.append(reason)
+
+    source = pick.get("source", "rule_fallback")
+    if source != "xgb":
+        _add("fallback_model")
+
+    # Model-side verdict travels with the pick.
+    for reason in pick.get("refusal_reasons") or []:
+        _add(reason)
+
+    # An xgb pick without any model-side eligibility info cannot be
+    # verified — refuse rather than trust.
+    if source == "xgb" and pick.get("recommendation_eligible") is None:
+        _add("model_metadata_missing")
+
+    projected_minutes = pick.get("projected_minutes")
+    if projected_minutes is None or projected_minutes <= 0:
+        _add("projected_minutes_unreliable")
+
+    low_risk = pick.get("low_minutes_risk")
+    if low_risk is not None and low_risk > MAX_LOW_MINUTES_RISK:
+        _add("low_minutes_risk_too_high")
+
+    return (not reasons), reasons
+
+
+def research_banner(refusal_reasons: list[str]) -> str:
+    """The banner to display for a non-eligible pick."""
+    if "fallback_model" in refusal_reasons:
+        return RESEARCH_ONLY_FALLBACK_MSG
+    return RESEARCH_ONLY_UNVALIDATED_MSG
+
 
 @dataclass
 class BetRecommendation:
@@ -50,23 +114,41 @@ class PickOutput:
     kelly_pct: float               # raw (uncapped) Kelly fraction
     kelly_stake: float
     flags: dict = field(default_factory=dict)
+    # Real-money gating: fail safe — a pick is research-only unless
+    # explicitly proven eligible.
+    source: str = "rule_fallback"
+    recommendation_eligible: bool = False
+    refusal_reasons: list = field(default_factory=lambda: ["fallback_model"])
 
     def format(self, bankroll: float = 10_000.0) -> str:
-        display_kelly_pct = min(self.kelly_pct, _KELLY_DISPLAY_CAP)
-        display_kelly_dollars = display_kelly_pct * bankroll
-        cap_note = ""
-        if self.kelly_pct > _KELLY_DISPLAY_CAP:
-            cap_note = f"  [capped from {self.kelly_pct:.1%}]"
-
         lines = [
             f"  {self.player} {self.description}",
             f"    Model confidence:   {self.model_confidence:.1%}",
             f"    Implied odds prob:  {self.implied_odds_prob:.1%}",
-            f"    Edge:               {self.edge:+.1%}",
-            f"    EV per $100:        ${self.ev_per_100:+.2f}",
-            f"    Kelly stake:        {display_kelly_pct:.1%} of bankroll "
-            f"(${display_kelly_dollars:.2f}){cap_note}",
         ]
+
+        if not self.recommendation_eligible:
+            # Research visibility only: projection/edge shown as
+            # diagnostics, no stake, no bet-size, no actionable labels.
+            lines.append(
+                f"    Edge:               {self.edge:+.1%} ({DIAGNOSTIC_EDGE_LABEL})"
+            )
+            lines.append(f"    {research_banner(self.refusal_reasons)}")
+            if self.refusal_reasons:
+                lines.append(f"    Refusal reasons:    {', '.join(self.refusal_reasons)}")
+        else:
+            display_kelly_pct = min(self.kelly_pct, _KELLY_DISPLAY_CAP)
+            display_kelly_dollars = display_kelly_pct * bankroll
+            cap_note = ""
+            if self.kelly_pct > _KELLY_DISPLAY_CAP:
+                cap_note = f"  [capped from {self.kelly_pct:.1%}]"
+            lines.append(f"    Edge:               {self.edge:+.1%}")
+            lines.append(f"    EV per $100:        ${self.ev_per_100:+.2f}")
+            lines.append(
+                f"    Kelly stake:        {display_kelly_pct:.1%} of bankroll "
+                f"(${display_kelly_dollars:.2f}){cap_note}"
+            )
+
         if self.flags:
             flag_parts = [f"{k}: {v:+.1%}" if isinstance(v, float) else f"{k}: {v}"
                           for k, v in self.flags.items()
@@ -208,9 +290,20 @@ class ParlayConstructor:
 
         recommendations: list[BetRecommendation] = []
 
-        eligible = [p for p in scored_picks if p.get("edge", 0) >= self._min_edge]
+        # Recommendations are actionable wagers: only recommendation-
+        # eligible picks may enter.  Research-only/fallback picks are
+        # excluded entirely (no top-N backfill from ineligible picks).
+        actionable = [p for p in scored_picks if assess_pick_eligibility(p)[0]]
+        if not actionable:
+            logger.info(
+                "recommend_bet_types: 0/%d picks recommendation-eligible — "
+                "no bet recommendations emitted", len(scored_picks),
+            )
+            return []
+
+        eligible = [p for p in actionable if p.get("edge", 0) >= self._min_edge]
         if not eligible:
-            eligible = sorted(scored_picks, key=lambda p: p.get("ev", 0), reverse=True)[:5]
+            eligible = sorted(actionable, key=lambda p: p.get("ev", 0), reverse=True)[:5]
 
         # 1. Best single bet
         best_single = max(eligible, key=lambda p: p.get("ev", 0))
@@ -367,6 +460,11 @@ class ParlayConstructor:
         market_label = market_labels.get(prop.get("market", ""), prop.get("market", ""))
         desc = f"Over {prop.get('line', 0)} {market_label}"
 
+        eligible, refusal_reasons = assess_pick_eligibility(prop)
+        if not eligible:
+            kelly_pct = 0.0
+            kelly_dollars = 0.0
+
         pick = PickOutput(
             player=prop.get("player", "Unknown"),
             description=desc,
@@ -377,6 +475,9 @@ class ParlayConstructor:
             kelly_pct=kelly_pct,
             kelly_stake=kelly_dollars,
             flags=prop.get("flags", {}),
+            source=prop.get("source", "rule_fallback"),
+            recommendation_eligible=eligible,
+            refusal_reasons=refusal_reasons,
         )
         return pick.format(bankroll=bankroll)
 

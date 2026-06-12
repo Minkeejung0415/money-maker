@@ -44,8 +44,18 @@ def log_prediction(
     direction: str = "over",
     outcome: bool | None = None,
     log_file: Path = DEFAULT_LOG,
+    source: str = "rule_fallback",
+    recommendation_eligible: bool = False,
+    refusal_reasons: list[str] | None = None,
 ) -> None:
-    """Append one prediction record to the JSONL log file (deduped by key)."""
+    """
+    Append one prediction record to the JSONL log file (deduped by key).
+
+    Diagnostic (research-only) rows ARE logged — they are needed for
+    calibration — but each row records whether it was recommendation-
+    eligible, so research rows can never be confused with actionable
+    wagers when grading.  Defaults are fail-safe (research-only).
+    """
     log_file = Path(log_file)
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -75,6 +85,10 @@ def log_prediction(
         "game_date": game_date,
         "logged_at": datetime.now(timezone.utc).isoformat(),
         "outcome": outcome,  # True=hit, False=miss, None=ungraded
+        "source": source,
+        "recommendation_eligible": recommendation_eligible,
+        "research_only": not recommendation_eligible,
+        "refusal_reasons": list(refusal_reasons or []),
     }
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")

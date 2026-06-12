@@ -333,6 +333,27 @@ class PropModel:
         from alpha.engines.sports.prop_features import FEATURE_SCHEMA_VERSION
         from alpha.engines.sports.xgb_prop_model import MODEL_VERSION
 
+        # Real-money recommendation eligibility (fail closed).  Diagnostic
+        # output is always allowed; stakes/recommendations require every
+        # check below to pass.
+        refusal_reasons: list[str] = []
+        if source == "rule_fallback":
+            refusal_reasons.append("fallback_model")
+        else:
+            has_metadata = bool(getattr(xgb_model, "feature_names", None)) and \
+                bool(getattr(xgb_model, "feature_schema_version", None))
+            if not has_metadata:
+                refusal_reasons.append("model_metadata_missing")
+            if not xgb_validated:
+                refusal_reasons.append("calibration_missing")
+            if missing_features:
+                refusal_reasons.append("required_features_missing")
+        if minutes_profile["projected_minutes"] <= 0:
+            refusal_reasons.append("projected_minutes_unreliable")
+        if minutes_profile["low_minutes_risk"] > self._MAX_LOW_MINUTES_RISK:
+            refusal_reasons.append("low_minutes_risk_too_high")
+        recommendation_eligible = not refusal_reasons
+
         return {
             "player": player_name,
             "market": market,
@@ -349,6 +370,9 @@ class PropModel:
             "projected_minutes": round(minutes_profile["projected_minutes"], 1),
             "minutes_std": round(minutes_profile["minutes_std"], 2),
             "low_minutes_risk": round(minutes_profile["low_minutes_risk"], 3),
+            "recommendation_eligible": recommendation_eligible,
+            "research_only": not recommendation_eligible,
+            "refusal_reasons": refusal_reasons,
             "model_version": MODEL_VERSION if source == "xgb" else "rule_based_v1",
             "feature_schema_version": FEATURE_SCHEMA_VERSION,
             "missing_features": missing_features,
@@ -417,6 +441,10 @@ class PropModel:
     # Unvalidated XGBoost models are capped here; >0.85 requires validated
     # (held-out) training evidence.
     _UNVALIDATED_XGB_MAX_PROB: float = 0.85
+    # Above this recent low-minute share, a player's role is too unstable
+    # for a real-money recommendation (fixed policy constant — never tuned
+    # on the current slate).
+    _MAX_LOW_MINUTES_RISK: float = 0.30
 
     @staticmethod
     def _minutes_profile(logs: list[dict]) -> dict:

@@ -170,15 +170,23 @@ class TestLegCountAdvisor:
 # ---------------------------------------------------------------------------
 
 
+
+# Eligibility fields for picks that should pass the real-money gates
+# (validated XGB-backed): required since the detailed-pick safety gating.
+_ELIGIBLE = {"source": "xgb", "recommendation_eligible": True,
+             "refusal_reasons": [], "projected_minutes": 33.0,
+             "low_minutes_risk": 0.0}
+
+
 class TestBetTypeRecommendations:
     def test_returns_recommendations(self, ctor):
         picks = [
             {"player": "A", "market": "player_points", "model_prob": 0.65,
-             "adjusted_prob": 0.65, "over_odds": -110, "ev": 0.10, "edge": 0.12},
+             "adjusted_prob": 0.65, "over_odds": -110, "ev": 0.10, "edge": 0.12, **_ELIGIBLE},
             {"player": "B", "market": "player_rebounds", "model_prob": 0.60,
-             "adjusted_prob": 0.60, "over_odds": -110, "ev": 0.06, "edge": 0.07},
+             "adjusted_prob": 0.60, "over_odds": -110, "ev": 0.06, "edge": 0.07, **_ELIGIBLE},
             {"player": "C", "market": "player_assists", "model_prob": 0.62,
-             "adjusted_prob": 0.62, "over_odds": -105, "ev": 0.08, "edge": 0.09},
+             "adjusted_prob": 0.62, "over_odds": -105, "ev": 0.08, "edge": 0.09, **_ELIGIBLE},
         ]
         recs = ctor.recommend_bet_types(picks)
         assert len(recs) == 3  # single, 2-leg, 3-leg
@@ -193,9 +201,9 @@ class TestBetTypeRecommendations:
     def test_single_bet_has_highest_win_prob(self, ctor):
         picks = [
             {"player": "A", "model_prob": 0.70, "adjusted_prob": 0.70,
-             "over_odds": -110, "ev": 0.15, "edge": 0.18},
+             "over_odds": -110, "ev": 0.15, "edge": 0.18, **_ELIGIBLE},
             {"player": "B", "model_prob": 0.65, "adjusted_prob": 0.65,
-             "over_odds": -110, "ev": 0.10, "edge": 0.12},
+             "over_odds": -110, "ev": 0.10, "edge": 0.12, **_ELIGIBLE},
         ]
         recs = ctor.recommend_bet_types(picks)
         single_recs = [r for r in recs if r.bet_type == "single"]
@@ -205,7 +213,7 @@ class TestBetTypeRecommendations:
     def test_warns_when_combined_prob_below_15_pct(self, ctor):
         picks = [
             {"player": f"P{i}", "model_prob": 0.40, "adjusted_prob": 0.40,
-             "over_odds": -110, "ev": 0.01, "edge": 0.01}
+             "over_odds": -110, "ev": 0.01, "edge": 0.01, **_ELIGIBLE}
             for i in range(3)
         ]
         ctor._min_edge = 0.0  # allow all
@@ -273,6 +281,8 @@ class TestOutputFormatting:
             "adjusted_prob": 0.673,
             "over_odds": -110,
             "flags": {"pace_adjustment": 0.021, "paint_deterrence_pct": 0.0},
+            # Kelly is only formatted for recommendation-eligible picks.
+            **_ELIGIBLE,
         }
         output = ctor.format_pick(prop)
         assert "Player X" in output
@@ -389,6 +399,9 @@ class TestKellyCap:
             ev_per_100=90.0,
             kelly_pct=0.235,    # 23.5% raw Kelly — huge
             kelly_stake=2350.0,
+            source="xgb",
+            recommendation_eligible=True,
+            refusal_reasons=[],
         )
         text = pick.format(bankroll=10_000.0)
         assert "5.0% of bankroll" in text
@@ -405,6 +418,9 @@ class TestKellyCap:
             ev_per_100=5.0,
             kelly_pct=0.03,
             kelly_stake=300.0,
+            source="xgb",
+            recommendation_eligible=True,
+            refusal_reasons=[],
         )
         text = pick.format(bankroll=10_000.0)
         assert "3.0% of bankroll" in text

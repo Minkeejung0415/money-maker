@@ -41,6 +41,9 @@ RECORD_FIELDS = [
     "bankroll_before", "suggested_stake",
     "result", "closing_line", "closing_odds", "closing_consensus_prob",
     "clv", "pnl",
+    # Real-money gating provenance: research-only rows are kept for
+    # calibration but must never be confused with actionable wagers.
+    "recommendation_eligible", "research_only", "refusal_reasons",
 ]
 
 
@@ -88,8 +91,18 @@ class PaperBettingLogger:
         projected_minutes: float | None = None,
         bankroll_before: float | None = None,
         suggested_stake: float | None = None,
+        recommendation_eligible: bool = False,
+        refusal_reasons: list[str] | None = None,
     ) -> str:
-        """Append a pregame prediction record; returns its prediction_id."""
+        """
+        Append a pregame prediction record; returns its prediction_id.
+
+        Research-only (non-eligible) rows are logged too — they feed
+        calibration — but carry recommendation_eligible=False,
+        research_only=True, and their refusal_reasons.  Defaults are
+        fail-safe: a row is research-only unless explicitly marked
+        eligible by the model's gating.
+        """
         record = {field: None for field in RECORD_FIELDS}
         record.update({
             "prediction_id": uuid.uuid4().hex,
@@ -113,6 +126,9 @@ class PaperBettingLogger:
             "feature_schema_version": feature_schema_version,
             "bankroll_before": bankroll_before,
             "suggested_stake": suggested_stake,
+            "recommendation_eligible": recommendation_eligible,
+            "research_only": not recommendation_eligible,
+            "refusal_reasons": list(refusal_reasons or []),
         })
         with open(self.log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")

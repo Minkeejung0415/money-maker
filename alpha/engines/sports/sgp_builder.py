@@ -116,6 +116,12 @@ class PropLeg:
     # Prediction source: "xgb" or "rule_fallback".  Defaults to the SAFE
     # value — callers must explicitly mark XGBoost-backed legs.
     source: str = "rule_fallback"
+    # Real-money eligibility verdict from PropModel (fail-safe defaults:
+    # not eligible until proven otherwise).
+    recommendation_eligible: bool = False
+    refusal_reasons: tuple = ("fallback_model",)
+    projected_minutes: float | None = None
+    low_minutes_risk: float | None = None
 
 
 # Messages shown by consumers — exported so displays and tests stay in sync.

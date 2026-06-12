@@ -449,6 +449,10 @@ def main() -> None:
                 confidence=conf,
                 player_team=actual_team,
                 source=result.get("source", "rule_fallback"),
+                recommendation_eligible=result.get("recommendation_eligible", False),
+                refusal_reasons=tuple(result.get("refusal_reasons") or ["fallback_model"]),
+                projected_minutes=result.get("projected_minutes"),
+                low_minutes_risk=result.get("low_minutes_risk"),
             ))
             log_prediction(
                 player=raw["player"],
@@ -459,6 +463,9 @@ def main() -> None:
                 market_implied=result.get("market_implied", 0.5),
                 confidence=conf,
                 game_date=str(date.today()),
+                source=result.get("source", "rule_fallback"),
+                recommendation_eligible=result.get("recommendation_eligible", False),
+                refusal_reasons=result.get("refusal_reasons"),
             )
 
             # Generate UNDER leg if 1 - model_prob >= 0.65
@@ -497,6 +504,10 @@ def main() -> None:
                         direction="under",
                         player_team=actual_team,
                         source=result.get("source", "rule_fallback"),
+                        recommendation_eligible=result.get("recommendation_eligible", False),
+                        refusal_reasons=tuple(result.get("refusal_reasons") or ["fallback_model"]),
+                        projected_minutes=result.get("projected_minutes"),
+                        low_minutes_risk=result.get("low_minutes_risk"),
                     ))
                     log_prediction(
                         player=raw["player"],
@@ -507,6 +518,9 @@ def main() -> None:
                         market_implied=round(1.0 - result.get("market_implied", 0.5), 4),
                         confidence=under_conf,
                         game_date=str(date.today()),
+                        source=result.get("source", "rule_fallback"),
+                        recommendation_eligible=result.get("recommendation_eligible", False),
+                        refusal_reasons=result.get("refusal_reasons"),
                     )
 
         print()  # newline after progress
@@ -562,6 +576,13 @@ def main() -> None:
                     "home_team": leg.home_team,
                     "away_team": leg.away_team,
                     "confidence": leg.confidence,
+                    # Safety fields travel with every pick so the detailed
+                    # --show-ev output can gate stakes correctly.
+                    "source": leg.source,
+                    "recommendation_eligible": leg.recommendation_eligible,
+                    "refusal_reasons": list(leg.refusal_reasons or ()),
+                    "projected_minutes": leg.projected_minutes,
+                    "low_minutes_risk": leg.low_minutes_risk,
                 })
 
             result_box: list = []
@@ -600,6 +621,11 @@ def main() -> None:
                             away_team=cs["away_team"],
                             confidence=cs["confidence"],
                             player_team=cs.get("home_team", ""),
+                            source=cs.get("source", "rule_fallback"),
+                            recommendation_eligible=cs.get("recommendation_eligible", False),
+                            refusal_reasons=tuple(cs.get("refusal_reasons") or ["fallback_model"]),
+                            projected_minutes=cs.get("projected_minutes"),
+                            low_minutes_risk=cs.get("low_minutes_risk"),
                         ))
 
                 filtered_count = pre_count - len(adjusted_legs)
@@ -753,6 +779,9 @@ def main() -> None:
     if parlay_ctor and context_scored:
         print(f"\n{'='*65}")
         print("DETAILED PICK ANALYSIS")
+        print("(diagnostic edges may be displayed; only picks marked "
+              "recommendation-eligible are actionable candidates — fallback "
+              "results are never eligible for real-money staking)")
         print(f"{'='*65}")
 
         edge_picks = [p for p in context_scored if p.get("edge", 0) >= args.min_edge]

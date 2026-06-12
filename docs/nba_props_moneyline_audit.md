@@ -136,3 +136,42 @@ python scripts/evaluate_moneyline_walkforward.py --list-ablations   # NBAModel a
 4. **nba_api dependency** — game logs and team stats come from stats.nba.com, which rate-limits and occasionally changes shape; all call sites degrade gracefully but a daily failure means rule-path-only predictions that day.
 5. **Closing-line capture is manual** — CLV requires settling with closing odds; a selected-event refresh near tipoff is the supported way to capture them (costs credits).
 6. The aggregated back-compat `over_odds/under_odds` pair comes from the best-over book; consumers wanting best-under must read `best_under_odds`/`best_under_book` explicitly.
+
+---
+
+## Addendum: standalone detailed-pick (`--show-ev`) safety gates
+
+The detailed single-pick analysis can display **diagnostic edges** for
+research visibility, but a diagnostic edge is not a bet:
+
+- Every prop result and pick row carries `source` (`"xgb"` |
+  `"rule_fallback"`), `recommendation_eligible: bool`, and
+  `refusal_reasons`.
+- **Only rows with `recommendation_eligible=True` are actionable
+  candidates.** Eligibility requires: an XGBoost-backed prediction with
+  valid feature-schema metadata, held-out validation metrics
+  (calibration evidence), all required live features available, a
+  reliable projected-minutes estimate, and recent low-minute risk at or
+  below the policy maximum (0.30, a fixed constant — never tuned on the
+  current slate).
+- **Fallback (`rule_fallback`) results are never eligible for real-money
+  staking.** They render with `Edge: … (Diagnostic edge only)`, the
+  banner `RESEARCH ONLY — fallback model is not eligible for real-money
+  recommendations`, their refusal reasons, and **no Kelly stake, no
+  bet-size recommendation, and no BET/VALUE BET labeling**.
+- XGB-backed picks that fail validation checks render `RESEARCH ONLY —
+  model validation incomplete` with the same suppression.
+- `recommend_bet_types()` (the BET TYPE RECOMMENDATIONS section) only
+  ever considers eligible picks; when none are eligible it emits nothing.
+- The gating fails **safe**: a pick missing its safety fields is treated
+  as fallback/research-only, never as eligible.
+
+Refusal reason identifiers: `fallback_model`, `model_metadata_missing`,
+`calibration_missing`, `required_features_missing`,
+`projected_minutes_unreliable`, `low_minutes_risk_too_high`.
+
+Paper logging (`scripts/log_predictions.py` and
+`alpha/engines/sports/paper_betting_logger.py`) **retains diagnostic
+rows** — they feed calibration — but every record stores
+`recommendation_eligible`, `research_only`, and `refusal_reasons` so
+research rows can never be confused with actionable wagers when grading.
