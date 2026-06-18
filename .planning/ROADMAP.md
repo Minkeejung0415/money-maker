@@ -78,7 +78,11 @@
   2. Elo ratings for all 48 WC 2026 nations load from `data/wc_priors.json` without a network call (cached from Kaggle CSV)
   3. StatsBomb 2018 + 2022 WC event data is accessible via `wc_stats.py` returning national-team attack/defense rates and player career per-90 stats, cached to `data/.wc_cache/`
   4. All three data sources are isolated from the EPL/UCL pipeline — no shared cache namespace, no calls to `soccer_stats.py` or `get_team_rolling_stats_all()`
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — FootballDataClient WC extension: _COMP_MAP update, _get_with_retry(), fetch_wc_games() with stage/group fields, tests
+- [ ] 05-02-PLAN.md — WC reader modules: wc_elo.py (Elo JSON loader) + wc_stats.py (StatsBomb pkl loader), tests
+- [ ] 05-03-PLAN.md — build_wc_priors.py one-time script: eloratings.net Elo download + StatsBomb 2018/2022 event aggregation, produces wc_priors.json + wc_stats.pkl
 
 ### Phase 6: Match Model
 **Goal**: WC match predictions output calibrated Win/Draw/Loss probabilities (or Win-to-Advance in knockouts) using Elo-logistic logic, with stage-aware behavior and a market divergence flag — and are never routed through SoccerModel
