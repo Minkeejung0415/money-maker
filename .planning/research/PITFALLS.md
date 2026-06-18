@@ -179,3 +179,129 @@ The model is ready when: for props where model_prob is 60-70%, actual hit rate i
 | 3 | Opponent rebound adjustment direction wrong | Systematic bias baked into every reb prediction |
 | 4 | No pace adjustment for rebounds | High-variance residuals destroy hit rate |
 | 5 | Tuning on 1 game day | Any parameter change that "works" is pure noise |
+
+---
+
+---
+
+# Pitfalls Research: World Cup 2026 Soccer Mode (v1.1)
+
+> Written 2026-06-18. WC-specific pitfalls grounded in: existing codebase inspection
+> (football_data_client.py, soccer_model.py, soccer_prop_model.py, soccer_sgp_builder.py),
+> live research on StatsBomb open data, The Odds API WC coverage, football-data.org API
+> behavior, and academic literature on national team prediction models.
+>
+> This section answers: what will break when adding WC 2026 on top of the EPL/UCL stack?
+
+---
+
+## Master Pitfall Table
+
+| # | Pitfall | Risk | Prevention Strategy | Phase to Address |
+|---|---------|------|---------------------|-----------------|
+| 1 | Club-soccer features fed to national-team model unchanged | HIGH | Build a separate WC feature set; never call `get_team_rolling_stats_all()` for national teams | Phase 1: Fixture Ingestion / Model Scaffold |
+| 2 | Synthetic rolling averages from season totals (current `soccer_prop_model.py` pattern) reused for WC players | HIGH | National team players have no Understat per-game logs — use tournament xG-per-90 from StatsBomb or odds-implied only | Phase 2: WC Prop Model |
+| 3 | StatsBomb WC 2018/2022 data used to train without temporal holdout | HIGH | Always train on 2018+qualifiers only, hold out 2022 for validation; never include 2026 group stage in training | Phase 2: WC Match Model |
+| 4 | `football_data_client.py` `_COMP_MAP` does not include `"wc"` key — WC fixture fetch silently returns `[]` | HIGH | Add `"wc": "WC"` to `_COMP_MAP`; add explicit integration test that asserts len > 0 for `"wc"` key | Phase 1: Fixture Ingestion |
+| 5 | Moneyline leg in SGP settles on 90-minute result; knockout match going to extra time means the moneyline bet wins but the team loses in regulation perspective | HIGH | Add `tournament_stage` metadata to every game dict; gate moneyline legs out of SGP combos for knockout-stage matches unless using "To Qualify" market explicitly | Phase 3: WC SGP Builder |
+| 6 | `soccer_prop_model.py` generates synthetic Gaussian noise around a single season-average value — for WC players this is random number generation dressed as signal | HIGH | If fewer than 3 real tournament game logs exist for a player, fall back to odds-implied probability only; never return HIGH confidence on synthetic data | Phase 2: WC Prop Model |
+| 7 | Odds API sport key `soccer_fifa_world_cup` has player props in `player_goal_scorer_anytime` format only — not `player_shots` or `player_assists` — causing props scanner to find zero WC legs | HIGH | Confirm available markets via `GET /v4/sports/soccer_fifa_world_cup/events/{id}/odds?markets=` before building prop model; map market names explicitly | Phase 1: Odds API Integration |
+| 8 | ProphitBet XGBoost model loaded by `soccer_model.py` was trained on EPL/UCL club matches — running it on national team feature dicts produces garbage probabilities with no error | HIGH | WC match model must use a separate model instance; never route WC games through `SoccerModel._load_xgb_models()` path | Phase 2: WC Match Model |
+| 9 | xG features (xG_for, xG_against) missing for national teams — `soccer_stats.py` fetches Understat which only covers 5 club leagues, not international football | HIGH | For WC match model, use StatsBomb open-data xG (2018+2022 tournaments), FIFA ranking delta, and head-to-head goal difference as feature set instead | Phase 2: WC Match Model |
+| 10 | BTTS (both teams to score) market produced by `soccer_sgp_builder.py` is valid in group stage but meaningless as a strategy signal in knockout rounds where defensive setups shift dramatically | MED | Add `stage_type` field (`"group"` / `"knockout"`); suppress BTTS SGP legs for knockout stage matches; log warning if BTTS leg is attempted in knockout context | Phase 3: WC SGP Builder |
+| 11 | football-data.org free tier returns WC fixtures but omits lineups, player stats, and xG — code that calls `.get("homeTeam", {}).get("name")` works but downstream stat fetches silently fall back to defaults | MED | Document that all WC stat fields will be missing from football-data.org response; build stat fetch layer separately from fixture fetch layer | Phase 1: Fixture Ingestion |
+| 12 | WC 2026 has 12 groups of 4 teams (not 8 groups of 4) — APIs that hardcode group count or use group-position tiebreaker logic from 2022 will fail for third-place advancement (8 of 12 third-place teams advance) | MED | Never hardcode group count; use fixture API's `stage` field to determine advancement; test against all 12 groups explicitly | Phase 1: Fixture Ingestion |
+| 13 | National team match sample is ~3-6 games per tournament; fitting model parameters (MAX_XGB_CONF, credibility filter thresholds) against this data will overfit to noise | MED | Use 2018+2022 StatsBomb (128 matches total) as training set; do not re-tune `MAX_XGB_CONF` or thresholds until 50+ WC predictions are validated | Phase 2: WC Match Model |
+| 14 | Friendly matches (UEFA Nations League, qualifiers) have systematically lower intensity — including them in rolling stats inflates team strength estimates and deflates variance | MED | Weight official WC qualifier and tournament matches 2x vs friendlies; exclude friendlies entirely from feature computation if using rolling recent form | Phase 2: WC Match Model |
+| 15 | The correlation table in `soccer_sgp_builder.py` (r=0.65 for player_goals + player_shots) was estimated for EPL; WC games have lower scoring rates (~2.5 goals/game vs ~2.8 in EPL) which changes correlation structure | MED | Use a separate WC SGP builder or parameterize with WC-calibrated correlation values; goals+shots correlation in WC context is closer to r=0.55 based on StatsBomb data | Phase 3: WC SGP Builder |
+| 16 | `soccer_prop_model.py` uses `self._league_key = league_key` as a cache namespace key — if WC props are stored under `"wc"` and fall back to EPL player stat cache, wrong per-90 values will be served | MED | Ensure `_CACHE_DIR` and `cache_key` always include `league_key`; confirm `"wc"` cache is isolated from `"epl"` cache; clear WC cache independently | Phase 2: WC Prop Model |
+| 17 | StatsBomb open data competition stages have a documented bug (Women's WC issue #33 on GitHub) where match stages are misclassified — using stage labels for knockout logic can silently misroute group-stage matches | MED | Validate stage labels against match round number + known bracket structure; do not rely solely on StatsBomb `competition_stage` field | Phase 2: WC Match Model |
+| 18 | The Odds API `soccer_fifa_world_cup` endpoint returns odds from UK/EU/AU bookmakers only — US-centric DraftKings/FanDuel lines are absent, making vig removal and market-implied probabilities skewed toward European juice | MED | Fetch from `regions=uk,eu` explicitly; document that market-implied WC probs reflect Pinnacle/European sharp money, not US retail books | Phase 1: Odds API Integration |
+| 19 | Player injury data for national teams has no ESPN API equivalent for international football — `soccer_injuries.py` calls ESPN soccer endpoint which covers club teams only | MED | Build a thin WC injury scraper from official FIFA match reports or use football-data.org `/teams/{id}/players` endpoint; fall back to odds-line movement as injury signal | Phase 2: WC Prop Model |
+| 20 | Prop lines for WC player shots and assists may simply not exist for most matches — `player_goal_scorer_anytime` is widely available but shots/assists are only offered by specialized books | MED | Run market discovery scan before building prop model; if `player_shots` / `player_assists` markets are unavailable for WC, restrict WC props to goals-only and document this limitation | Phase 1: Odds API Integration |
+| 21 | Training on StatsBomb 2018+2022 (128 matches) and immediately applying to 2026 ignores 8 years of squad turnover — France 2022 squad is only 30% the same as France 2026 | MED | Use FIFA ranking-based features (objective, updated live) rather than team-name embeddings; avoid lookup tables keyed by team name that were built on 2022 rosters | Phase 2: WC Match Model |
+| 22 | Confidence inflation from sparse national team data: model sees 5-game rolling average from WC qualifiers + 3 group stage games and outputs 75%+ confidence; real sample is far too small for that confidence level | MED | Hard cap: any player with fewer than 8 WC/qualifier game logs gets confidence capped at MEDIUM regardless of model_prob; document this in scanner output | Phase 2: WC Prop Model |
+| 23 | The `_best_ml_leg()` method in `soccer_sgp_builder.py` always picks one side of a match; in a WC group stage must-win scenario, both teams may be playing for a specific result — standard moneyline pick is ill-defined | LOW | Add a `must_win` context flag to game dicts when team needs win to advance; suppress moneyline SGP legs when both teams are in must-win scenarios (unpredictable tactical play) | Phase 3: WC SGP Builder |
+| 24 | Odds API rate budget: existing system uses ~9-11 requests per NBA run; adding WC fixture + odds + props fetch without a budget guard will exceed the daily allowance during tournament | LOW | Add WC request counter to the same budget tracker as NBA; set WC daily limit to 20 requests; cache WC odds for 2h (shorter TTL than NBA 6h because WC lines move faster near kickoff) | Phase 1: Odds API Integration |
+| 25 | football-data.org free tier has a 10 requests/minute rate limit — existing `football_data_client.py` has no retry-with-backoff; parallel WC fixture + group table fetches will hit 429 | LOW | Add `time.sleep(6)` between sequential football-data.org calls; or implement exponential backoff in the client; existing EPL fetch code has the same bug but EPL fetches are infrequent | Phase 1: Fixture Ingestion |
+
+---
+
+## Deep-Dive: Critical Pitfalls
+
+### Pitfall 1: Club Soccer Features Fed to National Team Model
+
+**Root cause in this codebase:** `soccer_model.py` calls `get_team_rolling_stats_all()` from `soccer_stats.py`, which fetches Understat club data for EPL teams. National team names like "Brazil" or "England" (international context) will never appear in Understat's EPL dataset. The lookup returns an empty dict `{}`, and the feature builder substitutes a default of `1.5` for every stat. The model then runs on all-default features, producing a probability near the market-implied default — this looks plausible but is completely uninformative.
+
+**The dangerous failure mode:** The code does not error. It returns a prediction. The credibility filter then sees a small divergence from market and passes the pick. You get HIGH-confidence picks that are literally random, presented as model output.
+
+**Prevention:** Build `wc_match_features.py` with an explicit national-team feature set: FIFA ranking, recent form (last 5 WC qualifier/tournament matches), head-to-head goal differential, and tournament xG from StatsBomb. Never import `get_team_rolling_stats_all()` in WC code paths.
+
+---
+
+### Pitfall 3: StatsBomb Training Without Temporal Holdout
+
+**The specific trap:** StatsBomb 2022 WC data contains match outcomes for all 64 games. If you train on all available StatsBomb data (2018 + 2022) and then validate on 2026, your validation is correct — but if during development you validate on 2022 data, you will see inflated accuracy because the model saw the 2022 outcomes during training.
+
+**The subtler leakage:** Elo ratings included in features are updated after each match. If you compute "team Elo before match" using a library that updates in chronological order but you slice the dataframe by tournament year, you may accidentally include post-match Elo in features for early-tournament predictions if the Elo update step was applied before the slice.
+
+**Prevention:** Process 2018 data first, compute rolling Elo forward, then hold out 2022 entirely for evaluation. Do not even look at 2022 match outcomes during feature engineering decisions.
+
+---
+
+### Pitfall 5: Extra Time / 90-Minute Settlement in Knockout SGP Legs
+
+**The specific trap in this codebase:** `soccer_sgp_builder.py` `_build_ml_sgp()` combines a moneyline ML leg with player prop legs. In EPL/UCL context, matches cannot end in extra time in the regular sense (UCL group stage allows draws). In WC knockouts, matches that are level after 90 minutes go to extra time and then penalties.
+
+**Sportsbook settlement:** The moneyline bet (`home`, `draw`, `away`) settles on the 90-minute result. If Croatia and Brazil are level at 1-1 after 90 minutes, the moneyline "draw" bet WINS — even if Brazil wins on penalties. The "team_win" entry in `_STATIC_CORR` and `_best_ml_leg()` will bet on Brazil winning the match moneyline, but if Brazil needs 120 minutes to win, the moneyline bet pays out as a draw, voiding the SGP assumption.
+
+**Player prop interaction:** Player props (shots, goals) typically include extra time but exclude penalty shootout goals. A player scoring in extra time will count for anytime goalscorer. This creates a split where the ML leg pays as a draw but the goalscorer leg also hits — the SGP breaks.
+
+**Prevention:** For any WC game with `"tournament_stage": "knockout"`, do not include a moneyline win leg in SGP combinations. Use `"to_qualify"` market if available, or restrict WC knockout SGPs to prop-only combinations.
+
+---
+
+### Pitfall 6: Synthetic Rolling Values Are Not Signal
+
+**What the current code does (`soccer_prop_model.py` lines 188-195):**
+```python
+random.seed(hash(player_name))
+values = [
+    max(0.0, base_val + random.gauss(0, base_val * 0.25))
+    for _ in range(_ROLLING_WINDOW)
+]
+values[0] = base_val
+```
+
+This generates 10 synthetic data points with 25% noise around a season average. For EPL, this is already a rough approximation. For WC players, `base_val` comes from Understat club stats (the player's EPL club performance) — not from WC play. A striker who gets 0.8 shots/90 in an EPL mid-table club might get 2.2 shots/90 playing for Brazil against a weaker opponent. The model will project from club rate and output false confidence.
+
+**The exact kill mechanism:** `std_stat = stdev(values)` will be approximately `base_val * 0.25`, which is tightly calibrated to produce non-extreme Poisson probabilities. A WC prop line set by sportsbooks at a higher rate than the club average will look like an "over" at 70%+ confidence. The model is measuring EPL club performance against WC sportsbook lines.
+
+**Prevention:** If the Odds API returns no `player_shots` or `player_assists` market for WC events, return `None` for all player props and surface that as a data gap rather than generating synthetic signal. Goal scorer (anytime) props are available — model only what markets exist.
+
+---
+
+### Pitfall 8: ProphitBet Model Running on WC Feature Dict
+
+**What currently happens:** `soccer_model.py` tries to load any `.pkl` or `.json` file from the ProphitBet repo directory. If it finds one, it runs `predict_proba()` on whatever feature dict `_build_game_features()` returns. For WC games, `_build_game_features()` returns the all-1.5-default dict from Pitfall 1. The model runs. It produces a probability. The credibility filter sees a small divergence. The pick passes.
+
+**Why this is worse than fallback:** The `_market_implied_predict()` fallback is honest — it says "I have no model, here are the market odds." The XGBoost path produces a subtly wrong probability that looks model-generated, passes the credibility filter, and outputs a bet recommendation that is entirely driven by the default feature values. This is confident noise.
+
+**Detection signal:** If WC predictions from XGBoost all cluster around a narrow probability band (e.g., 58-63% for home wins regardless of opponent), the model is running on all-default features. A real model should produce higher variance across different matchups.
+
+**Prevention:** Add a `model_type: str` field to every prediction dict. WC predictions must always carry `"model_type": "wc_model"` and WC-specific model class. Block `SoccerModel` from accepting games with `"league": "wc"`.
+
+---
+
+## Summary: The 8 Things That Kill a WC Soccer Mode
+
+| Rank | Mistake | Kill Mechanism |
+|------|---------|---------------|
+| 1 | Reusing club soccer feature pipeline for national teams | All features default to 1.5; confident-looking but random predictions |
+| 2 | Generating synthetic Gaussian noise as WC player history | Model outputs are EPL club stats dressed as WC signal |
+| 3 | ProphitBet XGBoost model receives WC feature dict | Silently produces garbage; credibility filter passes it through |
+| 4 | `_COMP_MAP` missing `"wc"` key | Entire fixture fetch returns `[]`; scanner outputs nothing |
+| 5 | Moneyline ML leg in knockout SGP | Match settles as draw on 90min even if team wins; SGP math breaks |
+| 6 | StatsBomb temporal leakage (train on 2022, validate on 2022) | Inflated backtest accuracy that disappears on 2026 live data |
+| 7 | Odds API WC player markets assumed to match EPL names | `player_shots` / `player_assists` may not exist; scanner returns zero WC prop legs |
+| 8 | No confidence cap for sparse national team sample | 5-game sample produces 80%+ confidence that is statistically meaningless |

@@ -1,410 +1,348 @@
-# Architecture Research: Prop Model Upgrade
+# Architecture: World Cup 2026 Soccer Mode Integration
 
-## Current Architecture Summary
-
-### What exists
-
-`alpha/engines/sports/prop_model.py` — `PropModel` class:
-- Fetches per-player game logs via `nba_api.stats.endpoints.playergamelogs` (same-day pickle cache)
-- Filters to games where player played >= 20 min
-- Computes a weighted rolling average: `0.5 * avg(L5) + 0.3 * avg(L10) + 0.2 * avg(L20)`
-- Applies per-market opponent adjustment (DEF_RTG for points, REB/STL/FG3M for other markets), capped at ±10–15%
-- Plugs result into a Normal CDF: `P(over) = 1 - norm.cdf(line, loc=opp_adj, scale=std_dev)`
-- Classifies confidence by gap vs market-implied probability (|gap| > 0.08 = HIGH, 0.04–0.08 = MEDIUM)
-- Degrades HIGH → MEDIUM if player traded within last 5 games
-
-`alpha/data/ingestion/nba_stats_cache.py` — `NBAStatsCache`:
-- SQLite-backed, 6h TTL cache for all nba_api calls
-- Thread-safe with 10s timeout per call, 0.5s sleep between calls
-- Provides: `fetch_player_game_logs`, `fetch_league_dash_player_stats`, `fetch_league_dash_team_stats`, `fetch_player_dash_pt_shots`, `fetch_league_dash_pt_defend`, `fetch_matchup_defender`, `fetch_team_recent_form`, `fetch_head_to_head`, `fetch_player_team_game_count`, `fetch_player_team_map`
-
-`alpha/engines/sports/nba_context.py` — `PropContextEvaluator`:
-- Pipeline: position filter → shared minutes → paint deterrence → foul trouble → advanced opp stats
-- Each evaluator produces a fractional adjustment to `model_prob`
-- Adjustments are additive deltas on the projection percentage, then re-mapped to probability
-- Wall timeout of 60s prevents runaway runs
-
-### Measured performance
-
-- Overall hit rate: **43.5%** (below 50% random baseline — model is directionally wrong more often than right)
-- Rebounds specifically: **34.2%** (severe downward bias — model over-projects REB)
-- Context evaluators run 18 min and cut 61% of legs (too aggressive, net accuracy impact unclear)
-- Model is overconfident: avg predicted 82% on Mar-12 props, actual hit rate was lower
-
-### Root causes of low accuracy (from live data)
-
-1. **Rolling average window is equal-weighted within each bucket** — a player's game 5 days ago counts the same as yesterday's game within the L5 window
-2. **Opponent adjustment is season-average only** — does not account for opponent's *recent* defensive form or matchup-specific position data (e.g., opponent's center vs. center, not team-wide DEF_RTG)
-3. **Standard deviation uses full-season samples** — does not tighten when player is in a hot/cold streak; variance is overestimated for consistent players, underestimated for streaky ones
-4. **No home/away split** — players systematically differ at home vs. away (avg 8–12% swing in scoring)
-5. **No rest/fatigue factor** — B2B game, 4th game in 5 nights — high correlation with under performance
-6. **No minutes projection** — model projects stats but doesn't know if player will play 28 or 38 min tonight
-7. **Rebound model ignores team rebounding rate** — guards on high-REB teams still get over-projected
-8. **Normal distribution assumption is wrong** — NBA counting stats are right-skewed (can't score -3 pts), especially assists and blocks
+**Project:** Alpha Terminal — v1.1 World Cup Soccer Mode
+**Researched:** 2026-06-18
+**Scope:** How WC components integrate with the existing `alpha/` architecture
 
 ---
 
-## Recommended Upgrade Path
+## Component Map
 
-Ordered by ROI (accuracy improvement per engineering hour, non-breaking changes first).
+### New Files (must create)
 
-### Phase 1 — Fix the rolling average (highest ROI, zero new API calls)
+| File | Type | Purpose |
+|------|------|---------|
+| `alpha/data/ingestion/wc_stats.py` | New ingestion module | WC team + player stats from StatsBomb open data (WC 2018/2022) with market-implied fallback |
+| `alpha/engines/sports/wc_model.py` | New engine | WC match outcome model (Win/Draw/Loss), national-team-specific features |
+| `alpha/engines/sports/wc_prop_model.py` | New engine | WC player prop model (goals, shots, assists) wrapping market-implied priors from The Odds API |
+| `alpha/engines/sports/wc_sgp_builder.py` | New engine | WC SGP builder with WC-specific correlation table, reuses `PropLeg`/`ParlayCombination`/`SGPMode` from `soccer_sgp_builder.py` |
+| `scripts/wc_scanner.py` | New entry point | Full 6-step pipeline, `--mode [props|sgp|mixed|parlay]` + `--stage [group|knockout|all]` |
+| `tests/unit/test_wc_stats.py` | New test | Unit tests for WC stats ingestion (all HTTP mocked) |
+| `tests/unit/engines/test_wc_model.py` | New test | Unit tests for WC match model |
+| `tests/unit/engines/test_wc_prop_model.py` | New test | Unit tests for WC prop model |
+| `tests/unit/engines/test_wc_sgp_builder.py` | New test | Unit tests for WC SGP builder |
 
-**Change:** Replace equal-weighted buckets with exponential decay weighting across individual games.
+### Modified Files (extend existing, never rewrite)
 
-Current: `0.5 * avg(L5) + 0.3 * avg(L10) + 0.2 * avg(L20)` — treats each of last 5 games equally
+| File | Change | Why Here, Not a New File |
+|------|--------|--------------------------|
+| `alpha/data/ingestion/football_data_client.py` | Add `"wc": "WC"` to `_COMP_MAP` + new `fetch_wc_games(date_from, date_to, stage)` method | Same API key, same v4 base URL, same HTTP client — competition code `WC` is confirmed available on the free tier. Creating a separate file would duplicate HTTP client setup and error handling. |
+| `alpha/data/ingestion/odds_api.py` | Add `"soccer_fifa_world_cup"` sport key constant + `fetch_wc_odds()` / `fetch_wc_prop_lines()` methods | Existing `OddsAPIClient` already handles all HTTP wiring and API key injection. The WC sport key (`soccer_fifa_world_cup`) is confirmed active on The Odds API with player prop markets (anytime goal scorer, shots). Quota consumption pattern matches NBA — guard with same per-run limits. |
 
-Better: Exponential decay across all 20 games: `weight[i] = lambda^i` where `lambda ≈ 0.85`
+### Files Left Untouched
 
-Formula: `proj = sum(values[i] * 0.85^i for i in range(N)) / sum(0.85^i for i in range(N))`
-
-This means game-1 (yesterday) gets 1.0 weight, game-5 gets 0.44, game-10 gets 0.20, game-20 gets 0.04. Naturally emphasizes recency without brittle bucket boundaries.
-
-**Impact:** Estimated +3–5pp on hit rate. Players in hot/cold streaks get corrected faster. Requires changing only `_weighted_avg()` in `prop_model.py` — no new data sources.
-
-**Validation:** Run `validate_picks.py` before and after. Should see avg_diff vs proj shrink.
-
-### Phase 2 — Home/away split (high ROI, no new API calls)
-
-**Change:** Track home/away separately when fetching game logs. Filter qualifying games to match today's game location.
-
-`PlayerGameLogs` rows already contain a `MATCHUP` column (e.g., `BOS vs. MIA` or `BOS @ MIA`). The `@` means away game.
-
-Implementation: in `_fetch_game_logs()`, tag each row with `is_home: bool`. In `predict_prop()`, accept `is_home: bool` parameter and filter qualifying games to the matching home/away split. If fewer than `_MIN_GAMES` remain in the split, fall back to all games but apply a home/away multiplier derived from the split averages.
-
-**Impact:** Estimated +3–4pp on hit rate for points/assists props. Guards especially show large home/away splits.
-
-**Validation:** Check `avg_diff` by home/away bucket in the validate script.
-
-### Phase 3 — Opponent allowed stats by position (high ROI, one new API endpoint)
-
-**Change:** Replace team-wide DEF_RTG with position-level opponent allowed stats.
-
-nba_api endpoint: `LeagueDashMatchups` already in `NBAStatsCache.fetch_matchup_defender()`. Separately, `LeagueDashPlayerStats` with `opponent_team_id` filter can give position-level opponent allowed stats.
-
-Better approach: Use `nba_api.stats.endpoints.leaguedashplayerbiostats` (or `leaguedashptdefend` already fetched) to get per-position opponent allowed PTS, REB, AST.
-
-The specific endpoint is `nba_api.stats.endpoints.leaguedashlineups` or more precisely `nba_api.stats.endpoints.LeagueDashOpponentPtShot` — however the simplest available source is `LeagueDashPlayerStats` with `per_mode="PerGame"` filtered by opponent team + position group.
-
-**Simpler implementation:** Add a new `NBAStatsCache` method `fetch_opp_allowed_by_position(team_name, position_group, season)` that:
-1. Calls `LeagueDashTeamStats` with `per_mode=PerGame` (already cached)
-2. Filters to games where the team was the defense
-3. Groups by offensive player position
-
-This data comes from `nba_api.stats.endpoints.leaguedashptdefend` (already fetched in `PaintDeterrenceEvaluator`). Map the defensive player's position to the matching opponent position group.
-
-**Impact:** Estimated +4–6pp on rebounds specifically (34.2% → 40%+ target). Guards facing team with poor PF/C rebounding should be penalized less.
-
-### Phase 4 — Poisson/Negative Binomial distribution (medium ROI, no new data)
-
-**Change:** Replace Normal CDF with Poisson CDF for low-count stats (assists, blocks, steals, threes) and Negative Binomial for points/rebounds.
-
-NBA counting stats are discrete and right-skewed. `P(assists > 6.5)` via Normal CDF is wrong when a player averages 5.2 — it over-estimates the tail.
-
-```python
-from scipy.stats import poisson, nbinom
-
-# For assists, blocks, steals, threes:
-p_over = 1 - poisson.cdf(int(line), mu=proj)
-
-# For points, rebounds (higher variance, overdispersed):
-# Fit r,p from mean and variance: r = mean^2/(var - mean), p = mean/var
-r = proj**2 / max(0.01, std**2 - proj)
-p_param = proj / max(0.01, std**2)
-p_over = 1 - nbinom.cdf(int(line), r, p_param)
-```
-
-This is a drop-in replacement inside `predict_prop()`. No new data. Changes two lines.
-
-**Impact:** Estimated +2–3pp on assists/blocks props specifically. Reduces overconfidence on high lines.
-
-### Phase 5 — Rest and schedule fatigue (medium ROI, no new API calls)
-
-**Change:** Add days-rest penalty/boost to the projection.
-
-Game log rows already contain `GAME_DATE`. Compute days since last game for each player's log. For today's game, the scanner already knows the game date. Compute days rest = today - last game date from the player's log.
-
-```
-rest_factor = 1.0
-if days_rest == 0:   rest_factor = 0.94   # B2B — significant under-performance
-if days_rest == 1:   rest_factor = 0.97   # 1 day rest — minor
-if days_rest >= 3:   rest_factor = 1.02   # well-rested boost
-```
-
-Apply `opp_adj *= rest_factor` before the CDF calculation.
-
-The `NBA-Machine-Learning-Sports-Betting` library already has `Add_Days_Rest.py` in its pipeline — the pattern is proven.
-
-**Impact:** Estimated +2pp overall, +4pp on B2B situations specifically.
-
-### Phase 6 — Ensemble blending with XGBoost confidence (medium ROI)
-
-**Change:** Use the existing `NBAModel` XGBoost win probability (already running for ML picks) to gate prop confidence.
-
-When the XGBoost model predicts a team win probability < 35%, props for players on that team should have their HIGH confidence downgraded to MEDIUM. Players on a team projected to lose by 10+ are less likely to hit volume stats (especially assists — spread out over fewer possessions in a blowout).
-
-Implementation: `sgp_scanner.py` already has both `prop_results` and `ml_games` in scope simultaneously. Pass `ml_games` context into prop scoring and apply a blowout flag.
-
-```python
-# In sgp_scanner.py, after prop scoring:
-blowout_teams = {g["away_team"] for g in ml_games if g.get("away_model_prob", 0.5) < 0.30}
-blowout_teams |= {g["home_team"] for g in ml_games if g.get("home_model_prob", 0.5) < 0.30}
-for prop in prop_legs:
-    if prop.player_team in blowout_teams and prop.confidence == "HIGH":
-        prop.confidence = "MEDIUM"
-```
-
-**Impact:** Estimated +1–2pp by eliminating assists/pts props on heavy underdogs.
+| File | Why Not Modified |
+|------|-----------------|
+| `alpha/engines/sports/soccer_model.py` | EPL/UCL club football model. WC has different feature requirements — national team FIFA ranking, confederation, knockout vs. group stage pressure. A `tournament_mode=True` flag would force a branching `_build_game_features()` with two incompatible data shapes. |
+| `alpha/engines/sports/soccer_prop_model.py` | Hard-wired to Understat via `soccer_stats.py`. WC has no Understat coverage — different data pipeline entirely. |
+| `alpha/engines/sports/soccer_sgp_builder.py` | EPL/UCL-calibrated static correlation table. WC has different market correlations (see Q4 below). However, `PropLeg`, `ParlayCombination`, and `SGPMode` from this file ARE imported by `wc_sgp_builder.py` — no duplication. |
+| `alpha/data/ingestion/soccer_stats.py` | Understat-only, EPL/UCL scope. WC stats are a completely different source (StatsBomb). |
+| `alpha/config/settings.py` | `football_api_key` and `odds_api_key` already present — WC uses both with no new keys. |
+| `scripts/soccer_scanner.py` | EPL/UCL-specific orchestrator with Understat assumptions baked in. WC gets its own entry point to keep both scanners readable and independently runnable. |
 
 ---
 
-## Component Design
+## Q1: Extend `soccer_model.py` with `tournament_mode=True` or create `wc_model.py`?
 
-### New: `ExponentialWeightedProjector` (replaces `_weighted_avg`)
+**Decision: Create `wc_model.py` as a new file.**
 
-Location: stays inside `PropModel` as a private method — rename `_weighted_avg` to `_exp_weighted_avg`.
+The codebase precedent is one class per sport/context: `nba_model.py`, `soccer_model.py`, `mlb_model.py`. Follow it.
 
-```python
-def _exp_weighted_avg(self, values: list[float], decay: float = 0.85) -> float:
-    if not values:
-        return 0.0
-    weights = [decay ** i for i in range(len(values))]
-    return sum(v * w for v, w in zip(values, weights)) / sum(weights)
-```
+Two concrete problems with the `tournament_mode` flag approach:
 
-Single method swap. Zero new dependencies.
+**Problem 1 — Incompatible data shapes in `_build_game_features()`:**
 
-### New: `HomeAwaySplit` logic inside `predict_prop`
+`soccer_model.py._build_game_features()` calls `get_team_rolling_stats_all()` from `soccer_stats.py`, which is Understat-backed and EPL/UCL-scoped. WC data comes from `wc_stats.py` (StatsBomb). The feature dict shapes differ: club football has `xG_for`, `xG_against` from a domestic season; WC needs `fifa_ranking_diff`, `confederation`, `tournament_games_played`, `wc_qualifying_goals_for`. Adding a `tournament_mode` branch produces a god-method that is hard to test and silently returns empty features when WC data is missing.
 
-Add `is_home: bool = True` parameter to `predict_prop()`. Propagate from `sgp_scanner.py` which already knows home/away from game data. Internal filtering:
+**Problem 2 — XGBoost model incompatibility:**
 
-```python
-if is_home is not None:
-    split = [g for g in qualifying if g.get("is_home") == is_home]
-    if len(split) >= _MIN_GAMES:
-        qualifying = split
-    # else: fall back to all games (current behavior)
-```
+`soccer_model.py` loads ProphitBet pkl files trained on club football features (league rank, head-to-head form, odds history). Those features are meaningless for national teams. A WC-specific XGBoost model (if ever trained) needs entirely different feature columns. Sharing the load logic with a flag leads to pkl format mismatches at runtime.
 
-Tag each game log row with `is_home` in `_fetch_game_logs()` by parsing the MATCHUP column: `"@" in matchup → away game (is_home=False)`.
+`wc_model.py` mirrors `soccer_model.py` structurally — same `predict()`, `evaluate_bet()`, `evaluate_batch()` interface, same market-implied fallback when no pkl is present — but pulls from `wc_stats.py` and has its own `MAX_XGB_CONF = 0.68` (national team soccer is the least predictable domain in the codebase).
 
-### New: `PositionAllowedStats` in `NBAStatsCache`
+---
 
-New method: `fetch_position_allowed_stats(team_name, season) -> dict[str, dict]`
+## Q2: WC Fixtures — New Method in `football_data_client.py` or New File?
 
-Returns position-group averages allowed by `team_name` defense:
-```
-{"Guard": {"PTS": 22.1, "AST": 5.3, "REB": 3.8}, "Forward": {...}, "Center": {...}}
-```
+**Decision: New method `fetch_wc_games()` in the existing `football_data_client.py`.**
 
-Data source: cross-reference `fetch_league_dash_player_stats(per_mode="PerGame")` filtered by each player's team and position. This approximates what opposing players at each position scored *against* that team.
+The football-data.org `WC` competition code is confirmed available on the free tier (same tier as `PL` and `CL`). Adding it to `_COMP_MAP` and writing one new public method is the minimum change.
 
-More accurate source: `nba_api.stats.endpoints.leaguedashlineups` but that requires lineup construction. The simpler approximation (opponents' per-game stats by position) is sufficient for Phase 3.
-
-### Modified: `_apply_opp_adjustment_for_market`
-
-Accept an optional `player_position: str` parameter. When position is known:
-- For rebounds: use position-specific REB allowed instead of team-average REB/game
-- For points: blend team DEF_RTG (70%) with position-allowed PTS (30%)
-- For assists: use position-specific AST allowed
-
-When position is unknown: fall back to current team-average logic (no regression).
-
-### Modified: `PropModel.predict_prop` signature
+`fetch_wc_games()` differs from `fetch_today_games()` in one important way: WC group-stage scheduling has gaps of 1-3 days between match days, so hardcoding `today` misses games scheduled tomorrow. The method takes explicit `date_from` / `date_to` parameters:
 
 ```python
-def predict_prop(
+# football_data_client.py — additions only
+
+_COMP_MAP: dict[str, str] = {
+    "epl": "PL",
+    "ucl": "CL",
+    "wc":  "WC",   # FIFA World Cup 2026
+}
+
+def fetch_wc_games(
     self,
-    player_name: str,
-    market: str,
-    line: float,
-    opponent_team: str,
-    over_odds: int = -110,
-    is_home: bool | None = None,      # NEW
-    player_position: str | None = None,  # NEW
-    days_rest: int | None = None,     # NEW
-) -> dict | None:
+    date_from: str | None = None,   # ISO date string; defaults to today
+    date_to: str | None = None,     # ISO date string; defaults to today + 1 day
+    stage: str | None = None,       # optional filter: "GROUP_STAGE", "ROUND_OF_16" etc.
+) -> list[dict]:
+    """
+    Fetch upcoming WC fixtures.
+
+    Returns same dict shape as fetch_today_games() plus:
+        "stage": str   # "GROUP_STAGE", "ROUND_OF_16", etc.
+        "group": str   # "Group A" ... "Group L" (empty in knockout rounds)
+    """
 ```
 
-All new parameters are optional with `None` defaults. Existing call sites work unchanged.
+The return dict is backward-compatible with `SoccerModel.predict()` and `SoccerSGPBuilder.build()` — same field names. `wc_model.py` and `wc_sgp_builder.py` additionally consume `stage` and `group` for correlation adjustments.
 
 ---
 
-## Data Flow
+## Q3: WC Player Stats — Separate `wc_stats.py` or Extend `soccer_stats.py`?
 
-```
-[1] sgp_scanner.py
-    - fetch_nba_games() → game dict (has home_team, away_team, event_id)
-    - fetch_player_props() → prop lines (has player, market, line, odds)
-    - for each player: resolve position from NBAStatsCache.fetch_player_info()
-    - for each player: compute days_rest from last game log date
-    - for each player: derive is_home from event matchup
+**Decision: Create `alpha/data/ingestion/wc_stats.py` as a new file.**
 
-[2] PropModel.predict_prop(player, market, line, opponent, odds,
-                            is_home=True/False,
-                            player_position="Guard",
-                            days_rest=2)
-    |
-    ├── _fetch_game_logs(player) → raw logs (pickle-cached, same-day)
-    |   └── tag each row: is_home = "@" not in MATCHUP
-    |
-    ├── filter qualifying games:
-    |   - all games >= 20 min (existing)
-    |   - optionally filter to matching home/away split (Phase 2)
-    |
-    ├── _exp_weighted_avg(values, decay=0.85) → proj_stat (Phase 1)
-    |
-    ├── _apply_opp_adjustment_for_market(proj, opponent, market,
-    |                                     player_position=position)
-    |   ├── team DEF_RTG (existing)
-    |   ├── position-allowed stats by market (Phase 3)
-    |   └── days_rest multiplier (Phase 5)
-    |
-    ├── _prob_from_distribution(line, proj, std, market) (Phase 4)
-    |   ├── Poisson CDF for low-count markets (ast, blk, stl, 3pm)
-    |   └── Negative Binomial CDF for pts, reb
-    |
-    └── return dict with model_prob, proj_stat, games_used, confidence
+`soccer_stats.py` is structurally incompatible with WC data:
 
-[3] PropContextEvaluator (existing, unchanged)
-    - runs position filter, paint deterrence, foul trouble, pace adj
-    - outputs adjusted_prob
+- **Source:** Understat async library vs. StatsBomb GitHub raw JSON (synchronous requests, no aiohttp)
+- **Granularity:** Understat gives season totals aggregated to per-90; StatsBomb gives per-match event rows that can be rolled up per-match
+- **Team namespace:** EPL club names vs. national team names — separate lookup tables required
+- **Cache directory:** `data/.wc_cache/` not `data/.soccer_cache/` — national team name "Brazil" vs. EPL player "Brazil" (common name conflict risk)
 
-[4] SGPBuilder (existing, unchanged)
-    - correlation engine + EV scoring + Kelly sizing
+`wc_stats.py` public API intentionally mirrors `soccer_stats.py` for drop-in compatibility with the model layer:
 
-[5] sgp_scanner.py blowout gate (Phase 6)
-    - cross-check prop player_team vs ml_games model probs
-    - downgrade HIGH → MEDIUM for heavy underdog team props
-```
-
----
-
-## Build Order
-
-### Step 1 — Exponential decay rolling average (Day 1, 2h)
-
-File: `alpha/engines/sports/prop_model.py`
-Change: Replace `_weighted_avg` with `_exp_weighted_avg(values, decay=0.85)`
-Test: Existing `tests/unit/` tests pass unchanged. Add one unit test verifying decay ordering.
-Validate: Run `validate_picks.py --date 2026-03-11` before and after — avg_diff should shrink.
-
-This is the minimum change for maximum accuracy lift. All other improvements build on top.
-
-### Step 2 — Home/away split (Day 1, 3h)
-
-Files:
-- `alpha/engines/sports/prop_model.py` — add `is_home` param, tag logs, filter split
-- `alpha/data/ingestion/nba_stats_cache.py` — no change needed (MATCHUP already in logs)
-- `scripts/sgp_scanner.py` — pass `is_home` when calling `predict_prop`
-
-Test: Unit test that home-filtered games differ from away-filtered games for a mock player.
-Validate: Compare hit rates by home/away in validate script.
-
-### Step 3 — Poisson/NB distribution (Day 2, 2h)
-
-File: `alpha/engines/sports/prop_model.py`
-Change: Add `_prob_from_distribution(line, proj, std, market)` method. Call it instead of `1 - norm.cdf(...)`.
-Test: Verify Poisson gives lower probability than Normal for assists line above mean.
-Validate: Should see fewer overconfident HIGH flags on assist props.
-
-### Step 4 — Position-level opponent stats (Day 2–3, 4h)
-
-Files:
-- `alpha/data/ingestion/nba_stats_cache.py` — add `fetch_position_allowed_stats(team, season)`
-- `alpha/engines/sports/prop_model.py` — add `player_position` param, use in opp adjustment
-- `scripts/sgp_scanner.py` — resolve position per player before calling `predict_prop`
-
-Test: Mock the cache method, verify position-aware adjustment differs from team-average adjustment.
-Validate: Rebounds hit rate should improve most (34.2% → target 40%+).
-
-### Step 5 — Rest/fatigue factor (Day 3, 2h)
-
-Files:
-- `alpha/engines/sports/prop_model.py` — add `days_rest` param, apply multiplier
-- `scripts/sgp_scanner.py` — compute days_rest from last game log date
-
-Test: Verify B2B games get 0.94 multiplier.
-Validate: Check if B2B props historically underperform — expect yes.
-
-### Step 6 — Blowout gate (Day 3, 1h)
-
-File: `scripts/sgp_scanner.py`
-Change: Post-prop-scoring loop that downgrades HIGH → MEDIUM for heavy underdog team props.
-Test: Mock ml_games with one heavy underdog; verify confidence downgrade fires.
-
-### Step 7 — Validate and calibrate thresholds (Day 4, all-day)
-
-Run full validate against March 11 and March 12 data. Measure per-phase improvement. Tune:
-- Exponential decay lambda (try 0.80, 0.85, 0.90)
-- Home/away fallback threshold (5 games vs 3 games)
-- Poisson vs NB boundary (which markets)
-- Position-allowed stats blend ratio (70/30 vs 60/40)
-
-Use `validate_picks.py` per-stat output to confirm each phase improves its target stat.
-
----
-
-## Integration Points
-
-### PropModel — add parameters, keep backward compat
-
-All new params (`is_home`, `player_position`, `days_rest`) default to `None`. When `None`, behavior is identical to today. Call sites that don't pass them (tests, soccer/MLB mirrors) continue to work.
-
-Pattern:
 ```python
-if days_rest is not None:
-    rest_factor = {0: 0.94, 1: 0.97}.get(days_rest, 1.02 if days_rest >= 3 else 1.0)
-    opp_adj *= rest_factor
+def get_wc_team_stats() -> list[dict]:
+    """
+    Rolling stats for WC teams using their last 5 tournament/qualifying matches
+    from StatsBomb open data.
+
+    Returns same shape as get_team_rolling_stats():
+        {"team": str, "goals_for": float, "goals_against": float,
+         "xG_for": float, "xG_against": float, "games_used": int}
+
+    Falls back to {} on any failure — wc_model.py uses market-implied fallback.
+    """
+
+def get_wc_player_stats(player_name: str) -> dict | None:
+    """
+    Per-90 stats from StatsBomb WC 2022 data (most recent free dataset).
+
+    Returns same shape as get_player_per90_stats() rows:
+        {"player": str, "goals_per90": float, "assists_per90": float,
+         "shots_per90": float, "xG_per90": float, "minutes_90s": float}
+
+    Returns None if player not found — wc_prop_model.py falls back to
+    market-implied prior from The Odds API.
+    """
 ```
 
-### NBAStatsCache — additive methods only
+**StatsBomb data availability note (IMPORTANT):**
 
-New method `fetch_position_allowed_stats` is purely additive. Existing methods unchanged. Method must route through `get_or_fetch()` for 6h TTL caching.
+StatsBomb has confirmed free open data for WC 2018 (64 matches) and WC 2022 (64 matches). The WC 2026 tournament is currently underway (research date: June 18, 2026). StatsBomb historically releases open data after tournament completion, so live 2026 per-match event data is NOT expected through the free tier during the tournament.
 
-### sgp_scanner.py — thin orchestration changes
+`wc_stats.py` must implement a two-tier fallback:
+1. **Primary:** StatsBomb WC 2022 per-90 stats for the player (most relevant historical baseline)
+2. **Fallback:** Market-implied prior from The Odds API (anytime goal scorer odds → implied goals/90 estimate)
 
-Scanner already has all game context (home/away, event_id, game date). Only needs to:
-1. Pass `is_home` to `predict_prop`
-2. Resolve `player_position` via `NBAStatsCache.fetch_player_info(player_id)["position"]`
-3. Compute `days_rest` from `max(log["GAME_DATE"] for log in player_logs)`
-4. Apply blowout gate post-scoring
+This mirrors how `soccer_stats.py` already handles UCL (Understat has no UCL data — falls back to `[]`, which triggers market-implied in `soccer_model.py`).
 
-### validate_picks.py — extend, don't break
-
-Current script validates hits/misses from cached data. To validate phases:
-- Add `--split home|away` flag to filter cache validation by game type
-- Add per-phase contribution tracking if desired
-
-Minimum: run existing script before and after each phase and compare per-stat numbers.
-
-### Tests — one new test per phase
-
-Each phase should add exactly one focused unit test to `tests/unit/test_prop_model.py` (create if needed) or `tests/unit/test_nba_scanner_features.py`. Tests should:
-- Mock nba_api calls (no live API in tests)
-- Assert the specific behavior change (decay ordering, home split, Poisson vs Normal, etc.)
-- Not change any existing test
-
-Target: 482 tests passing → 482 + 6 = 488 tests passing after all phases.
+**Cache location:** `data/.wc_cache/` and `data/.wc_cache/props/`
 
 ---
 
-## Risk Assessment
+## Q4: Can `soccer_sgp_builder.py` Handle WC Legs?
 
-| Phase | Risk | Mitigation |
-|-------|------|------------|
-| Exponential decay | May hurt recent-cold players (false signal) | Tune lambda; add fallback to old method behind `--legacy-avg` flag |
-| Home/away split | Too few qualifying games in one split | Graceful fallback to all-games (already in design) |
-| Poisson distribution | Integer rounding on lines like 6.5 | Use `floor(line)` as the CDF argument for discrete distributions |
-| Position stats | Stale position data mid-season after trades | Position comes from `CommonPlayerInfo` which reflects current team; re-cached every 6h |
-| Rest factor | Hardcoded constants may be wrong | Start conservative (0.94, 0.97, 1.02); validate before locking in |
-| Blowout gate | May filter genuine value in garbage time props | Only apply to HIGH→MEDIUM, not remove legs entirely; let SGP min_edge handle the rest |
+**Decision: Create `wc_sgp_builder.py` that imports shared types from `soccer_sgp_builder.py` and overrides the correlation table.**
+
+`soccer_sgp_builder.py` is mechanically data-agnostic — it operates on `PropLeg` dataclasses with no league-specific fields. The SGP math would produce numbers for WC legs. However, the static `_STATIC_CORR` table is wrong for WC:
+
+| Market pair | EPL/UCL correlation | WC correlation | Why different |
+|-------------|--------------------|--------------------|---------------|
+| `("player_goals", "team_win")` | 0.40 | 0.50 | Knockout elimination pressure — goal scorers are more decisive |
+| `("player_goals", "player_shots")` | 0.65 | 0.65 | Same physics, keep |
+| `("player_goals", "player_goals")` | -0.10 | -0.10 | Keep |
+| `("player_assists", "player_goals")` | 0.30 | 0.30 | Keep |
+
+Additionally, `wc_sgp_builder.py` needs to accept the `stage` field from `fetch_wc_games()` and adjust `("player_goals", "team_win")` correlation dynamically:
+
+```python
+_CORR_BY_STAGE: dict[str, dict] = {
+    "GROUP_STAGE":  {("player_goals", "team_win"): 0.42},
+    "KNOCKOUT":     {("player_goals", "team_win"): 0.55},
+}
+```
+
+Implementation: `wc_sgp_builder.py` imports `PropLeg`, `ParlayCombination`, `SGPMode` from `soccer_sgp_builder.py` (no duplication), then subclasses or composes `SoccerSGPBuilder` with overridden `_STATIC_CORR`.
+
+**DBTSA stats note:** `soccer_sgp_builder.py` already says "Empirical correlation from FBRef will be added in a later milestone." WC has no FBRef coverage — static table is the only option. This is fine; market is thin enough that static conservative correlations are appropriate.
 
 ---
 
-## What NOT to Build (for now)
+## Q5: Suggested Build Order
 
-- **New XGBoost prop model trained on historical prop lines**: Requires labeled historical prop data (line + result) for 2+ seasons. Not available without paid data source. No-build until data acquired.
-- **Neural network ensemble**: Over-engineering before basic stat corrections are in place. Build after phases 1–6 are validated.
-- **Contextual evaluator rewrite**: The 18-min runtime and 61% filter rate are problems, but the existing evaluators are architecturally sound. Fix the wall timeout (already 60s) and tune thresholds before redesigning.
-- **Real-time lineup scraping**: High maintenance, fragile scraping. Existing injury pipeline already covers the most impactful cases.
+Build order driven by dependency chains — each step unblocks the next.
+
+### Phase 1: Data Foundation (no model logic yet)
+
+**Step 1 — Extend `football_data_client.py`** (add `"wc": "WC"` + `fetch_wc_games()`)
+- Zero new dependencies
+- Immediately testable with mocked HTTP
+- Unblocks: everything that consumes WC fixtures
+
+**Step 2 — Create `wc_stats.py`** (StatsBomb fetch + cache + fallback)
+- Only dependency: `requests` (already installed)
+- StatsBomb is synchronous JSON — no async complexity like Understat
+- Unblocks: `wc_model.py`, `wc_prop_model.py`
+
+**Step 3 — Extend `odds_api.py`** (add `soccer_fifa_world_cup` sport key + `fetch_wc_odds()`)
+- Zero new dependencies
+- Provides: match odds (for model fallback) + player prop lines (anytime goal scorer, shots)
+- Unblocks: `wc_prop_model.py` (needs lines for market-implied comparison), `wc_model.py` (needs 3-way odds)
+
+### Phase 2: Models (depend on data layer)
+
+**Step 4 — Create `wc_model.py`** (WC match outcome model)
+- Depends on: `wc_stats.py` (team stats), `football_data_client.fetch_wc_games()` (odds), `odds_api.fetch_wc_odds()` (3-way odds)
+- Algorithm: same pattern as `soccer_model.py` — XGBoost if pkl present, market-implied fallback otherwise
+- WC pkl not expected for v1.1 (only 128 historical matches across 2 tournaments — insufficient training data); model ships as market-implied only
+- Unblocks: `wc_scanner.py` parlay mode, `wc_sgp_builder.py` ML legs
+
+**Step 5 — Create `wc_prop_model.py`** (WC player prop model)
+- Depends on: `wc_stats.py` (player per-90), `odds_api.fetch_wc_prop_lines()` (player prop lines)
+- Algorithm: same weighted rolling avg + normal CDF as `soccer_prop_model.py`
+- Key difference: market-implied fires as primary path when StatsBomb 2026 data is absent
+- Confidence thresholds: same as soccer (HIGH = gap > 0.10, MEDIUM = 0.08-0.10)
+- Unblocks: `wc_scanner.py` props mode, `wc_sgp_builder.py` prop legs
+
+### Phase 3: SGP Builder (depends on models, imports shared types)
+
+**Step 6 — Create `wc_sgp_builder.py`** (WC SGP construction)
+- Depends on: `soccer_sgp_builder.py` (shared types import), `wc_model.py`, `wc_prop_model.py`
+- Imports `PropLeg`, `ParlayCombination`, `SGPMode` from `soccer_sgp_builder.py` directly
+- Provides: WC-calibrated correlation table, stage-aware correlation adjustment
+
+### Phase 4: Entry Point (depends on all prior steps)
+
+**Step 7 — Create `scripts/wc_scanner.py`** (full pipeline orchestrator)
+- Depends on: Steps 1-6
+- Mirrors `soccer_scanner.py` structure 6-step pipeline
+- CLI: `--mode [props|sgp|mixed|parlay]` + `--stage [group|knockout|all]` + `--bankroll` + `--min-edge`
+
+### Build Order Summary
+
+```
+football_data_client.py (add fetch_wc_games)
+          |
+          |
+wc_stats.py ─────────────────── odds_api.py (add soccer_fifa_world_cup)
+          |                              |
+          +──────────┬───────────────────+
+                     |
+               wc_model.py        wc_prop_model.py
+                     |                   |
+                     +─────────┬─────────+
+                               |
+                         wc_sgp_builder.py
+                               |
+                        scripts/wc_scanner.py
+```
+
+The two parallel tracks in Phase 1 (wc_stats.py and odds_api.py extension) can be built concurrently — they have no mutual dependency.
+
+---
+
+## Q6: WC Model Artifact and Cache Locations
+
+### Pkl Files (model artifacts)
+
+| Artifact | Location | Notes |
+|----------|----------|-------|
+| WC match model (future only) | `data/wc_match_model.pkl` | Not for v1.1 — insufficient training data |
+| WC prop XGBoost (future only) | `data/wc_xgb_goals_model.pkl` | Same naming pattern as NBA pkl files |
+
+For v1.1, no pkl files are created. `wc_model.py` and `wc_prop_model.py` both ship with market-implied as the primary path and gracefully skip pkl loading if files are absent (same pattern as `soccer_model.py` when ProphitBet directory is missing).
+
+### Cache Files
+
+| Cache | Location | TTL | Rationale |
+|-------|----------|-----|-----------|
+| WC team stats (StatsBomb) | `data/.wc_cache/` | 24h | Separate from `data/.soccer_cache/` to prevent name collisions between national team "Brazil" and any EPL player context |
+| WC player stats | `data/.wc_cache/props/` | 24h | Mirrors `data/.soccer_cache/props/` structure |
+| WC fixture list | `data/.wc_cache/` | 6h | More frequent; WC group-stage schedule can be updated closer to kickoff |
+| WC prop lines (Odds API) | `data/.wc_cache/props/` | 2h | Odds move more during WC; shorter TTL than club soccer |
+
+Cache key naming convention (consistent with existing patterns):
+
+```python
+f"wc_team_stats_{date.today()}.pkl"
+f"wc_player_{player_name.replace(' ', '_')}_{stat_col}_{date.today()}.pkl"
+f"wc_fixtures_{date_from}_{date_to}.pkl"
+f"wc_props_{event_id}_{date.today()}.pkl"
+```
+
+---
+
+## Integration Point Summary
+
+### `wc_scanner.py` Pipeline (mirrors `soccer_scanner.py` exactly)
+
+```
+[1/6] fetch_wc_games(date_from, date_to) — football_data_client.py (extended)
+[2/6] fetch_wc_prop_lines()              — odds_api.py (extended, soccer_fifa_world_cup)
+[3/6] WCPropModel.predict_prop()         — wc_prop_model.py (new)
+[4/6] Static WC correlation table        — wc_sgp_builder.py (new)
+[5/6] WCModel.predict()                  — wc_model.py (new)
+[6/6] WCSGPBuilder.build()               — wc_sgp_builder.py (new)
+```
+
+### Settings: No Changes
+
+`alpha/config/settings.py` is unchanged. Existing fields cover WC:
+- `football_api_key` → `fetch_wc_games()` in `football_data_client.py`
+- `odds_api_key` → `fetch_wc_odds()` and `fetch_wc_prop_lines()` in `odds_api.py`
+- StatsBomb open data → no API key (GitHub raw JSON via `requests`)
+
+### Test Integration
+
+All new test files follow the pattern established by `soccer_model.py` tests (in `__pycache__` from prior session — the source was deleted but the compiled artifact confirms they existed and mocked external HTTP). Each new test file:
+- Mocks all external HTTP at the module level
+- Verifies the graceful fallback path (empty StatsBomb data → market-implied result)
+- Keeps test count growing: 535+ current → 535 + ~20 new WC tests
+
+---
+
+## Data Source Summary
+
+| Need | Source | Free? | Key | Confidence |
+|------|--------|-------|-----|------------|
+| WC fixture schedule + stage | football-data.org v4 `/competitions/WC/matches` | Yes | `FOOTBALL_API_KEY` (existing) | HIGH — `WC` competition code confirmed free tier |
+| WC match 3-way odds | The Odds API `soccer_fifa_world_cup` | Yes (quota) | `ODDS_API_KEY` (existing) | HIGH — sport key confirmed active |
+| WC player prop lines | The Odds API `soccer_fifa_world_cup` event odds (anytime goal scorer, shots) | Yes (quota) | `ODDS_API_KEY` (existing) | HIGH — player markets confirmed |
+| WC 2022 team/player historical stats | StatsBomb open data GitHub JSON | Yes | None | HIGH — WC 2018 + 2022 confirmed free |
+| WC 2026 live player stats | StatsBomb open data (2026 not released mid-tournament) | Unknown | None | LOW — fallback to 2022 stats + market-implied |
+| WC group/squad metadata | openfootball/worldcup.json (raw GitHub) | Yes | None | HIGH — 2026 data confirmed present |
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| football-data.org WC integration | HIGH | `WC` competition code confirmed, same client and key |
+| The Odds API WC sport key and markets | HIGH | `soccer_fifa_world_cup` confirmed, anytime goal scorer + shots markets confirmed |
+| StatsBomb 2018/2022 historical data | HIGH | Widely used free open data, Python package `statsbombpy` available |
+| StatsBomb 2026 live data | LOW | Tournament underway; free open data historically released post-tournament |
+| WC XGBoost match model | LOW | Only 128 training games across 2 tournaments — unreliable; ship market-implied only |
+| Market-implied fallback viability | HIGH | The Odds API provides WC 3-way odds; this is the reliable production path for v1.1 |
+
+---
+
+## Sources
+
+- football-data.org WC competition code (`WC` confirmed free): [football-data.org/documentation/quickstart](https://www.football-data.org/documentation/quickstart)
+- The Odds API FIFA World Cup sport key and player markets: [the-odds-api.com/sports/fifa-world-cup-odds.html](https://the-odds-api.com/sports/fifa-world-cup-odds.html)
+- StatsBomb open data (WC 2018 + 2022 confirmed): [github.com/statsbomb/open-data](https://github.com/statsbomb/open-data)
+- statsbombpy Python package: [github.com/statsbomb/statsbombpy](https://github.com/statsbomb/statsbombpy)
+- openfootball World Cup 2026 JSON fixtures (no key required): [github.com/openfootball/worldcup.json](https://github.com/openfootball/worldcup.json)
+- Best WC 2026 API options comparison: [thestatsapi.com/blog/best-world-cup-2026-apis](https://www.thestatsapi.com/blog/best-world-cup-2026-apis)

@@ -1,278 +1,203 @@
-# Features Research: NBA Prop Accuracy
+# Feature Landscape: World Cup 2026 Soccer Mode
 
-**Context:** Current model hit rate = 43.5% overall, 34.2% on rebounds.
-Current implementation uses weighted rolling avg (50% last-5, 30% last-10, 20% last-20)
-+ opponent DEF_RTG adjustment for points only. This document identifies what actually moves the needle.
-
----
-
-## Table Stakes (must-have features)
-
-Every competitive NBA prop model includes these. Absence of any one tanks accuracy.
-
-### 1. Player Baseline — Rolling Weighted Average
-- **What it is:** Recency-weighted average of per-game stat over last 5 / 10 / 20 games.
-- **Current status:** IMPLEMENTED. Weights: 50/30/20.
-- **Issue:** Window is applied to all games regardless of minutes played. A 12-minute DNP-adjacent game gets the same weight as a 36-minute starter game.
-- **Fix needed:** Filter to games ≥ 18 minutes AND normalize to per-36 before averaging, then re-scale to projected minutes for tonight.
-
-### 2. Minutes Projection
-- **What it is:** How many minutes will the player play tonight?
-- **Current status:** NOT IMPLEMENTED. The model uses raw totals without minutes normalization.
-- **Why it matters:** A player averaging 28 pts/game at 34 min/game, playing 38 min tonight = different projection than playing 28 min. This alone explains 3–5% of model error.
-- **Data source:** Season avg MIN from LeagueDashPlayerStats; recent trend from last-5 game logs; starter vs bench flag from CommonPlayerInfo.
-
-### 3. Opponent Defensive Rating (DRTG) — Position-Specific
-- **What it is:** How many points per 100 possessions does the opponent allow to the player's position?
-- **Current status:** PARTIALLY IMPLEMENTED. Points uses overall DRTG. Rebounds uses opponent REB/game (wrong — see Rebound section). Assists uses opponent STL/game (weak proxy).
-- **Why it matters:** A team's DRTG of 108 doesn't tell you what they allow to point guards vs centers. Point guards playing against Milwaukee (excellent wing defenders, weaker PG coverage) need a different scale factor than centers.
-- **Data source:** LeagueDashPlayerStats by position + opponent; or nba.com/stats "Opponent Stats by Position" endpoint.
-
-### 4. Home/Away Split
-- **What it is:** Binary indicator; player's historical performance differential at home vs away.
-- **Current status:** NOT IMPLEMENTED as a feature. The model doesn't track home/away.
-- **Why it matters:** On average, home players score +1.2 pts, +0.4 reb, +0.3 ast compared to road games. For some players (travel-sensitive stars, players with home crowd energy) the split is 2–4x the average.
-- **Data source:** Filter game logs by MATCHUP column ("vs." = home, "@" = away). Compute separate rolling averages.
-
-### 5. Line Quality / Market-Implied Probability
-- **What it is:** The closing line from books represents sharp market consensus. Departure from it = edge or noise.
-- **Current status:** IMPLEMENTED via `_american_to_implied()` and confidence gap classification.
-- **Note:** This is table stakes but the implementation is correct.
-
-### 6. Injury / Roster Context
-- **What it is:** Is the player's teammate who normally takes shots/rebounds/assists out tonight?
-- **Current status:** PARTIALLY IMPLEMENTED via ESPN injury fallback; no teammate-impact adjustments to the actual projection.
-- **Why it matters:** When a team's primary ball-handler is out, the backup assist leader's line moves +1.5 ast on average. Books price this in within minutes; the model needs to catch it simultaneously.
-- **Data source:** nba_injuries.py ESPN fallback already implemented; need to wire usage-share logic into PropModel.
+**Domain:** International tournament soccer betting prediction (national teams, single-elimination bracket)
+**Researched:** 2026-06-18
+**Milestone:** v1.1 — World Cup Soccer Mode
+**Existing engine baseline:** `soccer_scanner.py` / `soccer_model.py` / `soccer_prop_model.py` / `soccer_sgp_builder.py`
 
 ---
 
-## Differentiators (what adds the most lift)
+## Context: How WC Differs From EPL/UCL
 
-Ranked by estimated accuracy improvement based on sport analytics research and betting model literature.
+The existing soccer engine was designed for club leagues with:
+- Rich per-game rolling stats from Understat (EPL-only)
+- A persistent team history across a 38-game season
+- Known home and away designations tied to league standings
+- Market-implied fallback when XGBoost lacks a model file
 
-### 1. Position-Specific Opponent Allowed Stats — +4–6% accuracy lift
-**The single highest-impact missing feature.**
+World Cup changes four fundamental assumptions:
 
-Current: opponent REB/game used for rebound props (wrong direction — see Rebounds section).
-Needed: "Opponent rebounds allowed to [C/PF/SF/PG/SG] per game" from nba.com Opponent Stats by Position.
-
-Implementation:
-- Fetch LeagueDashMatchups or OpponentPlayerStats grouped by opponent team + position
-- Build lookup: `{opponent_team: {position: {reb_allowed_pg, pts_allowed_pg, ast_allowed_pg}}}`
-- Scale player projection by (position_allowed / league_avg_allowed_at_position)
-
-Why it lifts: Overall DRTG is a blunt instrument. A team with DRTG 108 could be elite at stopping wings but terrible at containing centers. Position-level opponent stats separate that signal. Rebounds especially: opponent rebounding rate by CENTER position vs. PF position differs by 15–20% across the league.
-
-### 2. Minutes-Normalized Projections with Tonight's Minutes Estimate — +3–4% accuracy
-Current model uses raw totals. A player who plays 24 mpg averaging 12 pts/game has the same raw number as a player who plays 36 mpg averaging 12 pts/game — but the first player's per-36 rate is 18 and would spike if his minutes increase.
-
-Approach:
-- Compute per-36 rolling average instead of raw average
-- Multiply by projected minutes tonight (season avg MPG ± back-to-back adjustment)
-- This correctly handles: rest-day starters getting extra minutes, blow-out scenarios where stars sit, injury-driven lineup changes
-
-### 3. Back-to-Back Game Flag — +2–3% accuracy
-The NBA-Machine-Learning-Sports-Betting cloned repo already uses `Days_Rest_Home` and `Days_Rest_Away` — proof this signal is real for game-level prediction. For props:
-
-- 0 days rest (back-to-back): apply -5% to -8% on counting stats (fatigue effect)
-- 1 day rest: baseline
-- 2+ days rest: apply +2% (fresh legs) — especially for big men who play heavy minutes
-- Stars are MORE affected than role players (minutes load is higher)
-- Data source: compute from game log dates — already feasible with existing MATCHUP + GAME_DATE columns
-
-### 4. Pace Adjustment (Possessions per Game) — +2–3% accuracy
-Current status: IMPLEMENTED in nba_context.py via `AdvancedOpponentStats.get_pace_adjustment()`.
-Gap: it's computed but the adjustment magnitude is small (pace_factor - 1.0 applied linearly to model_prob, not to the underlying stat projection).
-
-Better approach: Apply pace factor to the stat projection BEFORE deriving probability:
-```
-proj_stat_adjusted = proj_stat_per_poss * expected_possessions_tonight
-expected_poss = (player_team_pace + opponent_pace) / 2
-```
-This is what Cleaning the Glass and Second Spectrum-backed models use.
-
-### 5. Recent Form Trend — +1.5–2% accuracy
-Current: 50/30/20 weighted average is static recency weighting.
-Better: Add a momentum signal that captures whether recent games are trending UP or DOWN.
-
-- Compute: slope of last-7 games linear regression on the stat
-- Positive slope (trending up): boost projection by slope * 0.5
-- Negative slope (declining): discount by slope magnitude * 0.5
-- Cap adjustment at ±10% of base projection
-- Especially important for: players returning from injury, players entering hot streaks, rookies adjusting to NBA speed
-
-### 6. Opponent Recent Form (Last 5 Games Defensive Performance) — +1.5–2% accuracy
-Current: Season-average DRTG used as opponent quality signal.
-Problem: DRTG from October doesn't reflect that the team's best defender got injured in February.
-
-- Fetch opponent team's last-5 game defensive stats (points allowed, REB allowed, etc.)
-- Blend: 60% season DRTG + 40% last-5 game defensive performance
-- Data source: TeamGameLog for opponent — already implemented in `nba_stats_cache.fetch_team_recent_form()`; just needs to be wired into PropModel's opponent adjustment
-
-### 7. Usage Rate in Current Lineup Configuration — +1–2% accuracy
-- When a teammate is out, does the player's usage rate increase?
-- USG% from LeagueDashPlayerStats; cross-reference with injured players tonight
-- If player's top 2 usage teammates are out, scale up the player's projection by (team_usg% redistributed to him)
-
-### 8. Vs. Specific Opponent Historical Performance — +1% accuracy (with caveats)
-- Player's career stats against THIS opponent team (last 3 seasons)
-- Only reliable if 6+ games exist against that opponent
-- Significant matchup-specific patterns exist (some players always go off vs. certain teams)
-- Data source: PlayerGameLogs filtered by MATCHUP column for opponent abbreviation
-- CAVEAT: Overfits with small samples; weight down if < 8 career games vs. opponent
+| Assumption | EPL/UCL | World Cup |
+|---|---|---|
+| Data volume | 38 games/season per team | 3-7 games per tournament team |
+| Statistical source | Understat per-game logs | None native — must use Elo + FIFA rank + historical results |
+| Home advantage | Coded into features | Does not exist (neutral venues throughout) |
+| Bracket structure | Round-robin league | Group stage (3 games) + single-elimination knockout |
+| Player prop odds | No free source (existing gap) | The Odds API Business tier covers WC props |
+| Draw meaning | Draw bets skipped (illiquid) | Draws matter in group stage for points; irrelevant in knockout |
 
 ---
 
-## Rebound Model Features
+## Table Stakes
 
-The 34.2% rebound hit rate is the worst performing market. Root causes and fixes:
+Features users expect. Missing = the WC scanner feels incomplete or produces wrong output.
 
-### Root Cause 1: Wrong Opponent Metric (Primary Bug)
-**Current implementation:**
-```python
-# market == "player_rebounds"
-league_avg = _LEAGUE_AVGS["reb_pg"]   # 43.5 (team total)
-opp_val = opp.get("reb_pg", league_avg)
-scale = max(lo, min(hi, league_avg / opp_val))  # HIGH opp REB → scale DOWN
-```
-
-**Why this is wrong:** A team that grabs lots of rebounds on offense is NOT the same as a team that gives up rebounds. This logic penalizes players facing good offensive rebounding teams, but what actually matters is: how many defensive rebounds does the opponent surrender? More opposing team defensive rebounds = fewer for our player.
-
-**Fix:** Use opponent-allowed defensive rebound rate:
-- `opp_dreb_allowed_pg` = how many DREBs per game does this opponent surrender to opponents?
-- High value = loose rebounding team = more boards available for our player
-- Low value = tight rebounding team = boards locked up
-
-### Root Cause 2: Position Not Weighting the Projection
-**Current:** PositionFilter suppresses props for guards/SFs with avg_reb < 5.0.
-**Missing:** There's no scaling of the opponent adjustment by position. A center facing a big-man-heavy opponent gets the same scale factor as a point guard facing that opponent. The factor needs to be position-specific.
-
-Position-specific opponent rebound surrender rates:
-- Opponents surrender DREBs to C/PF at a very different rate than to guards
-- Some teams are weak at crashing the boards against big men but lock up guard rebounders
-- Data source: nba.com Opponent Stats by Position; or estimate from LeagueDashMatchups
-
-### Root Cause 3: Contested Rebound Rate Ignored
-**Missing feature:** How many of the available rebounds in this game are likely to be contested vs. uncontested?
-- Teams that play uptempo (high pace, lots of possessions) generate more rebound opportunities
-- Teams that run zone defense generate different rebound distributions than man-to-man
-- Proxy: (opp_DREB_pct) — opponent's defensive rebound percentage. High DREB_pct opponent = leaves fewer for us.
-
-**Implementation:**
-```
-opp_dreb_pct = opp_DREB / (opp_DREB + opp_OREB_allowed)  # from team stats
-scale = league_avg_dreb_pct / opp_dreb_pct
-```
-
-### Root Cause 4: Team Pace Not Applied to Rebounds
-**Current:** Pace adjustment is computed but only applied to points market. Rebounds are a counting stat that scales with possessions too — a pace of 110 vs 98 generates ~12% more possessions and therefore ~12% more rebound opportunities.
-
-### Root Cause 5: Minutes Volatility for Big Men
-Big men (primary rebounders) have the highest minutes variance due to: foul trouble, lineup matchups, blow-out garbage time. The std_stat floor of 1.0 rebounds is too low for guards (fine) but too loose for centers who can swing from 4 rebounds in 20 minutes to 11 rebounds in 38 minutes.
-
-**Fix:** Apply position-specific std_stat floor:
-- Guards: floor = 0.8
-- Forwards: floor = 1.2
-- Centers: floor = 1.5
-
-### Rebound Feature Priority List (implement in this order):
-
-1. Replace `opp_reb_pg` with `opp_dreb_pct` (defensive rebound percentage) — 1 hour
-2. Add `opp_dreb_allowed_to_position` lookup — 4 hours
-3. Add pace scaling to rebound projection — 1 hour
-4. Apply position-specific std floor — 30 minutes
-5. Add home/away rebound split (big men especially) — 2 hours
+| Feature | Why Expected | Complexity | WC-Specific Notes | Depends On |
+|---|---|---|---|---|
+| **WC fixture ingestion** | Scanner cannot run without knowing today's games | Low | `football-data.org` free tier includes FIFA World Cup (competition code already used in soccer_scanner.py via `FOOTBALL_API_KEY`). Rate limit: 10 req/min — sufficient for WC cadence (3-6 games/day). Backup: `openfootball/worldcup.json` on GitHub, free, no key required. | football-data.org client already in `alpha/data/ingestion/` |
+| **Win/Draw/Loss match model (neutral venue)** | Core scanner output — every match needs a W/D/L prediction | Medium | Must remove home-field advantage from `_build_game_features()`. Elo rating differential (from eloratings.net or vendored Kaggle dataset) replaces rolling `goals_for`/`xG_for` as the primary strength signal. FIFA ranking is a secondary signal but weaker predictor than Elo per academic literature. | New `wc_match_model.py` — mirrors `soccer_model.py` but substitutes Elo diff for club rolling stats |
+| **Elo-based team strength signal** | National teams play too few games for rolling stats to have predictive value; Understat does not cover national teams at all | Medium | eloratings.net maintains current ratings for all 48 WC teams. A Kaggle dataset (`saifalnimri/international-football-elo-ratings`) covers 1872-2025 history and can be vendored. Elo diff alone explains approximately 65% of international match outcome variance — far stronger than FIFA ranking as a predictor. | `alpha/data/ingestion/wc_elo.py` (new file) |
+| **Knockout round "To Advance" output** | Knockout games have no draw: Winner-or-penalties only. Emitting draw predictions in R16+ produces guaranteed bad picks. | Low | Detect round from football-data.org fixture metadata. When `round_type == knockout`, suppress draw probability and output only "To Advance" (winner across 90 min + ET + shootout). This is a hard behavioral difference from the existing scanner. | Round-type detection from fixture data |
+| **Group stage standings display** | Bettors want to know current table context (elimination pressure, clinch scenarios) alongside each pick | Low | football-data.org provides live standings per group. Display as a header block in scanner output: "Group A — France 6pts (clinched), Senegal 3pts, Morocco 1pt, Uruguay 0pts (eliminated)". No modeling needed. | football-data.org standings endpoint |
+| **WC player prop predictions** | Goals and shots props are available on every WC match and are the core prop workflow users already know from NBA/soccer scanners | High | The Odds API Business tier ($99/mo) covers WC player props. Markets confirmed live for WC 2026: `anytime_goalscorer`, `player_shots_on_target`, `player_shots`. No per-game rolling stats exist for national team players (Understat does not cover international duty). Model must use market-implied as base anchor + Elo team attack multiplier. See sparse data section below. | `wc_prop_model.py` (new) + The Odds API Business tier (cost gate — verify before building) |
+| **Calibrated confidence output** | Every pick needs HIGH/MEDIUM/LOW tier so users know which legs are safe for SGP inclusion | Low | Reuse existing gap-based confidence system from `soccer_prop_model.py`. Recommend wider thresholds than EPL because WC props have higher noise: HIGH > 0.12 gap, MEDIUM 0.09-0.12, LOW < 0.09 (exclude from SGP combos). | `wc_prop_model.py` |
+| **`scripts/wc_scanner.py` entry point** | Users expect the same CLI pattern as `soccer_scanner.py` and `sgp_scanner.py` | Low | Flags: `--mode props`, `--mode parlay`, `--round group` or `--round knockout`. Mirrors existing scanner pattern exactly. | All of the above |
 
 ---
 
-## Anti-Features (things that hurt)
+## The Sparse Data Problem — Required Methodology
 
-### 1. Overall DRTG for Non-Points Markets
-Currently: DRTG (defensive rating) is used to scale rebounds and assists via proxy stats.
-Problem: DRTG measures points allowed per 100 possessions — it's a points metric. Using it to adjust assists or rebounds is statistically invalid. A team with great DRTG might achieve it through paint defense (affects scoring) but be average at limiting assists.
+This is the most critical research finding for the WC match model. Standard club-league approaches fail hard.
 
-**Verdict:** Remove DRTG from non-points markets. Use market-specific metrics only.
+**Do NOT use rolling 5/10-game logs** — national teams play 6-15 games per year total, and only 3 group stage WC games exist before knockout. The existing `_weighted_avg()` from `soccer_prop_model.py` (last 5 + last 10 games) produces near-random outputs at this data volume.
 
-### 2. Raw Opponent STL/game for Assists
-Current: `stl_pg` used as proxy for "how well does the opponent disrupt passing?"
-Problem: Team steals correlate weakly (r ≈ 0.3) with assists allowed. Teams like Boston steal very little (good position defense) but allow very few assists. Teams that gamble for steals (Memphis style) have high STL but opponents still rack up assists because of all the open driving lanes after a gamble.
+**Validated approaches, in order of effectiveness:**
 
-**Better:** Use `opp_ast_pg` — how many assists per game does the opponent ALLOW? This is the direct metric.
+1. **Elo rating differential** — Single strongest predictor. Convert Elo diff to win probability using the logistic curve: `P(win) = 1 / (1 + 10^(-ELO_DIFF/400))`. This is the chess formula adapted for soccer and is the basis of eloratings.net's published system. For WC specifically, apply a neutral-venue correction: remove the built-in +100 Elo home-field boost that eloratings.net normally applies.
 
-### 3. Opponent REB/game for Rebound Props (Confirmed Bug)
-Already covered above. Using team offensive rebounding as a proxy for "how hard will it be to rebound against this team" is directionally wrong half the time.
+2. **Market-implied probability blend** — The bookmaker line for WC is extremely informative because sharp books have priced in squad depth, injuries, preparation camp results, and tournament form that no public model can fully replicate. Blend: 60% Elo-derived probability + 40% market-implied as the base estimate. This mirrors the existing `MARKET_BLEND` constant in `soccer_model.py`, just with inverted weights.
 
-### 4. Season-Long Averages Without Recency Weighting for Opponent Defense
-Using season-average opponent DRTG from October through March treats a team's February defensive performance the same as its October performance. Teams change lineups, develop chemistry, and rotate players differently. A 10-game rolling opponent defensive metric is more predictive than season average.
+3. **FIFA ranking as secondary signal** — Weaker than Elo but captures recent competitive context (qualifying campaigns). Use as a tiebreaker when Elo diff is small (< 50 points, near-equal teams). Do not use as primary signal.
 
-### 5. Overconfident Probability Outputs from Gaussian Model
-The Gaussian (normal distribution) model underestimates the fat tails of player stat distributions. NBA players frequently have outlier games (double their average, or zero). The model's 97% confidence on Cameron Johnson 8.5 pts is likely overfit to the normal distribution — true probability is lower because of injury/blowout/foul trouble tail risk.
+4. **Poisson goal model** — Optional enhancement for Phase 2. Fit lambda_attack and lambda_defense from historical WC results (2006-2022, approximately 200 matches). Mean WC goals/game is 2.5 (range 2.27-2.71 across recent tournaments). Use team Elo to scale attack and defense strength. Enables Over/Under and BTTS market predictions. Mark as Phase 2.
 
-**Fix already partially in place:** `MAX_XGB_CONF = 0.73` caps overconfident XGBoost picks. Same philosophy should cap PropModel raw outputs at 0.88 max (not 0.99).
+**Do NOT train XGBoost from scratch** — Total international match history is approximately 7,000 games, which is below the threshold for reliable XGBoost with meaningful features. Multiple academic studies confirm that logistic regression on Elo diff outperforms gradient boosting on international football data at this sample size. The existing ProphitBet XGBoost model was trained on domestic league data and is not transferable to national teams.
 
-### 6. Using Binary Position Classification (Guard vs. Not-Guard)
-Current: PositionFilter uses string matching on position labels to gate rebound props.
-Problem: The position label from CommonPlayerInfo can be stale (player listed as "G-F" but plays 80% of minutes as a full small forward now). Using role (usage, position on court via tracking data) is more accurate than label.
+---
+
+## Differentiators
+
+Features that add meaningful value beyond the baseline W/D/L + prop scanner.
+
+| Feature | Value Proposition | Complexity | WC-Specific Notes | Depends On |
+|---|---|---|---|---|
+| **Elo vs. market divergence flag** | Identifies matches where the model disagrees significantly with book odds — highest-EV opportunities | Low | Research confirms that Elo-to-FIFA-rank divergence is where WC edges live (e.g., a team ranked Elo #19 but FIFA #28). If `abs(elo_prob - market_implied) > 0.12`, flag as "Model Disagrees With Market" in output. WC equivalent of the NBA blowout gate. | Elo ingestion + market odds from Odds API or football-data.org |
+| **BTTS (Both Teams To Score) prediction** | High-liquidity WC market, more predictable than correct score, available on every match | Medium | Poisson model: `P(BTTS Yes) = P(team_A scores >= 1) * P(team_B scores >= 1)`. Uses Elo-adjusted attack/defense lambdas. WC BTTS Yes has historically landed around 45-50%. The model has edge here when both teams have high Elo attack ratings. Phase 2 (requires Poisson calibration first). | Poisson goal model |
+| **Over/Under 2.5 goals prediction** | Very high liquidity, available on every WC match, matches the 2.5 mean | Medium | Same Poisson model: `P(total >= 3)`. Structural edge when both teams have offensive Elo strength above league mean AND neither team is playing for a draw (early group games, not late qualification games). Critical caveat: extra-time goals do NOT count toward O/U in knockout rounds — must suppress this output for R16+. Phase 2. | Poisson goal model |
+| **Golden Boot / top scorer tracker** | Tournament-wide futures market with very high public interest; low engineering cost | Low | Display current top scorer standings alongside today's games. No modeling needed — pull from football-data.org `/competitions/WC/scorers` endpoint. Present as a sidebar to scanner results. Zero model risk. | football-data.org scorers endpoint |
+| **Group advancement probability** | "What are France's odds of advancing from Group D?" — strategic context for futures bets | Medium | Monte Carlo simulation: 10,000 iterations of remaining group fixtures using W/D/L probabilities. Output advancement probability per team per group. Useful late in group stage when some teams have played 2 of 3 games. Phase 2. | WC match model + remaining fixture schedule |
+| **Asian Handicap recommendation** | When moneyline favorite is very short (e.g., Brazil -400), AH -0.5 or -1 provides better EV | Low | When `model_prob > 0.70`, compute AH EV alongside moneyline EV and recommend whichever has better implied edge. However: football-data.org does not carry AH odds. Requires The Odds API (h2h covers moneyline, not AH) or SportsGameOdds API. Flag as conditional on odds source. | AH-capable odds source (not currently in stack) |
+
+---
+
+## Anti-Features
+
+Features to explicitly NOT build. These have specific failure modes in the WC context.
+
+| Anti-Feature | Why Avoid | What To Do Instead |
+|---|---|---|
+| **Correct score prediction** | Correct score book carries 15-20% vig — highest of all WC markets. Top 6 scorelines (1-0, 2-1, 2-0, 3-0, 1-1, 0-0) cover only 75% of group matches; the tail is enormous and unpriceable. A Poisson model will produce output but has no realistic edge after vig. Chasing exotic scorelines is the single most cited bettor mistake. | Use Over/Under 2.5 and BTTS instead — same underlying model, much higher liquidity, lower vig |
+| **XGBoost trained on WC match data** | Total international match history is ~7,000 games. XGBoost with standard features will overfit badly. Academic papers directly comparing approaches at this data volume show logistic regression outperforms tree ensembles. The existing `_load_xgb_models()` in `soccer_model.py` looks for ProphitBet domestic league models — those feature sets do not generalize to national teams. | Elo-logistic model. No XGBoost. |
+| **Rolling 5/10-game club-form stats for WC** | Understat covers domestic leagues only — it has no national team data. The current `soccer_prop_model.py` synthesizes fake gaussian noise around a season average (lines 191-195) to pad the rolling window. For WC that would mean generating fake data around a player's EPL per-90 average and using it to predict international performance — these are different playing contexts, different formation, different teammates. | Use market-implied as the base anchor for WC player props; apply team Elo attack multiplier as the only adjustment |
+| **Club-side injury impact on WC predictions** | `soccer_injuries.py` fetches ESPN domestic injury reports. International call-ups mean players may rest, be rested by the coach, or play limited minutes regardless of club fitness status. A player "healthy" for Arsenal but selected to play 60 minutes for England introduces a different injury/rest signal entirely. The existing `get_team_injury_impact()` data will be stale and wrong. | Apply a pre-game lineup flag when confirmed lineups are released via football-data.org. Do not use club injury data for national team props. |
+| **Draw No Bet output in knockout rounds** | No draws exist in knockout (R16 onward). DNB becomes a regular moneyline in knockout rounds, so any "Draw No Bet" recommendation is either identical to the standard moneyline (wasted output) or quietly wrong if the round detector fails. | Hard gate: if `round_type == knockout`, output only "To Advance" predictions. No DNB. Document this in scanner help text. |
+| **Futures modeling (winner, semifinalists)** | Tournament-level futures require bracket simulation across 6+ rounds. High computation, very high variance. Prediction markets (Polymarket) and sharp sportsbooks have already priced futures with large trading volume and tight margins — there is no realistic edge against them without proprietary information. | Display existing market odds as context only. Do not generate model-based futures odds. |
+| **Live in-play odds recommendations** | In-play WC markets require sub-second data feeds and a decision engine that runs continuously. The Odds API (even Business tier) adds latency. The existing run-once-before-kickoff architecture is not suited to in-play. Any attempt to retrofit this is a multi-week project outside the v1.1 scope. | Pre-game only. State this explicitly in scanner help text and README. |
+| **Per-player game-log ingestion for WC** | There is no free per-game log source covering players during international tournament duty. FBRef and Understat are domestic. Building a scraper for WC player game logs is significant engineering work and the data volume (3 group games) would not support the weighted rolling average model anyway. | Market-implied anchor + team Elo attack multiplier is the correct WC prop approach. |
 
 ---
 
 ## Feature Dependencies
 
-### Data Already Available (nba_api, existing cache)
+```
+WC fixture ingestion (football-data.org — free tier, key already in .env)
+    |
+    +-- WC match model (Win/Draw/Loss or To Advance)
+    |       |
+    |       +-- Elo ingestion — wc_elo.py [NEW FILE]
+    |       |       Source: eloratings.net scrape or vendored Kaggle dataset
+    |       |
+    |       +-- Knockout round detection (from fixture round metadata)
+    |       |
+    |       +-- Elo vs. market divergence flag [differentiator]
+    |       |
+    |       +-- Group stage standings sidebar
+    |               |
+    |               +-- Group advancement probability [Phase 2 differentiator]
+    |
+    +-- WC player prop model
+    |       |
+    |       +-- The Odds API Business tier (COST GATE — verify before building)
+    |       |       Markets: anytime_goalscorer, player_shots_on_target, player_shots
+    |       |
+    |       +-- Market-implied base + Elo team attack multiplier
+    |
+    +-- WC SGP builder
+            |
+            +-- Match leg + player prop leg correlation table
+            +-- Reuse soccer_sgp_builder.py correlation logic
 
-| Feature | Source | Endpoint / Method |
-|---|---|---|
-| Rolling avg (5/10/20) | nba_api | `PlayerGameLogs` |
-| Opponent DRTG | nba_api | `LeagueDashTeamStats(measure_type=Defense)` |
-| Opponent REB/game | nba_api | `LeagueDashTeamStats(measure_type=Base)` |
-| Player position | nba_api | `CommonPlayerInfo` |
-| Team pace | nba_api | `LeagueDashTeamStats(measure_type=Advanced)` |
-| Player avg minutes | nba_api | `LeagueDashPlayerStats` |
-| Days rest | Computed | GAME_DATE diff from PlayerGameLogs |
-| Home/Away flag | Computed | MATCHUP column in PlayerGameLogs |
-| Recent team form | nba_api | `TeamGameLog` — already in NBAStatsCache |
-| Player vs. specific opponent | Computed | Filter PlayerGameLogs by MATCHUP |
+Poisson goal model [Phase 2]
+    +-- BTTS prediction
+    +-- Over/Under 2.5 prediction
 
-### Data Requiring New Fetches (medium effort)
-
-| Feature | Source | Effort |
-|---|---|---|
-| Opponent DREB% (defensive rebound pct) | `LeagueDashTeamStats` Advanced | LOW — same endpoint, new column |
-| Opponent stats allowed by position | nba.com `LeagueSeasonMatchups` | MEDIUM — new endpoint, needs position join |
-| Opponent AST allowed per game | `LeagueDashTeamStats` Base | LOW — same endpoint, OPP_AST column |
-| Player per-36 stats | `LeagueDashPlayerStats(per_mode=Per36)` | LOW — already fetched in NBAStatsCache |
-| USG% impact of teammate absences | `LeagueDashPlayerStats` + injury list | MEDIUM — logic to redistribute usage |
-| Stat trend slope (linear regression) | Computed | LOW — numpy polyfit on PlayerGameLogs |
-
-### Data Requiring External Sources (high effort or paid)
-
-| Feature | Source | Effort |
-|---|---|---|
-| Tracking data (speed, distance) | NBA Second Spectrum | HIGH — requires partnership/license |
-| True shot quality | Synergy Sports | HIGH — paid data |
-| Matchup-specific tracking | nba.com/stats tracking (limited) | MEDIUM — some tracking endpoints in nba_api |
-| Lineup-on/off splits | nba_api `TeamPlayerOnOffSummary` | MEDIUM — new endpoint |
+Golden Boot tracker [standalone, no model dependency]
+    +-- football-data.org /competitions/WC/scorers endpoint
+```
 
 ---
 
-## Implementation Priority Order
+## MVP Recommendation
 
-Given the 34.2% rebound rate and 43.5% overall rate, here is the recommended fix sequence:
+Build in this exact order. Phase 2 only if Phase 1 validates above 50% match prediction accuracy.
 
-**Phase 1 — Fix the bugs (immediate, 1–2 days):**
-1. Replace `opp_reb_pg` with `opp_dreb_pct` in rebound adjustment
-2. Replace `opp_stl_pg` with `opp_ast_allowed_pg` in assists adjustment
-3. Add home/away split to player rolling average (separate home/away windows)
-4. Cap max model_prob at 0.88 instead of 0.99
+**Phase 1 — Match model (no external cost beyond existing .env keys)**
+1. WC fixture ingestion via football-data.org (free, `FOOTBALL_API_KEY` already in .env)
+2. Elo data ingestion from Kaggle dataset or eloratings.net (free — vendor the dataset)
+3. `wc_match_model.py`: Elo-logistic W/D/L + 60/40 market blend + neutral venue correction
+4. Knockout round detection: suppress draw output, emit "To Advance"
+5. Group stage standings sidebar in scanner output
+6. `scripts/wc_scanner.py --mode parlay`
 
-**Phase 2 — Add position-specific opponent stats (2–3 days):**
-5. Implement position-specific opponent stat lookup via LeagueDashMatchups
-6. Add pace scaling to rebound projection (not just points)
-7. Add per-36 normalization with minutes projection
+**Phase 2 — Player props (requires Odds API Business tier)**
+1. Confirm The Odds API Business tier is active and WC sport key is available
+2. `wc_prop_model.py`: market-implied base + Elo attack multiplier per team
+3. Markets: `anytime_goalscorer`, `player_shots_on_target`
+4. WC SGP builder combining match leg + player prop leg
+5. `scripts/wc_scanner.py --mode props`
 
-**Phase 3 — Add differentiating features (3–5 days):**
-8. Back-to-back game flag with fatigue discount
-9. Recent form slope (linear trend over last-7 games)
-10. Opponent recent 5-game defensive performance (blended with season avg)
-11. Usage rate adjustment when teammate is out (injury context)
+**Phase 3 — Differentiators (if time and accuracy warrant)**
+1. Elo vs. market divergence flag (low effort, high value)
+2. Golden Boot tracker (low effort, high visibility)
+3. BTTS and Over/Under 2.5 via Poisson model (medium effort, requires historical calibration)
+
+**Defer entirely:**
+- Correct score predictions
+- Asian Handicap (requires new odds source)
+- Group advancement Monte Carlo
+- In-play recommendations
+
+---
+
+## Sources
+
+- [The Odds API — Business tier covers WC 2026 props](https://the-odds-api.com/)
+- [football-data.org — Free tier confirmed to include FIFA World Cup](https://www.football-data.org/)
+- [openfootball/worldcup.json — Free fixture data, no key, covers WC 2026](https://github.com/openfootball/worldcup.json)
+- [World Football Elo Ratings — eloratings.net](https://eloratings.net/2026_World_Cup)
+- [International Football Elo Ratings 1872-2025 — Kaggle dataset](https://www.kaggle.com/datasets/saifalnimri/international-football-elo-ratings)
+- [2026 FIFA World Cup Historical Elo Ratings — Kaggle](https://www.kaggle.com/datasets/afonsofernandescruz/2026-fifa-world-cup-historical-elo-ratings)
+- [I Built 11 Models to Predict the 2026 World Cup — Towards Data Science](https://towardsdatascience.com/i-built-11-models-to-predict-the-2026-world-cup-they-crown-four-different-champions/)
+- [Footlab Elo Rankings WC 2026 — Footlab Data](https://footlab-data.com/en/world-cup/article/footlab-elo-rankings-48-teams-world-cup-2026-en)
+- [World Cup 2026 Prop Bets for Every Match — Dimers](https://www.dimers.com/best-props/swc)
+- [World Cup 2026 Props: Player and Team Markets Explained — Oddspedia](https://oddspedia.com/insights/football/world-cup-2026-prop-markets)
+- [World Cup Player Props Explained: Goals, Assists & Cards Guide — MyBookie](https://www.mybookie.ag/sports-betting-guide/world-cup-player-props-explained/)
+- [2026 FIFA World Cup Betting Strategies — CBS Sports](https://www.cbssports.com/betting/news/2026-fifa-world-cup-betting-strategies/)
+- [World Cup Correct Score Betting Tips and Strategy — FreeBets](https://www.freebets.com/guides/world-cup-correct-score-betting-tips-strategy/)
+- [World Cup Best Props for Tuesday June 16 2026 — Lineups](https://www.lineups.com/betting/world-cup-best-player-prop-picks-odds-predictions-for-tuesday-june-16-2026/)
+- [Best World Cup 2026 APIs for Fixtures, Scores, Stats and Odds — TheStatsAPI](https://www.thestatsapi.com/blog/best-world-cup-2026-apis)
+- [Prediction of FIFA World Cup Match Outcomes Based on Random Forests — ACM DL](https://dl.acm.org/doi/fullHtml/10.1145/3696500.3696512)
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Reason |
+|---|---|---|
+| WC player prop markets available (goals, shots) | HIGH | Tournament is live as of research date. Markets confirmed active on DraftKings, FanDuel, Bet365, Dimers for WC 2026 per-match. |
+| Elo as primary national team strength signal | HIGH | Consistent finding across 5+ academic papers and practitioner sources. Elo diff is the standard in international football prediction. |
+| football-data.org WC fixture coverage (free tier) | HIGH | Free tier confirmed to include FIFA World Cup competition. Used by existing soccer scanner for football-data.org client. |
+| The Odds API Business tier WC prop coverage | MEDIUM | Business tier described as covering WC, but exact WC sport key and prop market endpoint names need verification before building. Do not start prop model until this is confirmed. |
+| XGBoost anti-feature | HIGH | Multiple academic comparisons at international football data volume confirm logistic/Poisson outperforms tree ensembles. Not a close call. |
+| Correct score anti-feature | HIGH | Multiple practitioner sources unanimously flag high vig and low accuracy. BTTS and O/U are better alternatives in every analysis reviewed. |
+| BTTS / O/U Poisson model edge | MEDIUM | Methodology is validated but calibration from historical WC data (2006-2022) is required before the model has demonstrated edge over market. |

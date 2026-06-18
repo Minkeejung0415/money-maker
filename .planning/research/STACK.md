@@ -1,172 +1,258 @@
-# Stack Research: NBA Prop Algorithm
+# Technology Stack — World Cup 2026 Mode
 
-## Recommended Approach
-
-**Primary: LightGBM ensemble with EWMA projection + market-implied Bayesian prior**
-
-The highest-accuracy production approach used by sharp quant shops combines three layers:
-
-1. **Statistical projection layer** — EWMA rolling averages with adaptive decay (not fixed 5/10/20 game weights). Each market gets its own optimal decay rate learned from historical data.
-2. **Machine learning layer** — LightGBM (preferred over XGBoost for player props: faster, handles sparse features better, less prone to overfitting on small samples). Trained to predict the *residual* between the stat projection and the actual outcome — not the raw value.
-3. **Market calibration layer** — Bayesian shrinkage toward the market-implied probability. The market line is informative and should not be discarded; treat it as a prior, blend it with model output.
-
-The key insight sharp bettors apply: **predict the distribution, not the point estimate**. The question is not "will he score 18 points" but "what is P(pts > 17.5) given this game context?" Modeling the full distribution (via Poisson or negative binomial for counting stats) outperforms normal-distribution assumptions, especially for rebounds and assists which are right-skewed and low-count.
-
-**Minimum target for selectivity:** Only bet props where model_prob diverges from market_implied by >8% AND the prop passes a minimum 60% confidence floor. This is already in the codebase but calibration of the model_prob is likely off — the root cause of the 43.5% hit rate is model miscalibration, not necessarily wrong features.
+**Project:** Alpha Terminal v1.1 — WC Soccer Mode
+**Researched:** 2026-06-18
+**Scope:** New additions only. Existing EPL/UCL stack (football-data.org client + Understat + ProphitBet XGBoost) is unchanged.
 
 ---
 
-## Key Libraries & Tools
+## Decision Summary
 
-| Library | Version | Use |
-|---|---|---|
-| `lightgbm` | 4.x | Main ML model (replaces or augments XGBoost) |
-| `xgboost` | 2.x | Ensemble member, existing codebase already uses |
-| `scikit-learn` | 1.4+ | Calibration (CalibratedClassifierCV, IsotonicRegression), GridSearchCV |
-| `scipy.stats` | current | Poisson/NegBinomial distribution fitting for prop lines |
-| `statsmodels` | 0.14+ | ARIMA for time-series trend, GLM for count data |
-| `nba_api` | current | Already in use — also use `playerdashptreb`, `leaguehustlestatsplayer` |
-| `pandas` | 2.x | Feature engineering, rolling windows |
-| `numpy` | current | Vectorized stat calculations |
-| `optuna` | 3.x | Hyperparameter tuning (Bayesian, better than GridSearch for LGBM) |
-| `shap` | 0.44+ | Feature importance, model explainability, debugging bad predictions |
-
-**No new data vendors needed** — nba_api has all required endpoints. The missing ones are:
-- `playerdashptreb` — individual rebound opportunity stats (OREB%, DREB%)
-- `leaguehustlestatsplayer` — contested rebounds, screen assists
-- `boxscoreadvancedv2` — per-game USG%, TS%, box plus/minus
-- `leaguedashptstats` — tracking-based touches, paint touches, front court touches
+| Question | Answer | Confidence |
+|----------|--------|------------|
+| Does football-data.org free tier cover WC 2026? | YES — competition code `WC` | HIGH |
+| Does The Odds API cover WC match lines on current plan? | NO — requires Business plan ($99/mo) | HIGH |
+| Does The Odds API cover WC player props? | NO — soccer player props not offered | HIGH |
+| Is statsbombpy correct for historical WC training data? | YES — 2018 + 2022, 64 matches each, free | HIGH |
+| Is there a free WC fixture fallback if football-data.org fails? | YES — openfootball/worldcup.json (no key) | HIGH |
+| Does Understat cover national team / WC player stats? | NO — domestic leagues only | HIGH |
+| Is soccerdata/FBref a viable live WC player stats source? | AVOID — scraping is fragile, fragile | MEDIUM |
 
 ---
 
-## Algorithm Options Ranked
+## 1. Fixture Ingestion — football-data.org (EXTEND existing client)
 
-### 1. LightGBM + Poisson Distribution (BEST for props)
-**Why:** Counting stats (pts, reb, ast) are discrete non-negative integers. A Poisson or Negative Binomial model is statistically correct. LightGBM predicts the Poisson rate (lambda), then P(X > line) = 1 - Poisson.CDF(line, lambda). This alone will outperform the current normal distribution assumption, particularly for rebounds (typically lambda=5-8, very different shape than normal).
+**Decision:** Extend `FootballDataClient` — add `"wc": "WC"` to `_COMP_MAP`. No new API key, no new library.
 
-**Implementation:** Train LightGBM with `objective='poisson'`, output is lambda. Then `from scipy.stats import poisson; p_over = 1 - poisson.cdf(line, mu=lambda)`.
+### Evidence
 
-**Expected improvement:** +4-7 percentage points on rebounds specifically.
+- football-data.org free tier explicitly covers 12 competitions including the FIFA World Cup and European Championship. The competition code is `WC`.
+- Endpoint: `GET https://api.football-data.org/v4/competitions/WC/matches?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD`
+- Same 10 req/min rate limit applies. Same `X-Auth-Token: {FOOTBALL_API_KEY}` header. Same response schema as EPL/UCL.
+- The `stage` field differentiates group stage from knockouts (`GROUP_STAGE`, `ROUND_OF_16`, `QUARTER_FINALS`, `SEMI_FINALS`, `FINAL`).
+- **What is NOT available on free tier:** draw odds / 3-way lines; per-player goal logs per match; squad data (requires Deep Data plan at €29/month).
+- The `scorers` endpoint (`/competitions/WC/scorers`) returns top scorers for the tournament — goals only, no assists/shots, no per-match breakdown.
 
-### 2. EWMA Projection + Bayesian Market Blend (HIGH ROI, LOW EFFORT)
-**Why:** The current weighted average (0.5/0.3/0.2 fixed weights) is not adaptive. EWMA with a tunable `alpha` parameter learns the optimal recency weight per market from historical data. Blending with the market line as a prior corrects calibration without a full ML retraining.
+### What to add
 
-**Formula:**
-```
-proj = ewma(last_n_values, alpha=alpha_market)       # alpha learned per market
-sigma = ewma_std(last_n_values, alpha=alpha_market)  # adaptive std
-market_lambda = line * market_implied / (1 - market_implied)  # implied projection
-blended = (1 - prior_weight) * proj + prior_weight * market_lambda
-p_over = 1 - poisson.cdf(line, blended)
-```
-**Expected improvement:** +3-5 percentage points overall, highest on low-game-count players.
-
-### 3. Contextual Feature XGBoost (MEDIUM EFFORT, GOOD UPSIDE)
-**Why:** The existing XGBoost model predicts game outcomes, not individual props. A dedicated prop-specific XGBoost (or LightGBM) trained on historical prop lines vs outcomes, using contextual features, would directly optimize for the prop hit/miss target.
-
-**Critical features to add (not currently in model):**
-- `usg_pct_last5` — usage rate in last 5 games (most predictive for pts/ast)
-- `oreb_pct` and `dreb_pct` — rebound opportunity rate (most predictive for reb)
-- `contested_reb_pg` — from hustle stats, measures real rebound competition
-- `min_last3_avg` — minutes in last 3 games (injury load indicator)
-- `back_to_back` — binary flag (significant negative for all markets)
-- `home_away` — binary, home players average +1.2 pts, +0.4 reb, +0.3 ast
-- `days_rest` — 0/1/2/3+ days since last game
-- `line_movement` — opening line vs current line (sharp signal of where market moved)
-- `opp_position_def_rank` — opponent's defensive ranking vs the player's position
-
-**Implementation:** Build a training set of historical props (can use nba_api + historical Odds API data going back 3 seasons). Train LGBM to predict binary hit/miss. Use time-series CV (no leakage).
-
-### 4. Negative Binomial for Rebounds Specifically (MEDIUM EFFORT, HIGH IMPACT)
-**Why:** Rebounds have overdispersion — the variance exceeds the mean. Poisson assumes variance = mean; Negative Binomial allows variance > mean. This is empirically better for rebounds.
-
-**Implementation:** `from scipy.stats import nbinom; p_over = 1 - nbinom.cdf(line, n=r, p=p)` where r and p are fit from historical data per player.
-
-### 5. Isotonic Calibration of Existing Model (LOWEST EFFORT, IMMEDIATE WIN)
-**Why:** The existing model outputs probabilities that may be systematically biased — e.g., it says 70% but actual hit rate is 52%. Isotonic regression calibration corrects this monotonically without retraining.
-
-**Implementation:**
 ```python
-from sklearn.calibration import CalibratedClassifierCV
-# or post-hoc:
-from sklearn.isotonic import IsotonicRegression
-iso = IsotonicRegression(out_of_bounds='clip')
-iso.fit(model_probs_historical, actuals_historical)
-calibrated_prob = iso.predict([raw_prob])[0]
+# alpha/data/ingestion/football_data_client.py
+_COMP_MAP: dict[str, str] = {
+    "epl": "PL",
+    "ucl": "CL",
+    "wc":  "WC",   # <-- new: FIFA World Cup 2026
+}
 ```
-**This is the single highest ROI fix** — can be done in one session with backtest data.
 
-### 6. Pure Regression (WEAKEST APPROACH)
-Linear regression on raw stat values then comparing to line. Problem: doesn't model uncertainty correctly, treats all residuals as normally distributed, performs poorly on high-variance players. Currently what the model roughly does. The normal CDF assumption is the main source of error.
+The existing `fetch_today_games()` method will work without modification once `"wc"` is in the map. The `league` field on returned game dicts will be `"wc"`.
 
 ---
 
-## Rebound-Specific Findings
+## 2. Match Lines (Win/Draw/Loss Odds) — The Odds API Situation
 
-Rebounds have the lowest hit rate (34.2%) because the current model makes three structural errors:
+**Decision:** Do NOT expand The Odds API to World Cup. Remain on existing free plan (NBA-only). Use Poisson model for WC match lines with market-implied fallback.
 
-**Error 1: Wrong distribution family**
-Rebounds are low-count, overdispersed integers. Normal distribution assumption is wrong. Use Negative Binomial or Poisson. For a player averaging 6.2 RPG with std 2.1, the normal model and Poisson model differ by 3-5 percentage points at common lines like 5.5 or 6.5.
+### Evidence
 
-**Error 2: Wrong opponent adjustment feature**
-The current model adjusts for opponent REB/game (total team rebounds). This is too coarse. The correct adjustment is opponent's **position-specific defensive rebound rate** — how many rebounds does the opponent's center/PF unit grab vs league average? A small-ball lineup surrenders far more offensive rebounds than a traditional big-man lineup.
+- The Odds API sport key for WC is `soccer_fifa_world_cup`. The endpoint would be `GET /v4/sports/soccer_fifa_world_cup/odds/`.
+- World Cup coverage requires the **Business plan at $99/month** (200,000 req/month). Current account is on the free tier (500 credits/month, NBA h2h only).
+- Player props for soccer are **not listed** in any tier. The documented player prop markets on Business tier are: NBA, NHL, MLB, WNBA, AFL, NRL. Soccer appears only as anytime-goalscorer outright tournament markets (e.g. "who wins the Golden Boot"), not per-match in-game player prop lines.
+- Upgrading solely for WC violates the "free APIs only" project constraint.
 
-**Error 3: Missing opportunity features (most impactful)**
-The single most predictive feature for rebounds is **rebound opportunity rate**, not raw rebound total. Key features to add:
-- `OREB_PCT` — offensive rebound percentage (what % of available OREB does this player grab)
-- `DREB_PCT` — defensive rebound percentage
-- `contested_reb_per_game` — from `leaguehustlestatsplayer` endpoint
-- `opp_fg_miss_rate_per_game` — how many shots does the opponent miss? More misses = more rebound opportunities
-- `team_reb_opportunity_share` — what % of the team's rebound opportunities does this player take?
-- `opponent_pace` — faster pace = more possessions = more rebound opportunities
-- `linemates_reb_rate` — if Giannis plays with Brook Lopez, Lopez takes interior rebounds away
+### Fallback path for WC match odds
 
-**nba_api endpoints to add for rebounds:**
-```
-playerdashptreb          # OREB_PCT, DREB_PCT, REB_CHANCE_PCT_ADJ
-leaguehustlestatsplayer  # CONTESTED_REBOUNDS, CONTESTED_REB_PG
-boxscoreadvancedv2       # Per-game USG%, REB%
-```
+The existing `SoccerModel._market_implied_predict()` defaults to `home_odds=-110, draw_odds=300, away_odds=250` when no odds are provided. This will be the WC default. The Poisson model built from StatsBomb historical national-team attack/defense rates will be the primary signal.
 
-**Practical fix with current data:**
-The fastest improvement is to add `OREB_PCT` and `DREB_PCT` from `LeagueDashPlayerStats` (already fetched via the cache) and weight them into the rebound projection. These are available in the existing endpoint at no additional API cost.
-
-**Position adjustment (already partially done):**
-The `PositionFilter` suppresses rebound props for guards below 5.0 RPG. This is correct directionally but too binary. A continuous weight by position would be more accurate:
-- Centers: 1.0x weight (no adjustment)
-- Power Forwards: 0.95x
-- Small Forwards: 0.85x
-- Shooting Guards: 0.70x
-- Point Guards: 0.65x
+**Optional future enhancement (not default):** Add `WC_ODDS_ENABLED=false` env flag. When true, call `soccer_fifa_world_cup` h2h endpoint as a supplemental signal. One h2h call costs 1 credit. Gate it behind the flag so it does not consume budget by default.
 
 ---
 
-## Confidence Levels
+## 3. Historical Training Data — statsbombpy (NEW library)
 
-| Recommendation | Effort | Expected Impact | Confidence |
-|---|---|---|---|
-| Isotonic calibration of existing model | Low (1 session) | +3-6% hit rate overall | HIGH — this is a known fix for miscalibrated ML outputs |
-| Switch to Poisson/NegBinom distribution | Low (1-2 sessions) | +4-7% on rebounds | HIGH — statistically correct for integer counting stats |
-| Add OREB_PCT/DREB_PCT features | Low (already cached) | +2-4% on rebounds | HIGH — these are the industry-standard rebound predictors |
-| EWMA with adaptive alpha + market prior | Medium (2-3 sessions) | +3-5% overall | HIGH — EWMA + Bayesian blend is the de facto quant approach |
-| LightGBM prop-specific model | High (3-5 sessions) | +5-10% overall | MEDIUM — requires historical training data pipeline |
-| Line movement as signal | Medium | +2-4% on high-edge picks | MEDIUM — requires historical odds data (Odds API paid tier or alternate source) |
-| Position-continuous weight for rebounds | Low | +1-2% on rebounds | MEDIUM — directionally correct but small effect |
-| Back-to-back / days rest features | Low | +1-2% overall | MEDIUM — small effect but well-documented in literature |
+**Decision:** Add `statsbombpy>=1.19.0`. Use open data (no credentials needed). Pull WC 2018 and 2022 match events to compute national-team attack/defense rates and per-player career WC stats.
 
-**Priority order for implementation:**
-1. Isotonic calibration (immediate, highest ROI per hour)
-2. Poisson/NegBinom for rebounds (low effort, high impact on worst-performing market)
-3. Add OREB_PCT + DREB_PCT + contested rebound features (already in cache, just wire in)
-4. EWMA adaptive decay per market
-5. Full LightGBM rebuild with training set (longer-term)
+### Evidence — StatsBomb Open Data Coverage
+
+StatsBomb open data (GitHub: `statsbomb/open-data`) includes:
+
+| Tournament | competition_id | season_id | Matches | Data |
+|------------|---------------|-----------|---------|------|
+| FIFA World Cup 2018 | 43 | 3 | 64 | events + lineups |
+| FIFA World Cup 2022 | 43 | 106 | 64 | events + lineups + 360 (partial) |
+
+- Event data contains 80+ columns per event: `shot_statsbomb_xg`, `shot_outcome`, `pass_goal_assist`, `player`, `team`, `minute`, `period`, `location`, `position`, etc.
+- No authentication needed for open data. The library detects missing credentials and falls back to open GitHub data automatically.
+- Version 1.19.0 is current on PyPI as of June 2026.
+- **Critical limitation:** StatsBomb open data is post-match historical only. It does NOT cover live WC 2026 matches. WC 2026 data will only appear after the tournament concludes (based on their release pattern for prior tournaments). Use 2018+2022 data as training priors and population baselines.
+
+### Usage pattern
+
+```python
+from statsbombpy import sb
+
+# List all available open competitions (no creds needed)
+competitions = sb.competitions()
+# Returns DataFrame; filter for competition_id == 43 to see WC seasons
+
+# Fetch all 2022 WC matches
+matches_2022 = sb.matches(competition_id=43, season_id=106)
+
+# Fetch match events (one match at a time)
+events = sb.events(match_id=<match_id>)
+# Returns single DataFrame with 80+ columns
+
+# Split by type for efficient access
+events_split = sb.events(match_id=<match_id>, split=True)
+shots  = events_split["shots"]   # has shot_statsbomb_xg column
+passes = events_split["passes"]  # has pass_goal_assist column
+
+# Aggregate across a whole competition (uses concurrent fetching internally)
+all_events = sb.competition_events(
+    country="World", division="FIFA World Cup", season="2022", gender="male"
+)
+```
+
+### What to build with StatsBomb data
+
+1. **National team attack/defense rates:** Goals scored + xG per match for each national team across 2018+2022. Used as Poisson lambda features for WC match model.
+2. **Player career WC stats:** Per-player goals, shots, xG, assists per 90 minutes across all WC matches played. Used as prior means for WC prop model (if props are ever enabled).
+3. **One-time offline build:** Run `scripts/build_wc_priors.py` to pull StatsBomb data and cache as `data/wc_priors.json`. The live scanner reads from this cache. No live StatsBomb calls during scanner runs.
+
+### Install
+
+```bash
+./venv/Scripts/python.exe -m pip install "statsbombpy>=1.19.0"
+```
+
+StatsBombpy pulls pandas DataFrames from GitHub JSON files. It depends on `pandas`, `requests`, `ujson` — all already available or standard.
 
 ---
 
-## Notes on Line Movement (Sharp Signal)
+## 4. Live WC Player Stats — The Gap and How to Handle It
 
-Sharp bettors track the opening line vs current line. When a line moves from 17.5 to 18.5 points, sharp money is on the under. The nba_api has no historical odds data, but The Odds API (already in the codebase) can provide this in real-time. Adding a `line_movement_direction` feature (up/flat/down since open) would provide a meaningful signal for high-confidence picks and is worth implementing once the base model is calibrated.
+**Decision:** WC player props mode returns 0 legs (same as MLB/UCL today). Props are blocked by the absence of a free live per-player stat feed for international tournaments.
 
-## Notes on Model Miscalibration Root Cause
+### Why Understat cannot be extended to WC
 
-The 43.5% overall hit rate vs the expected ~52-55% suggests the model is selecting too many LOW-edge props. The calibration issue is: when the model says "65% confidence," the actual hit rate is probably ~50-52%. This means the edge metric is wrong, not necessarily the directional prediction. Fixing calibration first (step 1 above) will reveal whether the underlying features are actually predictive or whether bigger structural changes are needed.
+Understat covers exactly: EPL, La Liga, Bundesliga, Serie A, Ligue 1. National team football is architecturally out of scope — there is no Understat WC section. Confirmed by checking understat.com and community documentation.
+
+### Why soccerdata/FBref is not recommended
+
+FBref does cover the World Cup (it has a WC stats section: `fbref.com/en/comps/1/World-Cup-Stats`). The `soccerdata` library (v1.9.0, released April 2026) has `FBref` as a supported scraper class. However:
+- FBref is known to block scrapers and rate-limit aggressively. Production use is fragile.
+- No stable API — response format changes without notice.
+- Terms of service are ambiguous for automated scraping.
+- The existing `soccer_stats.py` already had issues with `soccerdata` on UCL (the MEMORY.md notes "BROKEN — needs Understat fix"), reinforcing that this is unreliable.
+
+### Recommended path for WC props
+
+Option A (current implementation): `wc_scanner.py --mode props` returns 0 legs with a logged warning: `"WC player props: no free live player stat source available"`. Same behavior as MLB.
+
+Option B (future, if The Odds API Business plan is activated): The `soccer_fifa_world_cup` event-level endpoint offers `player_goal_scorer_anytime` market. Wire it in behind the `WC_ODDS_ENABLED` flag.
+
+Option C (future, manual enrichment): Top-scorer tournament stats from `football-data.org /competitions/WC/scorers` can supplement StatsBomb career priors for current-form estimation.
+
+---
+
+## 5. WC Fixture Fallback — openfootball/worldcup.json
+
+**Decision:** Use as zero-dependency backup when football-data.org is unavailable.
+
+### Evidence
+
+- GitHub: `openfootball/worldcup.json` — public domain, no API key.
+- 2026 data: `https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json`
+- Available files: `worldcup.json` (schedule + scores), `worldcup.groups.json` (group table), `worldcup.squads.json` (team rosters), `worldcup.stadiums.json`.
+- Contains: match date, team1, team2, score (when played), round name.
+
+```python
+import requests
+_WC_FALLBACK_URL = (
+    "https://raw.githubusercontent.com/openfootball/worldcup.json"
+    "/master/2026/worldcup.json"
+)
+data = requests.get(_WC_FALLBACK_URL, timeout=10).json()
+# data["rounds"] -> list of rounds, each with "matches" list
+```
+
+**Limitations:** No odds. Community-maintained; live-score latency may be hours behind football-data.org. Use only as schedule source, not as results source for live betting.
+
+No new library required. Uses `requests` already in stack.
+
+---
+
+## 6. New Python Packages Required
+
+| Package | Version | Purpose | Status |
+|---------|---------|---------|--------|
+| `statsbombpy` | `>=1.19.0` | 2018 + 2022 WC historical event data for training priors | **NEW — add to pyproject.toml** |
+
+Everything else is covered by existing dependencies:
+- `football-data.org`: extended via existing `football_data_client.py` + `FOOTBALL_API_KEY`
+- `requests`: already in stack — used for openfootball fallback
+- `pandas`, `numpy`, `scipy`: already in stack — StatsBomb events are DataFrames; Poisson model uses `scipy.stats`
+- `xgboost`, `joblib`: already in stack — WC match model follows same ProphitBet pattern as EPL/UCL
+- `aiohttp`, `understat`: already installed but NOT used for WC
+
+---
+
+## 7. Integration Map
+
+### Clients to extend (no new files needed)
+
+| Existing file | Change |
+|---------------|--------|
+| `alpha/data/ingestion/football_data_client.py` | Add `"wc": "WC"` to `_COMP_MAP` — 1 line |
+| `alpha/data/ingestion/odds_api.py` | No change. NBA-only guard stays. |
+| `alpha/data/ingestion/soccer_stats.py` | No change. Understat EPL-only stays. |
+
+### New files to create
+
+| New file | Purpose |
+|----------|---------|
+| `alpha/data/ingestion/wc_stats.py` | StatsBombPy reader — loads `data/wc_priors.json`; returns national-team attack/defense rates and per-player career WC stats |
+| `alpha/engines/sports/wc_model.py` | Inherits from `SoccerModel`; overrides `_build_game_features()` to use national-team WC priors instead of Understat rolling stats |
+| `alpha/engines/sports/wc_sgp_builder.py` | Mirrors `soccer_sgp_builder.py` for WC legs |
+| `scripts/build_wc_priors.py` | One-time: pulls StatsBomb 2018+2022 WC events, computes and saves `data/wc_priors.json` |
+| `scripts/wc_scanner.py` | Entry point: `--mode props` / `--mode parlay` |
+
+---
+
+## 8. Environment Variables
+
+| Variable | Status | Purpose |
+|----------|--------|---------|
+| `FOOTBALL_API_KEY` | Existing — already set | WC fixtures via football-data.org `WC` competition code |
+| `ODDS_API_KEY` | Existing — NBA-only, no change | Not used for WC in default config |
+| `WC_ODDS_ENABLED` | Optional new flag (default `false`) | Guard for future Odds API WC h2h expansion |
+
+---
+
+## 9. Alternatives Explicitly Rejected
+
+| Alternative | Why Rejected |
+|-------------|--------------|
+| The Odds API Business plan ($99/mo) for WC match lines | Violates "free APIs only" project constraint |
+| API-Football / API-Sports | Paid; free tier is 100 req/day (inadequate for daily scanner) |
+| Sportmonks WC API | Paid; no meaningful free tier |
+| SofaScore scraping | TOS violation risk; no stable Python library |
+| soccerdata + FBref for live WC player stats | FBref blocks scrapers; fragile; already proven unreliable in this codebase for UCL |
+| WorldCupAPI.com | Paid subscription for live data |
+| FIFA official API | Not publicly documented or available to third-party developers |
+| Expand Understat to WC | Architecturally impossible — Understat only covers top-5 domestic European leagues |
+
+---
+
+## Sources
+
+- [football-data.org free tier coverage](https://www.football-data.org/coverage) — WC code `WC` confirmed, HIGH confidence
+- [football-data.org v4 lookup tables](https://docs.football-data.org/general/v4/lookup_tables.html) — competition codes
+- [The Odds API — FIFA World Cup odds page](https://the-odds-api.com/sports/fifa-world-cup-odds.html) — sport key `soccer_fifa_world_cup`, player props listed as anytime-goalscorer only
+- [The Odds API — Sports APIs list](https://the-odds-api.com/sports-odds-data/sports-apis.html) — Business plan required for WC; soccer player props not listed
+- [Odds API Pricing 2026 comparison](https://oddspapi.io/blog/odds-api-pricing-2026-comparison/) — tier structure confirmed
+- [StatsBomb open-data GitHub](https://github.com/statsbomb/open-data) — WC 2018 (season_id=3) + 2022 (season_id=106) confirmed, 64 matches each
+- [StatsBomb 2022 WC free data release post](https://blogarchive.statsbomb.com/news/statsbomb-release-free-2022-world-cup-data/)
+- [statsbombpy PyPI](https://pypi.org/project/statsbombpy/) — version 1.19.0 current
+- [statsbombpy GitHub + Context7 docs](https://github.com/statsbomb/statsbombpy) — API patterns confirmed via Context7 (`/statsbomb/statsbombpy`)
+- [openfootball/worldcup.json GitHub](https://github.com/openfootball/worldcup.json) — 2026 fixtures confirmed in master branch
+- [soccerdata PyPI](https://pypi.org/project/soccerdata/) — v1.9.0 confirmed, FBref World Cup coverage acknowledged but scraping fragility documented
