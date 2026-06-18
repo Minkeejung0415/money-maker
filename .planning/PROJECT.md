@@ -1,8 +1,19 @@
-# NBA Prop Model Algorithm Upgrade
+# Alpha Terminal — Multi-Asset Prediction Engine
 
 ## What This Is
 
-A systematic upgrade to the NBA prop prediction algorithm in `alpha/engines/sports/prop_model.py`. The current model produces a 43.5% overall hit rate (below random 50%), with rebounds at a critical 34.2%. This project researches, implements, and validates better prediction approaches to push accuracy above 55% across all stat categories.
+A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
+
+## Current Milestone: v1.1 — World Cup Soccer Mode
+
+**Goal:** Ship a full World Cup 2026 prediction stack — match outcome model, player props, and SGP builder — running on live group-stage and knockout-round data.
+
+**Target features:**
+- WC fixture ingestion: live group stage + knockout schedule
+- WC match model: Win/Draw/Loss predictions tuned to national-team dynamics
+- WC player props: goals, shots, assists (odds-implied where historical data is sparse)
+- WC SGP builder: combine match + player legs into SGP combos
+- `scripts/wc_scanner.py`: new entry point (`--mode props` / `--mode parlay`)
 
 ## Core Value
 
@@ -10,24 +21,28 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 
 ## Requirements
 
-### Validated
+### Validated (v1.0)
 
-(None yet — ship to validate)
+- [x] Exponential decay rolling average for NBA props
+- [x] Poisson/Negative Binomial distribution CDFs for probability estimates
+- [x] Position-level opponent adjustments for rebounds, points, assists
+- [x] Blowout gate (ML win prob <30% → downgrade HIGH picks)
+- [x] 60% confidence floor for SGP legs
 
-### Active
+### Active (v1.1)
 
-- [ ] Rebound predictions hit >55% (currently 34.2% — model ignores opponent rebounding)
-- [ ] Overall hit rate >55% across pts/reb/ast/3pm (currently 43.5%)
-- [ ] Research identifies the best algorithm approach (weighted rolling avg, matchup-based, or ensemble)
-- [ ] New algorithm implemented and integrated into PropModel
-- [ ] Existing tuning fixes applied (rebound cap ±10%, opponent weights for all markets)
-- [ ] validate_picks.py confirms improvement vs baseline before any changes ship
+- [ ] WC fixture ingestion: live group stage + knockout schedule
+- [ ] WC match outcome model (Win/Draw/Loss with calibrated confidence)
+- [ ] WC player prop model (goals, shots, assists)
+- [ ] WC SGP builder combining match and player legs
+- [ ] `scripts/wc_scanner.py` entry point (`--mode props` / `--mode parlay`)
+- [ ] Research confirms best data sources for WC stats and odds
 
 ### Out of Scope
 
-- Sportsbook line comparison (EV vs market) — future milestone after hit rate is fixed
-- Soccer/MLB model changes — NBA only for this upgrade
-- UI/output format changes — algorithm only
+- EPL/UCL engine changes — WC only for this milestone
+- NBA/MLB model changes — sports scope is WC only
+- UI/output format changes beyond scanner output
 
 ## Context
 
@@ -67,5 +82,26 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 | Fix rebounds before other stats | 34.2% hit rate is 15% below random — biggest win | — Pending |
 | Research algorithm options before building | User wants to see options before committing | — Pending |
 
+## Previous Milestone: v1.0 — NBA Prop Model Algorithm Upgrade (Complete)
+
+**Shipped (2026-03-12):** Exponential decay, Poisson/NB distributions, position-level opponent adjustments, blowout gate, confidence floor. 493 tests passing. Final accuracy: 48.6% overall (up from 43.5% baseline).
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-03-12 after initialization*
+*Last updated: 2026-06-18 — Milestone v1.1 started*

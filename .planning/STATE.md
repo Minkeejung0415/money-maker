@@ -2,23 +2,22 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-12)
+See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** All 4 phases complete
+**Current focus:** v1.1 — World Cup Soccer Mode
 
 ## Current Position
 
-Phase: 4 of 4 — COMPLETE
-Status: All algorithm upgrades implemented and validated
-Last activity: 2026-03-12 — Phase 4 (Confidence Tuning) complete
-
-Progress: [██████████] 100%
+Phase: 5 — Data Foundation
+Plan: TBD
+Status: Not started
+Last activity: 2026-06-18 — Roadmap created for v1.1
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
+- Total plans completed: 0 (v1.1)
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -26,7 +25,9 @@ Progress: [██████████] 100%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 5 - Data Foundation | 0/3 | - | - |
+| 6 - Match Model | 0/4 | - | - |
+| 7 - SGP Builder + Scanner Integration | 0/5 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -36,29 +37,38 @@ Progress: [██████████] 100%
 
 ## Accumulated Context
 
-### Decisions
+### Decisions (carried from v1.0)
 
-- Project: Validate via validate_picks.py not live runs (zero API cost, uses real box scores)
-- Project: Fix rebounds before other stats (34.2% hit rate is 15% below random — biggest win)
-- Project: Phase 1 must delete stale cache before any baseline is recorded
-- Project: Synthetic line = own projection produces a meaningless baseline — real lines needed for final validation
-- Baseline recorded: overall=43.5% (count=127/292) — see 01-BASELINE.md
-- Phase 2 complete: overall=46.2% (pts 52.1%, reb 35.6%, ast 50.7%, 3pm 46.6%) — see 02-SUMMARY.md
-- Phase 3 complete: overall=48.6% (pts 52.1%, reb 45.2%, ast 50.7%, 3pm 46.6%) — see 03-SUMMARY.md
-- Phase 4 complete: CONF-01 blowout gate, CONF-02 low-line skepticism, CONF-03 60% floor — see 04-SUMMARY.md
-- Final: overall=48.6% (142/292), up from baseline 43.5% (127/292) — see 04-FINAL-VALIDATION.md
+- Validate via validate_picks.py not live runs (zero API cost, uses real box scores)
+- Synthetic line = own projection produces a meaningless baseline — real lines needed for final validation
+- NBA Odds API usage reserved exclusively for NBA (soccer and MLB do NOT use it)
+- World Cup scanner goes in scripts/wc_scanner.py (separate from soccer_scanner.py) — keeps WC isolated
+
+### Decisions (v1.1 — from research)
+
+- wc_model.py is a completely separate class — never routes WC games through SoccerModel or ProphitBet XGBoost
+- Elo-logistic (chess formula) is the correct model — XGBoost explicitly rejected for WC data volume (~7k international games)
+- Player props deferred to v1.2 — Odds API Business tier required for WC prop markets beyond anytime goalscorer
+- StatsBomb 2018+2022 data (128 matches) cached to data/.wc_cache/ (separate namespace from data/.soccer_cache/)
+- Neutral-venue correction applied: no +100 Elo home-field boost for WC (all matches at US/Canada/Mexico venues)
+- Knockout round SGPs: Draw legs and standard moneyline legs are hard-gated out (settle on 90-min result only)
+- WC Odds API daily budget: 20 requests max; 2h cache TTL (WC odds move faster than club soccer)
 
 ### Pending Todos
 
-None yet.
+- Run Odds API market discovery scan (`GET /v4/sports/soccer_fifa_world_cup/events/<id>/odds?markets=`) to confirm which player prop market names exist before building any prop pipeline
+- Confirm per-request credit cost for `soccer_fifa_world_cup` h2h endpoint on existing free tier
+- Decide Elo data source for v1.1: static Kaggle CSV (saifalnimri/international-football-elo-ratings, covers through 2025) vs. live eloratings.net scrape
+- Check whether football_data_client.py has retry/backoff for 429 responses before extending
 
 ### Blockers/Concerns
 
-- The 43.5% baseline is measured against synthetic lines (model's own projection), not real sportsbook lines. VAL-04 final target needs real Odds API lines to be meaningful. This is a known limitation — document when VAL-04 runs.
-- Context evaluators (PropContextEvaluator) run 18 min and cut 61% of legs — not addressed in this upgrade. Separate concern.
+- World Cup 2026 group stage is LIVE (started June 11) — urgency is high, Phase 1 must ship within first week
+- StatsBomb 2026 live data is NOT available mid-tournament (historical pattern: released post-tournament) — wc_stats.py uses 2018/2022 data only as priors
+- If most group stage games complete before Phase 6 ships, the prop mode has limited live testing window before knockout begins
 
 ## Session Continuity
 
-Last session: 2026-03-12
-Stopped at: All 4 phases complete. 493 tests passing. Next: YouTube + real-line validation + monetization.
+Last session: 2026-06-18
+Stopped at: v1.1 roadmap created. Phase 5 (Data Foundation) is next.
 Resume file: None
