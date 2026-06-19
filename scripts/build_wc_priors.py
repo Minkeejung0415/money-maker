@@ -42,6 +42,12 @@ ELO_BASE = "https://www.eloratings.net"
 ELO_FALLBACK = 1500
 ELO_SLEEP = 0.1
 
+# eloratings.net uses different slugs for some teams than football-data.org names
+_ELO_SLUG_OVERRIDES: dict[str, str] = {
+    "Korea Republic": "South_Korea",
+    "Trinidad and Tobago": "Trinidad_&_Tobago",
+}
+
 # 48 WC 2026 qualified nations (as team names on eloratings.net slug format)
 WC_2026_TEAMS = [
     "Argentina", "Australia", "Belgium", "Brazil", "Cameroon", "Canada",
@@ -65,7 +71,7 @@ def _fetch_team_elo(team_name: str) -> int:
 
     Returns ELO_FALLBACK on any failure.
     """
-    slug = team_name.replace(" ", "_").replace("'", "")
+    slug = _ELO_SLUG_OVERRIDES.get(team_name) or team_name.replace(" ", "_").replace("'", "")
     url = f"{ELO_BASE}/{slug}.tsv"
     try:
         resp = requests.get(url, headers={"User-Agent": "alpha-terminal/1.1"}, timeout=10)
@@ -221,9 +227,9 @@ def build_wc_priors() -> None:
     n_teams = len(stats) - 1  # exclude built_at
     logger.info("Wrote WC stats to %s (%d teams)", WC_STATS_CACHE, n_teams)
 
-    print(f"\n=== Build complete ===")
-    print(f"  data/wc_priors.json     → {len(ratings)} teams")
-    print(f"  data/.wc_cache/wc_stats.pkl → {n_teams} teams")
+    print("\n=== Build complete ===")
+    print(f"  data/wc_priors.json          -> {len(ratings)} teams")
+    print(f"  data/.wc_cache/wc_stats.pkl  -> {n_teams} teams")
 
 
 if __name__ == "__main__":

@@ -21,9 +21,9 @@ _WC_STATS_CACHE = _WC_CACHE_DIR / "wc_stats.pkl"  # no date suffix: historical d
 # Populate after first run of build_wc_priors.py by comparing sb.matches()
 # team names to fixture response team names.
 _TEAM_NAME_MAP: dict[str, str] = {
-    # Examples (complete map built during Phase 5 execution):
-    # "United States Men's National Team": "United States",
-    # "Korea Republic": "South Korea",
+    # StatsBomb name -> football-data.org name
+    # Populated from first build_wc_priors.py run (Phase 5 execution):
+    "South Korea": "Korea Republic",
 }
 
 
