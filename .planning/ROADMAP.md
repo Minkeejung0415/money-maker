@@ -59,15 +59,15 @@
 
 ---
 
-## Current Milestone: v1.1 — World Cup Soccer Mode
+## Previous Milestone: v1.1 — World Cup Soccer Mode (Complete)
 
-## Phases (v1.1)
+## Phases (v1.1 — Complete)
 
 - [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
 - [x] **Phase 6: Match Model** - Elo-logistic W/D/L model with neutral-venue correction, stage metadata, knockout gate, and market divergence flag (completed 2026-06-19)
 - [x] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage (completed 2026-06-19)
 
-## Phase Details (v1.1)
+## Phase Details (v1.1 — Complete)
 
 ### Phase 5: Data Foundation
 **Goal**: WC 2026 fixtures, national team Elo ratings, and StatsBomb historical event data are all accessible to downstream model and builder code
@@ -107,8 +107,32 @@ Plans:
   2. `wc_scanner.py --mode parlay --stage knockout` produces SGP combos that contain zero Draw legs and zero standard moneyline legs for elimination-round games
   3. `wc_scanner.py --league wc` routes exclusively through the WC data pipeline, WC match model, and WC SGP builder — no EPL/UCL code paths are invoked
   4. All new WC components (`wc_model.py`, `wc_sgp_builder.py`, `wc_stats.py`, WC routes in `soccer_scanner.py` or `wc_scanner.py`) have unit tests, and the total test count meets or exceeds 535 with zero regressions
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [x] 07-01-PLAN.md — WCSGPBuilder: stage-aware correlation gate, SGP combo assembly, scanner routing
+- [x] 07-02-PLAN.md — wc_scanner.py entry point, full test suite, regression validation
 **UI hint**: no
+
+---
+
+## Current Milestone: v1.2 — Draw Algorithm
+
+## Phases (v1.2)
+
+- [ ] **Phase 8: Dynamic Draw Algorithm** - Replace flat draw constant with Elo-calibrated draw probability function in wc_model.py, with full test coverage
+
+## Phase Details (v1.2)
+
+### Phase 8: Dynamic Draw Algorithm
+**Goal**: Group-stage draw probability in wc_model.py reflects actual match balance — evenly-matched teams draw more often than mismatches — calibrated to historical WC data, with knockout behavior unchanged and full parameterized test coverage
+**Depends on**: Phase 7
+**Requirements**: DRAW-01, DRAW-02, DRAW-03, TEST-01
+**Success Criteria** (what must be TRUE):
+  1. Calling `wc_model.predict()` on a group-stage match with Elo difference near 0 returns a draw probability at or near 30%
+  2. Calling `wc_model.predict()` on a group-stage match with Elo difference near 500 returns a draw probability at or near 8%
+  3. Calling `wc_model.predict()` on any knockout round match returns draw probability exactly 0.0 regardless of Elo difference
+  4. Parameterized tests pass at Elo difference values of 0, 100, 300, 500, and 750 — all 619 existing tests continue to pass with zero regressions
+**Plans**: TBD
 
 ## Progress (v1.0)
 
@@ -126,6 +150,12 @@ Plans:
 | 5. Data Foundation | 3/3 | Complete   | 2026-06-19 |
 | 6. Match Model | 1/1 | Complete    | 2026-06-19 |
 | 7. SGP Builder + Scanner Integration | 2/2 | Complete    | 2026-06-19 |
+
+## Progress (v1.2)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 8. Dynamic Draw Algorithm | 0/2 | Not started | - |
 
 ## v1.0 Final Results
 | Stat    | Baseline | Final  | Delta   |
