@@ -63,7 +63,7 @@
 
 ## Phases (v1.1)
 
-- [ ] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer
+- [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
 - [ ] **Phase 6: Match Model** - Elo-logistic W/D/L model with neutral-venue correction, stage metadata, knockout gate, and market divergence flag
 - [ ] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage
 
@@ -80,9 +80,9 @@
   4. All three data sources are isolated from the EPL/UCL pipeline — no shared cache namespace, no calls to `soccer_stats.py` or `get_team_rolling_stats_all()`
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — FootballDataClient WC extension: _COMP_MAP update, _get_with_retry(), fetch_wc_games() with stage/group fields, tests
-- [ ] 05-02-PLAN.md — WC reader modules: wc_elo.py (Elo JSON loader) + wc_stats.py (StatsBomb pkl loader), tests
-- [ ] 05-03-PLAN.md — build_wc_priors.py one-time script: eloratings.net Elo download + StatsBomb 2018/2022 event aggregation, produces wc_priors.json + wc_stats.pkl
+- [x] 05-01-PLAN.md — FootballDataClient WC extension: _COMP_MAP update, _get_with_retry(), fetch_wc_games() with stage/group fields, tests
+- [x] 05-02-PLAN.md — WC reader modules: wc_elo.py (Elo JSON loader) + wc_stats.py (StatsBomb pkl loader), tests
+- [x] 05-03-PLAN.md — build_wc_priors.py one-time script: eloratings.net Elo download + StatsBomb 2018/2022 event aggregation, produces wc_priors.json + wc_stats.pkl
 
 ### Phase 6: Match Model
 **Goal**: WC match predictions output calibrated Win/Draw/Loss probabilities (or Win-to-Advance in knockouts) using Elo-logistic logic, with stage-aware behavior and a market divergence flag — and are never routed through SoccerModel
@@ -121,7 +121,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 5. Data Foundation | 0/3 | Not started | - |
+| 5. Data Foundation | 3/3 | Complete   | 2026-06-19 |
 | 6. Match Model | 0/4 | Not started | - |
 | 7. SGP Builder + Scanner Integration | 0/5 | Not started | - |
 
