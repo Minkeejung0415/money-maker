@@ -4,16 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.1 — World Cup Soccer Mode
+## Current Milestone: v1.2 — Draw Algorithm
 
-**Goal:** Ship a full World Cup 2026 prediction stack — match outcome model, player props, and SGP builder — running on live group-stage and knockout-round data.
+**Goal:** Replace the flat 25% draw rate with a match-strength-dependent draw probability calibrated to historical WC group-stage data.
 
 **Target features:**
-- WC fixture ingestion: live group stage + knockout schedule
-- WC match model: Win/Draw/Loss predictions tuned to national-team dynamics
-- WC player props: goals, shots, assists (odds-implied where historical data is sparse)
-- WC SGP builder: combine match + player legs into SGP combos
-- `scripts/wc_scanner.py`: new entry point (`--mode props` / `--mode parlay`)
+- Dynamic draw probability function: p_draw decreases as Elo difference grows
+- Calibration against historical WC group-stage draw rates by Elo band
+- Updated `wc_model.py` and full test coverage
+
+## Previous Milestone: v1.1 — World Cup Soccer Mode (Complete)
+
+**Shipped (2026-06-19):** WC fixture ingestion (football-data.org), Elo-logistic match model (neutral venue, knockout gate, elo_edge flag), WC SGP builder, wc_scanner.py entry point. 619 tests passing.
 
 ## Core Value
 
@@ -29,14 +31,18 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Blowout gate (ML win prob <30% → downgrade HIGH picks)
 - [x] 60% confidence floor for SGP legs
 
-### Active (v1.1)
+### Validated (v1.1)
 
-- [ ] WC fixture ingestion: live group stage + knockout schedule
-- [ ] WC match outcome model (Win/Draw/Loss with calibrated confidence)
-- [ ] WC player prop model (goals, shots, assists)
-- [ ] WC SGP builder combining match and player legs
-- [ ] `scripts/wc_scanner.py` entry point (`--mode props` / `--mode parlay`)
-- [ ] Research confirms best data sources for WC stats and odds
+- [x] WC fixture ingestion: live group stage + knockout schedule
+- [x] WC match outcome model (Elo-logistic, neutral venue, knockout gate)
+- [x] WC SGP builder (stage-aware, correlation gate)
+- [x] `scripts/wc_scanner.py` entry point (`--mode parlay`)
+
+### Active (v1.2)
+
+- [ ] Dynamic draw probability function keyed on Elo difference
+- [ ] Calibration to historical WC group-stage draw rates
+- [ ] Updated wc_model.py with full test coverage
 
 ### Out of Scope
 
@@ -104,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-18 — Milestone v1.1 started*
+*Last updated: 2026-06-18 — Milestone v1.2 started*

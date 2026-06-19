@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: — NBA Prop Model Algorithm Upgrade
-status: executing
-stopped_at: v1.1 roadmap created. Phase 5 (Data Foundation) is next.
-last_updated: "2026-06-19T04:50:57.913Z"
-last_activity: 2026-06-18 -- Phase 05 execution started
+milestone: v1.2
+milestone_name: Draw Algorithm
+status: planning
+stopped_at: Milestone v1.2 started. Defining requirements.
+last_updated: "2026-06-18T00:00:00.000Z"
+last_activity: 2026-06-18 -- Milestone v1.2 started
 progress:
-  total_phases: 7
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
-  percent: 14
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,26 +25,22 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 05 (data-foundation) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 05
-Last activity: 2026-06-18 -- Phase 05 execution started
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-18 — Milestone v1.2 started
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0 (v1.1)
+- Total plans completed: 0 (v1.2)
 - Average duration: - min
 - Total execution time: 0 hours
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 5 - Data Foundation | 0/3 | - | - |
-| 6 - Match Model | 0/4 | - | - |
-| 7 - SGP Builder + Scanner Integration | 0/5 | - | - |
+*Roadmap not yet created*
 
 **Recent Trend:**
 
