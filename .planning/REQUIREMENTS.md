@@ -29,12 +29,12 @@ Replace the flat 25% draw rate with a match-strength-dependent draw probability 
 
 ## Traceability
 
-| REQ-ID  | Phase   | Plan |
-|---------|---------|------|
-| DRAW-01 | Phase 8 | TBD  |
-| DRAW-02 | Phase 8 | TBD  |
-| DRAW-03 | Phase 8 | TBD  |
-| TEST-01 | Phase 8 | TBD  |
+| REQ-ID  | Phase   | Plan  |
+|---------|---------|-------|
+| DRAW-01 | Phase 8 | 08-01 |
+| DRAW-02 | Phase 8 | 08-01 |
+| DRAW-03 | Phase 8 | 08-01 |
+| TEST-01 | Phase 8 | 08-01 |
 
 ---
-*Last updated: 2026-06-18 — v1.2 roadmap created; all requirements mapped to Phase 8*
+*Last updated: 2026-06-18 — v1.2 roadmap created; all requirements mapped to Phase 8; 08-01-PLAN.md assigned*

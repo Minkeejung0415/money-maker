@@ -132,7 +132,9 @@ Plans:
   2. Calling `wc_model.predict()` on a group-stage match with Elo difference near 500 returns a draw probability at or near 8%
   3. Calling `wc_model.predict()` on any knockout round match returns draw probability exactly 0.0 regardless of Elo difference
   4. Parameterized tests pass at Elo difference values of 0, 100, 300, 500, and 750 — all 619 existing tests continue to pass with zero regressions
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 08-01-PLAN.md — _draw_prob() exponential decay function: replace flat constant, update tests
 
 ## Progress (v1.0)
 
@@ -155,7 +157,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 8. Dynamic Draw Algorithm | 0/2 | Not started | - |
+| 8. Dynamic Draw Algorithm | 0/1 | Not started | - |
 
 ## v1.0 Final Results
 | Stat    | Baseline | Final  | Delta   |
