@@ -4,7 +4,7 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.2 — Draw Algorithm
+## Current Milestone: v1.2 — Draw Algorithm (Complete)
 
 **Goal:** Replace the flat 25% draw rate with a match-strength-dependent draw probability calibrated to historical WC group-stage data.
 
@@ -38,11 +38,11 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] WC SGP builder (stage-aware, correlation gate)
 - [x] `scripts/wc_scanner.py` entry point (`--mode parlay`)
 
-### Active (v1.2)
+### Validated (v1.2)
 
-- [ ] Dynamic draw probability function keyed on Elo difference
-- [ ] Calibration to historical WC group-stage draw rates
-- [ ] Updated wc_model.py with full test coverage
+- [x] Dynamic draw probability function keyed on Elo difference
+- [x] Calibration to historical WC group-stage draw rates
+- [x] Updated wc_model.py with full test coverage
 
 ### Out of Scope
 
@@ -110,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-18 — Milestone v1.2 started*
+*Last updated: 2026-06-19 — Milestone v1.2 completed*

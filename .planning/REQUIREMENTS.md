@@ -8,13 +8,13 @@ Replace the flat 25% draw rate with a match-strength-dependent draw probability 
 
 ### Draw Probability
 
-- [ ] **DRAW-01**: Model computes draw probability as a function of |Elo difference| for group-stage games, not a flat constant — so Spain (Δ745) and Scotland (Δ54) get materially different draw rates
-- [ ] **DRAW-02**: Draw probability is calibrated to historical WC group-stage draw rates by Elo band (Δ<100 → ~30%, Δ200-400 → ~18%, Δ>500 → ~8%), using an exponential decay or equivalent formula
-- [ ] **DRAW-03**: Knockout round behavior unchanged — p_draw = 0.0 always regardless of Elo difference
+- [x] **DRAW-01**: Model computes draw probability as a function of |Elo difference| for group-stage games, not a flat constant — so Spain (Δ745) and Scotland (Δ54) get materially different draw rates
+- [x] **DRAW-02**: Draw probability is calibrated to historical WC group-stage draw rates by Elo band (Δ<100 → ~30%, Δ200-400 → ~18%, Δ>500 → ~8%), using an exponential decay or equivalent formula
+- [x] **DRAW-03**: Knockout round behavior unchanged — p_draw = 0.0 always regardless of Elo difference
 
 ### Testing
 
-- [ ] **TEST-01**: Parameterized tests cover draw probability output at multiple representative Elo difference values (Δ=0, Δ=100, Δ=300, Δ=500, Δ=750); all 619 existing tests pass with zero regressions
+- [x] **TEST-01**: Parameterized tests cover draw probability output at multiple representative Elo difference values (Δ=0, Δ=100, Δ=300, Δ=500, Δ=750); all 619 existing tests pass with zero regressions
 
 ## Future Requirements
 

@@ -119,7 +119,7 @@ Plans:
 
 ## Phases (v1.2)
 
-- [ ] **Phase 8: Dynamic Draw Algorithm** - Replace flat draw constant with Elo-calibrated draw probability function in wc_model.py, with full test coverage
+- [x] **Phase 8: Dynamic Draw Algorithm** - Replace flat draw constant with Elo-calibrated draw probability function in wc_model.py, with full test coverage (completed 2026-06-19)
 
 ## Phase Details (v1.2)
 
@@ -134,7 +134,7 @@ Plans:
   4. Parameterized tests pass at Elo difference values of 0, 100, 300, 500, and 750 — all 619 existing tests continue to pass with zero regressions
 **Plans**: 1 plan
 Plans:
-- [ ] 08-01-PLAN.md — _draw_prob() exponential decay function: replace flat constant, update tests
+- [x] 08-01-PLAN.md — _draw_prob() exponential decay function: replace flat constant, update tests
 
 ## Progress (v1.0)
 
@@ -157,7 +157,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 8. Dynamic Draw Algorithm | 0/1 | Not started | - |
+| 8. Dynamic Draw Algorithm | 1/1 | Complete | 2026-06-19 |
 
 ## v1.0 Final Results
 | Stat    | Baseline | Final  | Delta   |
