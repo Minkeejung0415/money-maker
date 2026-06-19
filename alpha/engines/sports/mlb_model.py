@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from datetime import date
 
 from alpha.engines.sports.ev_calculator import EVCalculator
 
@@ -40,6 +41,7 @@ class MLBModel:
         self._kelly_fraction = kelly_fraction
 
         self._xgb_model = None
+        self._model_bundle: dict | None = None
         self._xgb_models_loaded: bool = False
 
         self._injury_impact: dict = {}
@@ -72,7 +74,7 @@ class MLBModel:
 
         if self._xgb_models_loaded:
             try:
-                probs = self._predict_xgb(game)
+                probs = self._predict_bundle(game) if self._model_bundle else self._predict_xgb(game)
                 if probs is not None:
                     home_prob, away_prob = probs
                     if home_prob > MAX_XGB_CONF:
@@ -89,7 +91,7 @@ class MLBModel:
                         "away_team": away_team,
                         "home_win_prob": round(home_prob, 4),
                         "away_win_prob": round(away_prob, 4),
-                        "source": "xgboost",
+                        "source": "trained_calibrated" if self._model_bundle else "xgboost",
                     }
             except Exception as exc:
                 logger.debug("XGBoost prediction failed, using market-implied: %s", exc)
@@ -178,13 +180,25 @@ class MLBModel:
                 logger.debug("No mlb_outcomes model file found — using market-implied")
                 return
 
-            self._xgb_model = joblib.load(str(model_path))
+            loaded = joblib.load(str(model_path))
+            if isinstance(loaded, dict) and loaded.get("kind") == "mlb_win_probability_bundle":
+                from alpha.engines.sports.mlb_training import FEATURE_NAMES
+                if not loaded.get("validated") or tuple(loaded.get("feature_names", ())) != FEATURE_NAMES:
+                    logger.warning("MLB artifact failed validation/schema gate")
+                    return
+                self._model_bundle = loaded
+                self._xgb_model = loaded["model"]
+            else:
+                self._xgb_model = loaded
             self._xgb_models_loaded = True
-            logger.info("Loaded MLB XGBoost model: %s", model_path.name)
+            logger.info("Loaded MLB model: %s", model_path.name)
         except Exception as exc:
             logger.debug("MLB model load skipped: %s", exc)
 
     def _find_model_path(self) -> Path | None:
+        preferred = Path("alpha/models/mlb_win_probability.pkl")
+        if preferred.exists():
+            return preferred
         for search_dir in _MODEL_SEARCH_DIRS:
             if not search_dir.exists():
                 continue
@@ -198,6 +212,20 @@ class MLBModel:
     # Internal: XGBoost prediction
     # ------------------------------------------------------------------
 
+    def _predict_bundle(self, game: dict) -> tuple[float, float] | None:
+        """Predict with the validated v1.3 bundle and its saved team state."""
+        import numpy as np
+        from alpha.engines.sports.mlb_training import FEATURE_NAMES, live_feature_vector
+        from scripts.train_mlb_moneyline import calibrated
+        bundle = self._model_bundle
+        if not bundle:
+            return None
+        game_date = str(game.get("commence_time", ""))[:10] or date.today().isoformat()
+        features = live_feature_vector(game.get("home_team", ""), game.get("away_team", ""), game_date, bundle["team_state"])
+        X = np.asarray([[features[name] for name in FEATURE_NAMES]], dtype=float)
+        raw = bundle["model"].predict_proba(X)[:, 1]
+        home = float(calibrated(bundle["calibrator"], raw)[0])
+        return home, 1.0 - home
     def _predict_xgb(self, game: dict) -> tuple[float, float] | None:
         try:
             import pandas as pd  # noqa: PLC0415

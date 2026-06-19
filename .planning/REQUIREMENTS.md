@@ -1,40 +1,69 @@
-# Requirements: v1.2 — Draw Algorithm
+# Requirements: v1.3 — MLB Win Probability Model
 
-## Milestone Goal
+**Defined:** 2026-06-19
+**Core Value:** Daily MLB percentages must come from a validated independent model, never a silent 50/50 placeholder.
 
-Replace the flat 25% draw rate with a match-strength-dependent draw probability calibrated to historical WC group-stage data.
+## v1.3 Requirements
 
-## Active Requirements
+### Historical Data
 
-### Draw Probability
+- [x] **MLBD-01**: Build a reproducible historical MLB game dataset from free sources with final outcomes and canonical team identifiers.
+- [x] **MLBD-02**: Every model feature is computed from information available before the target game's first pitch.
+- [x] **MLBD-03**: Training and live inference use the same feature schema and transformations.
 
-- [x] **DRAW-01**: Model computes draw probability as a function of |Elo difference| for group-stage games, not a flat constant — so Spain (Δ745) and Scotland (Δ54) get materially different draw rates
-- [x] **DRAW-02**: Draw probability is calibrated to historical WC group-stage draw rates by Elo band (Δ<100 → ~30%, Δ200-400 → ~18%, Δ>500 → ~8%), using an exponential decay or equivalent formula
-- [x] **DRAW-03**: Knockout round behavior unchanged — p_draw = 0.0 always regardless of Elo difference
+### Modeling
 
-### Testing
+- [x] **MLBM-01**: Train at least one transparent baseline and one boosted candidate on chronological data.
+- [x] **MLBM-02**: Calibrate probabilities using a validation window separate from training and final testing.
+- [x] **MLBM-03**: Select the released model using out-of-time Brier score and log loss, with accuracy reported second.
+- [x] **MLBM-04**: Persist estimator metadata including schema, training dates, metrics, calibration, and model version.
 
-- [x] **TEST-01**: Parameterized tests cover draw probability output at multiple representative Elo difference values (Δ=0, Δ=100, Δ=300, Δ=500, Δ=750); all 619 existing tests pass with zero regressions
+### Runtime
+
+- [x] **MLBR-01**: MLBModel loads only schema-compatible validated artifacts and clearly reports its source/status.
+- [x] **MLBR-02**: MLB scanner prints home/away percentages and fair decimal odds for every daily matchup.
+- [x] **MLBR-03**: Scanner never presents placeholder -110/-110 probabilities as an independent model prediction.
+- [x] **MLBR-04**: Optional manual sportsbook odds enable no-vig comparison and edge output without paid API usage.
+
+### Verification
+
+- [x] **MLBV-01**: Leakage, chronology, feature parity, artifact validation, and scanner output have automated tests.
+- [x] **MLBV-02**: Full repository tests pass with no regressions.
 
 ## Future Requirements
 
-- Dynamic draw calibration using live WC 2026 result feed (after tournament closes)
-- WC player props pipeline (deferred to v1.3 — requires Odds API Business tier)
+- Player prop probabilities and prop odds ingestion
+- Parlay construction and bankroll sizing from validated MLB probabilities
+- Automated paid live moneyline feed
 
 ## Out of Scope
 
-- EPL/UCL draw model changes — WC-only scope
-- NBA/MLB changes — no cross-vertical impact
-- New data sources — uses existing Elo priors only
+| Feature | Reason |
+|---------|--------|
+| Player props | Requires broader data and dependable prop odds |
+| Parlays | Single-game probability quality must be proven first |
+| Paid feeds | v1.3 is free-data only |
+| In-game predictions | Pregame model only |
 
 ## Traceability
 
-| REQ-ID  | Phase   | Plan  |
-|---------|---------|-------|
-| DRAW-01 | Phase 8 | 08-01 |
-| DRAW-02 | Phase 8 | 08-01 |
-| DRAW-03 | Phase 8 | 08-01 |
-| TEST-01 | Phase 8 | 08-01 |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| MLBD-01 | Phase 9 | Complete |
+| MLBD-02 | Phase 9 | Complete |
+| MLBD-03 | Phase 9 | Complete |
+| MLBM-01 | Phase 10 | Complete |
+| MLBM-02 | Phase 10 | Complete |
+| MLBM-03 | Phase 10 | Complete |
+| MLBM-04 | Phase 10 | Complete |
+| MLBR-01 | Phase 11 | Complete |
+| MLBR-02 | Phase 11 | Complete |
+| MLBR-03 | Phase 11 | Complete |
+| MLBR-04 | Phase 11 | Complete |
+| MLBV-01 | Phases 9-11 | Complete |
+| MLBV-02 | Phase 11 | Complete |
+
+**Coverage:** 13 requirements, 13 mapped, 0 unmapped.
 
 ---
-*Last updated: 2026-06-18 — v1.2 roadmap created; all requirements mapped to Phase 8; 08-01-PLAN.md assigned*
+*Requirements defined: 2026-06-19*

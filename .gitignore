@@ -52,3 +52,5 @@ Thumbs.db
 *.parquet
 /data/**/*.csv
 *.json.gz
+.tmp-tests/
+test-tmp/

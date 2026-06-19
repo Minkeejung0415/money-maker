@@ -4,7 +4,7 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.3 — MLB Win Probability Model
+## Current Milestone: v1.3 — MLB Win Probability Model (Complete)
 
 **Goal:** Replace the 50/50 MLB fallback with independently trained, historically validated home/away win probabilities for every daily MLB game.
 
@@ -55,14 +55,14 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Calibration to historical WC group-stage draw rates
 - [x] Updated wc_model.py with full test coverage
 
-### Active (v1.3)
+### Validated (v1.3)
 
-- [ ] Build a leakage-free historical MLB game dataset from free sources
-- [ ] Train and calibrate an independent MLB win-probability model
-- [ ] Validate chronologically against home-team and market baselines
-- [ ] Persist model metadata and prevent unvalidated models from being trusted silently
-- [ ] Show daily home/away probabilities and fair odds in the MLB scanner
-- [ ] Support optional manually supplied sportsbook odds for edge comparison
+- [x] Build a leakage-free historical MLB game dataset from free sources
+- [x] Train and calibrate an independent MLB win-probability model
+- [x] Validate chronologically against home-team and market baselines
+- [x] Persist model metadata and prevent unvalidated models from being trusted silently
+- [x] Show daily home/away probabilities and fair odds in the MLB scanner
+- [x] Support optional manually supplied sportsbook odds for edge comparison
 
 ### Out of Scope
 

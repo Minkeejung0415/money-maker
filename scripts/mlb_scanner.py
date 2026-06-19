@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import logging
 import sys
 from pathlib import Path
@@ -153,6 +154,17 @@ def main() -> None:
         sys.exit(0)
     print(f"    Found {len(games)} game(s)")
 
+    # Optional manually supplied market odds.
+    odds_path = ROOT / "data" / "mlb_odds_override.json"
+    if odds_path.exists():
+        odds_map = {k: v for k, v in json.loads(odds_path.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+        for game in games:
+            odds = odds_map.get(f"{game['home_team']}|{game['away_team']}")
+            if odds:
+                game["home_odds"] = odds["home_american"]
+                game["away_odds"] = odds["away_american"]
+                game["has_market_odds"] = True
+
     # Enrich with MLBModel win probabilities
     mlb_model = MLBModel()
     for game in games:
@@ -160,9 +172,17 @@ def main() -> None:
         game["home_model_prob"] = pred["home_win_prob"]
         game["away_model_prob"] = pred["away_win_prob"]
 
+    src = "validated trained model" if mlb_model._model_bundle else ("legacy model" if mlb_model._xgb_models_loaded else "UNAVAILABLE — train with scripts/train_mlb_moneyline.py")
     if args.validate:
-        src = "XGBoost (mlb_outcomes)" if mlb_model._xgb_models_loaded else "market-implied fallback"
         print(f"    Model source: {src}")
+
+    print("\n    Today's win probabilities:")
+    for game in games:
+        if mlb_model._model_bundle:
+            hp, ap = game["home_model_prob"], game["away_model_prob"]
+            print(f"      {game['away_team']} {ap:.1%} at {game['home_team']} {hp:.1%} | fair odds {1/ap:.2f} / {1/hp:.2f}")
+        else:
+            print(f"      {game['away_team']} at {game['home_team']}: model unavailable")
 
     # ── Step 2: Fetch props ──────────────────────────────────────────────
     prop_legs_raw: list[dict] = []
@@ -220,7 +240,6 @@ def main() -> None:
 
     # ── Step 5: Validation ───────────────────────────────────────────────
     if args.validate:
-        src = "XGBoost (mlb_outcomes)" if mlb_model._xgb_models_loaded else "market-implied"
         print(f"[5/6] Model info: {src}")
     else:
         print("[5/6] Skipping validation  (run with --validate to check model source)")
@@ -232,9 +251,10 @@ def main() -> None:
         min_edge=args.min_edge,
         max_legs=args.max_legs,
     )
+    market_games = [g for g in games if g.get("has_market_odds")]
     results = builder.build(
         prop_legs=scored_legs,
-        ml_games=games,
+        ml_games=market_games,
         mode=sgp_mode,
         top_n=args.top,
     )
@@ -246,6 +266,8 @@ def main() -> None:
 
     if not results:
         print(f"\nNo combinations found with >={args.min_edge:.1%} edge today.")
+        if not market_games:
+            print("  No real market odds supplied; edge/parlay output intentionally disabled.")
         if scored_legs:
             print(f"  (Scored {len(scored_legs)} legs — try --min-edge 0.02)")
         return

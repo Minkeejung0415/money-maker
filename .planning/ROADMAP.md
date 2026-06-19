@@ -169,3 +169,50 @@ Plans:
 | overall | 43.5%    | 48.6%  | +5.1%   |
 
 Tests: 493/493 passing.
+---
+
+## Current Milestone: v1.3 — MLB Win Probability Model
+
+## Phases (v1.3)
+
+- [x] **Phase 9: Historical Data and Feature Contract** - Build leakage-safe historical game rows and one shared pregame feature schema
+- [x] **Phase 10: Training, Calibration, and Validation** - Train candidates, calibrate probabilities, benchmark chronologically, and persist validated artifacts
+- [x] **Phase 11: Runtime and Scanner Integration** - Load validated artifacts and show daily percentages, fair odds, and optional manual market comparison
+
+## Phase Details (v1.3)
+
+### Phase 9: Historical Data and Feature Contract
+**Goal**: Historical completed games can be transformed into deterministic pregame feature rows without future information.
+**Requirements**: MLBD-01, MLBD-02, MLBD-03, MLBV-01
+**Success Criteria**:
+1. Dataset rows contain canonical teams, date, binary home-win target, and only shifted/rolling pregame features.
+2. Chronology tests prove target-game results cannot influence features.
+3. Trainer and runtime call the same feature schema helper.
+**Plans**: 1 plan
+
+### Phase 10: Training, Calibration, and Validation
+**Goal**: A calibrated model is selected on untouched future games and saved with auditable metadata.
+**Requirements**: MLBM-01, MLBM-02, MLBM-03, MLBM-04, MLBV-01
+**Success Criteria**:
+1. Logistic and boosted candidates are evaluated with chronological train/calibration/test windows.
+2. Report includes Brier score, log loss, accuracy, reliability buckets, and baseline comparisons.
+3. Saved artifact includes exact feature schema and validation metadata.
+**Plans**: 1 plan
+
+### Phase 11: Runtime and Scanner Integration
+**Goal**: Today's MLB slate displays validated independent win percentages and fair odds, never misleading fallback output.
+**Requirements**: MLBR-01, MLBR-02, MLBR-03, MLBR-04, MLBV-01, MLBV-02
+**Success Criteria**:
+1. MLBModel rejects incompatible or unvalidated artifacts.
+2. Scanner prints every game's home/away probabilities, fair odds, and source.
+3. Manual odds enable no-vig edge comparison; absent odds are labeled unavailable.
+4. Full test suite passes.
+**Plans**: 1 plan
+
+## Progress (v1.3)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 9. Historical Data and Feature Contract | 1/1 | Complete | 2026-06-19 |
+| 10. Training, Calibration, and Validation | 1/1 | Complete | 2026-06-19 |
+| 11. Runtime and Scanner Integration | 1/1 | Complete | 2026-06-19 |
