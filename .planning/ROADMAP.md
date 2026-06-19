@@ -63,7 +63,7 @@
 
 ## Phases (v1.1)
 
-- [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
+- [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
 - [ ] **Phase 6: Match Model** - Elo-logistic W/D/L model with neutral-venue correction, stage metadata, knockout gate, and market divergence flag
 - [ ] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage
 
@@ -94,7 +94,9 @@ Plans:
   3. Each game dict returned by the WC pipeline contains a `stage` field with one of `GROUP_STAGE`, `LAST_16`, `QUARTER_FINALS`, `SEMI_FINALS`, or `FINAL` extracted from football-data.org fixture response
   4. Picks where the Elo model win probability diverges from sportsbook implied odds by more than 5 percentage points carry `"elo_edge": true` in the output dict
   5. Passing a WC game dict to `SoccerModel` raises an error or is explicitly blocked — WC games never silently enter the EPL/UCL code path
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — WCMatchModel: Elo-logistic predict(), knockout gate, elo_edge flag, evaluate_bet(), full TDD test suite
 
 ### Phase 7: SGP Builder + Scanner Integration
 **Goal**: Users can run `python scripts/wc_scanner.py --mode parlay` and receive ranked WC match picks with Elo confidence, EV vs. market odds, divergence flag annotation, and valid multi-leg SGP combos — with all new components covered by tests and zero regressions against existing suite
@@ -122,7 +124,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 5. Data Foundation | 3/3 | Complete   | 2026-06-19 |
-| 6. Match Model | 0/4 | Not started | - |
+| 6. Match Model | 0/1 | Not started | - |
 | 7. SGP Builder + Scanner Integration | 0/5 | Not started | - |
 
 ## v1.0 Final Results
