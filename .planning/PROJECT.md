@@ -4,7 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.2 — Draw Algorithm (Complete)
+## Current Milestone: v1.3 — MLB Win Probability Model
+
+**Goal:** Replace the 50/50 MLB fallback with independently trained, historically validated home/away win probabilities for every daily MLB game.
+
+**Target features:**
+- Leakage-free historical game dataset from free MLB data
+- Calibrated pregame model using team, pitcher, rest, and home-field features
+- Chronological validation against simple and market benchmarks
+- Daily scanner output with win percentages and fair odds
+- Optional manual sportsbook odds for edge comparison
+
+## Previous Milestone: v1.2 — Draw Algorithm (Complete)
 
 **Goal:** Replace the flat 25% draw rate with a match-strength-dependent draw probability calibrated to historical WC group-stage data.
 
@@ -44,11 +55,21 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Calibration to historical WC group-stage draw rates
 - [x] Updated wc_model.py with full test coverage
 
+### Active (v1.3)
+
+- [ ] Build a leakage-free historical MLB game dataset from free sources
+- [ ] Train and calibrate an independent MLB win-probability model
+- [ ] Validate chronologically against home-team and market baselines
+- [ ] Persist model metadata and prevent unvalidated models from being trusted silently
+- [ ] Show daily home/away probabilities and fair odds in the MLB scanner
+- [ ] Support optional manually supplied sportsbook odds for edge comparison
+
 ### Out of Scope
 
-- EPL/UCL engine changes — WC only for this milestone
-- NBA/MLB model changes — sports scope is WC only
-- UI/output format changes beyond scanner output
+- MLB player props — requires a dependable prop-odds source and broader modeling scope
+- MLB parlay optimization — deferred until single-game probabilities are validated
+- Paid baseball or odds feeds — free data only for v1.3
+- NBA and soccer model changes — milestone scope is MLB game outcomes only
 
 ## Context
 
@@ -110,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-19 — Milestone v1.2 completed*
+*Last updated: 2026-06-19 — Milestone v1.3 started*

@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Draw Algorithm
-status: completed
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-06-19T07:19:41.165Z"
-last_activity: 2026-06-19 -- Phase 08 marked complete
+milestone: v1.3
+milestone_name: MLB Win Probability Model
+status: planning
+last_updated: "2026-06-19T18:14:37.185Z"
+last_activity: 2026-06-19
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 08 — COMPLETE
-Plan: 1 of 1
-Status: Phase 08 complete
-Last activity: 2026-06-19 -- Phase 08 marked complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-19 — Milestone v1.3 started
 
 ## Performance Metrics
 
