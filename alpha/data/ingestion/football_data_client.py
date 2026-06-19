@@ -151,11 +151,16 @@ class FootballDataClient:
                 timeout=10,
             )
             data = resp.json()
+            _PLAYABLE = {"TIMED", "SCHEDULED", "IN_PLAY", "PAUSED"}
             games = []
             for match in data.get("matches", []):
                 home = match.get("homeTeam", {}).get("name", "")
                 away = match.get("awayTeam", {}).get("name", "")
                 if not home or not away:
+                    continue
+                status = match.get("status", "")
+                if status and status not in _PLAYABLE:
+                    logger.debug("Skipping %s vs %s — status=%s", home, away, status)
                     continue
                 games.append({
                     "home_team": home,

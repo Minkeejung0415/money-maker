@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 _WC_PRIORS_PATH = Path("data/wc_priors.json")
 _ELO_FALLBACK: int = 1500
 
+# football-data.org name -> wc_priors.json key (for teams with divergent naming)
+_TEAM_NAME_ALIASES: dict[str, str] = {
+    "South Korea": "Korea Republic",  # football-data.org uses "South Korea"
+}
+
 
 def load_wc_elo_ratings() -> dict[str, int]:
     """
@@ -41,9 +46,10 @@ def get_elo_rating(team: str, ratings: dict[str, int]) -> int:
 
     Logs a warning when the fallback is used so callers can detect missing mappings.
     """
-    if team not in ratings:
+    canonical = _TEAM_NAME_ALIASES.get(team, team)
+    if canonical not in ratings:
         logger.warning(
             "No Elo rating for '%s' — using fallback %d", team, _ELO_FALLBACK
         )
         return _ELO_FALLBACK
-    return ratings[team]
+    return ratings[canonical]
