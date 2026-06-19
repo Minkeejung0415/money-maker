@@ -1,7 +1,7 @@
 """
 Unit tests for alpha.data.ingestion.soccer_form.
 
-All tests mock FootballDataClient.fetch_team_matches() — no live API calls.
+All tests mock FootballDataClient.fetch_team_matches() - no live API calls.
 """
 from __future__ import annotations
 
@@ -18,6 +18,17 @@ from alpha.data.ingestion.soccer_form import (
     fetch_h2h,
     fetch_team_form,
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolated_cache(
+    request: pytest.FixtureRequest,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Prevent one test's daily cache entry from leaking into another."""
+    if request.node.name != "test_cache_namespace_isolated":
+        monkeypatch.setattr(soccer_form, "_CACHE_DIR", tmp_path)
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +67,7 @@ def test_form_all_wins():
         for i in range(1, 6)
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_team_form(team_id, n=5)
@@ -77,7 +88,7 @@ def test_form_mixed():
         _make_match(99, team_id, "HOME_WIN", 3, 1, "2025-11-20T15:00:00Z"),  # team as away, loses
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_team_form(team_id, n=5)
@@ -89,7 +100,7 @@ def test_form_empty():
     """No matches: games=0, form_points=0, wdl=[]."""
     team_id = 57
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = []
         result = fetch_team_form(team_id, n=5)
@@ -103,11 +114,11 @@ def test_form_skips_null_winner():
     """Matches where score.winner=null are excluded from computation."""
     team_id = 57
     matches = [
-        _make_match(team_id, 99, None, 0, 0, "2025-11-01T15:00:00Z"),  # null winner — skip
+        _make_match(team_id, 99, None, 0, 0, "2025-11-01T15:00:00Z"),  # null winner - skip
         _make_match(team_id, 99, "HOME_WIN", 2, 0, "2025-11-05T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_team_form(team_id, n=5)
@@ -131,7 +142,7 @@ def test_h2h_basic():
         _make_match(away_id, home_id, "DRAW", 1, 1, "2024-08-01T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_h2h(home_id, away_id, n=5)
@@ -151,7 +162,7 @@ def test_h2h_partial():
         _make_match(away_id, home_id, "AWAY_WIN", 0, 1, "2024-04-01T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_h2h(home_id, away_id, n=5)
@@ -167,7 +178,7 @@ def test_h2h_no_meetings():
         _make_match(99, 100, "HOME_WIN", 1, 0, "2024-01-01T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_h2h(home_id, away_id, n=5)
@@ -187,7 +198,7 @@ def test_days_rest_normal():
         _make_match(team_id, 99, "HOME_WIN", 2, 0, "2025-12-01T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_days_rest(team_id, "2025-12-08")
@@ -199,7 +210,7 @@ def test_days_rest_no_prior():
     """Empty matches list: returns default of 3."""
     team_id = 57
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = []
         result = fetch_days_rest(team_id, "2025-12-08")
@@ -214,7 +225,7 @@ def test_days_rest_b2b():
         _make_match(team_id, 99, "HOME_WIN", 2, 0, "2025-12-07T15:00:00Z"),
     ]
     with patch(
-        "alpha.data.ingestion.soccer_form.FootballDataClient"
+        "alpha.data.ingestion.football_data_client.FootballDataClient"
     ) as MockClient:
         MockClient.return_value.fetch_team_matches.return_value = matches
         result = fetch_days_rest(team_id, "2025-12-08")
