@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: — NBA Prop Model Algorithm Upgrade
+status: executing
+stopped_at: v1.1 roadmap created. Phase 5 (Data Foundation) is next.
+last_updated: "2026-06-18T22:48:42.238Z"
+last_activity: 2026-06-18 -- Phase 05 execution started
+progress:
+  total_phases: 7
+  completed_phases: 1
+  total_plans: 6
+  completed_plans: 6
+  percent: 14
+---
+
 # Project State
 
 ## Project Reference
@@ -5,18 +21,19 @@
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** v1.1 — World Cup Soccer Mode
+**Current focus:** Phase 05 — data-foundation
 
 ## Current Position
 
-Phase: 5 — Data Foundation
-Plan: TBD
-Status: Not started
-Last activity: 2026-06-18 — Roadmap created for v1.1
+Phase: 05 (data-foundation) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 05
+Last activity: 2026-06-18 -- Phase 05 execution started
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0 (v1.1)
 - Average duration: - min
 - Total execution time: 0 hours
@@ -30,6 +47,7 @@ Last activity: 2026-06-18 — Roadmap created for v1.1
 | 7 - SGP Builder + Scanner Integration | 0/5 | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: -
 - Trend: -
 
