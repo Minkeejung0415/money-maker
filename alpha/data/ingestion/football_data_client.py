@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from datetime import date
 
 import requests
@@ -25,7 +26,30 @@ _BASE_URL = "https://api.football-data.org/v4"
 _COMP_MAP: dict[str, str] = {
     "epl": "PL",   # English Premier League
     "ucl": "CL",   # UEFA Champions League
+    "wc":  "WC",   # FIFA World Cup
 }
+
+
+def _get_with_retry(url: str, *, headers: dict, params: dict, timeout: int = 10):
+    """
+    GET with one 429 retry after 60s backoff.
+
+    On status_code==429 at attempt 0, sleeps 60s and retries once.
+    On any other non-2xx status, calls raise_for_status() immediately.
+    Returns requests.Response on success.
+    Raises requests.exceptions.HTTPError on persistent errors.
+    """
+    for attempt in range(2):
+        resp = requests.get(url, headers=headers, params=params, timeout=timeout)
+        if resp.status_code == 429 and attempt == 0:
+            logger.warning("football-data.org 429 — waiting 60s before retry")
+            time.sleep(60)
+            continue
+        resp.raise_for_status()
+        return resp
+    # Second attempt still returned 429 — raise to let caller handle
+    resp.raise_for_status()
+    return resp  # unreachable; satisfies type checkers
 
 
 class FootballDataClient:
@@ -102,4 +126,54 @@ class FootballDataClient:
             logger.warning("football-data.org HTTP %s for %s", status, league_key)
         except Exception as exc:
             logger.warning("football-data.org error for %s: %s", league_key, exc)
+        return []
+
+    def fetch_wc_games(self, date_from: str, date_to: str) -> list[dict]:
+        """
+        Fetch WC 2026 fixtures for a date range.
+
+        Returns game dicts with all standard fields plus two new fields:
+            "stage": str   — e.g. "GROUP_STAGE", "LAST_16", "QUARTER_FINALS",
+                             "SEMI_FINALS", "THIRD_PLACE", "FINAL"
+            "group": str   — e.g. "Group A" (empty string in knockout rounds)
+
+        Returns [] on any failure (including missing API key).
+        """
+        if not self.is_configured():
+            logger.warning("FOOTBALL_API_KEY not set — WC game fetch skipped")
+            return []
+
+        try:
+            resp = _get_with_retry(
+                f"{_BASE_URL}/competitions/WC/matches",
+                headers={"X-Auth-Token": self.api_key},
+                params={"dateFrom": date_from, "dateTo": date_to},
+                timeout=10,
+            )
+            data = resp.json()
+            games = []
+            for match in data.get("matches", []):
+                home = match.get("homeTeam", {}).get("name", "")
+                away = match.get("awayTeam", {}).get("name", "")
+                if not home or not away:
+                    continue
+                games.append({
+                    "home_team": home,
+                    "away_team": away,
+                    "home_odds": -110,
+                    "away_odds": -110,
+                    "league": "wc",
+                    "event_id": str(match.get("id", "")),
+                    "commence_time": match.get("utcDate", ""),
+                    "stage": match.get("stage", ""),
+                    "group": match.get("group", ""),
+                })
+            logger.info("Fetched %d WC games from football-data.org", len(games))
+            return games
+
+        except requests.exceptions.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else "?"
+            logger.warning("football-data.org HTTP %s for WC", status)
+        except Exception as exc:
+            logger.warning("football-data.org WC error: %s", exc)
         return []
