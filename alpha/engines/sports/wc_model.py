@@ -11,6 +11,7 @@ probabilities for knockout rounds, with a market divergence flag.
 from __future__ import annotations
 
 import logging
+import math
 
 from alpha.engines.sports.ev_calculator import EVCalculator
 from alpha.data.ingestion.wc_elo import load_wc_elo_ratings, get_elo_rating
@@ -22,8 +23,14 @@ logger = logging.getLogger(__name__)
 # Module-level constants
 # ---------------------------------------------------------------------------
 
-_WC_DRAW_RATE: float = 0.25
-"""Historical WC group-stage draw frequency."""
+_WC_BASE_DRAW: float = 0.32
+"""Maximum draw probability at Elo difference = 0 (historical WC group-stage peak)."""
+
+_WC_MIN_DRAW: float = 0.05
+"""Floor draw probability for extreme mismatches on group-stage games."""
+
+_WC_DRAW_SCALE: float = 500.0
+"""Elo-points scale factor for exponential decay (500 points yields about 12%)."""
 
 _XG_ELO_SCALE: float = 35.0
 """Elo points per 1 xG/game advantage (StatsBomb modifier)."""
@@ -39,6 +46,14 @@ KNOCKOUT_STAGES: frozenset[str] = frozenset({
     "FINAL",
 })
 """Stages where draws are impossible (extra time / penalties decide)."""
+
+
+def _draw_prob(elo_adj: float) -> float:
+    """Return the calibrated group-stage draw probability for an adjusted Elo gap."""
+    return max(
+        _WC_MIN_DRAW,
+        _WC_BASE_DRAW * math.exp(-abs(elo_adj) / _WC_DRAW_SCALE),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +137,7 @@ class WCMatchModel:
             p_home = p_home_2way
             p_away = 1.0 - p_home_2way
         else:
-            p_draw = _WC_DRAW_RATE
+            p_draw = _draw_prob(elo_adj)
             p_home = p_home_2way * (1.0 - p_draw)
             p_away = (1.0 - p_home_2way) * (1.0 - p_draw)
 

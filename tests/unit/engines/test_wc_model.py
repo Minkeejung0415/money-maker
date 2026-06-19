@@ -5,7 +5,7 @@ import inspect
 
 import pytest
 
-from alpha.engines.sports.wc_model import WCMatchModel, _WC_DRAW_RATE, KNOCKOUT_STAGES
+from alpha.engines.sports.wc_model import KNOCKOUT_STAGES, WCMatchModel, _draw_prob
 
 # ---------------------------------------------------------------------------
 # Shared constants
@@ -40,10 +40,6 @@ def model(monkeypatch):
 # Module-level constants
 # ---------------------------------------------------------------------------
 
-def test_wc_draw_rate_value():
-    assert _WC_DRAW_RATE == pytest.approx(0.25)
-
-
 def test_knockout_stages_contains_expected_values():
     assert "LAST_16" in KNOCKOUT_STAGES
     assert "QUARTER_FINALS" in KNOCKOUT_STAGES
@@ -51,6 +47,41 @@ def test_knockout_stages_contains_expected_values():
     assert "THIRD_PLACE" in KNOCKOUT_STAGES
     assert "FINAL" in KNOCKOUT_STAGES
     assert "GROUP_STAGE" not in KNOCKOUT_STAGES
+
+
+# ---------------------------------------------------------------------------
+# Draw probability - dynamic decay (DRAW-01, DRAW-02)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("elo_diff,expected", [
+    (0, 0.320),
+    (100, 0.262),
+    (300, 0.176),
+    (500, 0.118),
+    (750, 0.071),
+])
+def test_draw_prob_exponential_decay(elo_diff, expected):
+    """Draw probability matches the Phase 8 calibration table."""
+    result = _draw_prob(float(elo_diff))
+    assert result == pytest.approx(expected, abs=0.02), (
+        f"_draw_prob({elo_diff}) = {result:.4f}, expected {expected:.4f}"
+    )
+
+
+def test_draw_prob_floor_enforced():
+    """Extreme Elo mismatches never fall below the configured draw floor."""
+    from alpha.engines.sports.wc_model import _WC_MIN_DRAW
+
+    assert _draw_prob(9999.0) >= _WC_MIN_DRAW
+
+
+def test_draw_prob_monotone_decreasing():
+    """Draw probability cannot increase as the absolute Elo gap grows."""
+    previous = _draw_prob(0.0)
+    for delta in (100, 200, 300, 500, 750, 1000):
+        current = _draw_prob(float(delta))
+        assert current <= previous + 1e-9
+        previous = current
 
 
 # ---------------------------------------------------------------------------
