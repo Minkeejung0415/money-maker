@@ -67,28 +67,50 @@ class WCSGPBuilder:
         """
         Build the best Win/Advance leg dict for a WC game.
 
-        Uses game["win_prob"] (home team Win-to-Advance in knockouts, or
-        home team Win probability in group stage).
+        Compares home EV vs away EV and picks whichever has higher expected value
+        (mirrors SoccerSGPBuilder._best_ml_leg). This matters when the Elo model
+        strongly favors the away team (e.g. Scotland vs Morocco).
+
+        win_prob  = home team W probability (from WCMatchModel.predict)
+        loss_prob = away team W probability
 
         SGP-02: Draw legs are NEVER generated here — not for knockouts
         (invalid), not for group stage (illiquid, excluded by design).
         """
-        win_prob = game.get("win_prob", 0.5)
-        if win_prob <= 0.0:
-            return None
+        win_prob = game.get("win_prob", 0.5)    # home team
+        loss_prob = game.get("loss_prob", 0.5)  # away team
         home_odds = game.get("home_odds", -110)
+        away_odds = game.get("away_odds", -110)
         home_dec = _EV_CALC.american_to_decimal(home_odds)
+        away_dec = _EV_CALC.american_to_decimal(away_odds)
+
+        home_ev = _EV_CALC.expected_value(win_prob, home_dec)
+        away_ev = _EV_CALC.expected_value(loss_prob, away_dec)
+
+        if home_ev >= away_ev:
+            return {
+                "type": "wc_ml",
+                "team": game.get("home_team", ""),
+                "model_prob": win_prob,
+                "decimal_odds": home_dec,
+                "event_id": game.get("event_id", ""),
+                "home_team": game.get("home_team", ""),
+                "away_team": game.get("away_team", ""),
+                "elo_edge": game.get("elo_edge", False),
+                "knockout": game.get("knockout", False),
+                "home_elo": game.get("home_elo", 1500),
+            }
         return {
             "type": "wc_ml",
-            "team": game.get("home_team", ""),
-            "model_prob": win_prob,
-            "decimal_odds": home_dec,
+            "team": game.get("away_team", ""),
+            "model_prob": loss_prob,
+            "decimal_odds": away_dec,
             "event_id": game.get("event_id", ""),
             "home_team": game.get("home_team", ""),
             "away_team": game.get("away_team", ""),
             "elo_edge": game.get("elo_edge", False),
             "knockout": game.get("knockout", False),
-            "home_elo": game.get("home_elo", 1500),
+            "home_elo": game.get("away_elo", 1500),  # use away Elo for display
         }
 
     def _build_classic_parlay(self, ml_games: list[dict]) -> list[ParlayCombination]:
