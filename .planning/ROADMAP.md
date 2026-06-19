@@ -65,7 +65,7 @@
 
 - [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
 - [x] **Phase 6: Match Model** - Elo-logistic W/D/L model with neutral-venue correction, stage metadata, knockout gate, and market divergence flag (completed 2026-06-19)
-- [ ] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage
+- [x] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage (completed 2026-06-19)
 
 ## Phase Details (v1.1)
 
@@ -125,7 +125,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 5. Data Foundation | 3/3 | Complete   | 2026-06-19 |
 | 6. Match Model | 1/1 | Complete    | 2026-06-19 |
-| 7. SGP Builder + Scanner Integration | 0/5 | Not started | - |
+| 7. SGP Builder + Scanner Integration | 2/2 | Complete    | 2026-06-19 |
 
 ## v1.0 Final Results
 | Stat    | Baseline | Final  | Delta   |
