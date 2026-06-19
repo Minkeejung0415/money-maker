@@ -259,7 +259,7 @@ def test_fetch_wc_games_returns_empty_when_not_configured():
 # ---------------------------------------------------------------------------
 
 def test_fetch_today_games_epl_regression():
-    """fetch_today_games() for EPL must return the 7-key dict shape — no stage or group."""
+    """fetch_today_games() for EPL must return the 9-key dict shape — no stage or group."""
     client = FootballDataClient(api_key="testkey")
     mock_resp = MagicMock()
     mock_resp.status_code = 200
@@ -269,8 +269,8 @@ def test_fetch_today_games_epl_regression():
             {
                 "id": 99,
                 "utcDate": "2026-06-18T15:00:00Z",
-                "homeTeam": {"name": "Arsenal"},
-                "awayTeam": {"name": "Chelsea"},
+                "homeTeam": {"name": "Arsenal", "id": 57},
+                "awayTeam": {"name": "Chelsea", "id": 61},
             }
         ]
     }
@@ -282,7 +282,99 @@ def test_fetch_today_games_epl_regression():
         games = client.fetch_today_games("epl")
 
     assert len(games) == 1
-    expected_keys = {"home_team", "away_team", "home_odds", "away_odds", "league", "event_id", "commence_time"}
+    expected_keys = {
+        "home_team", "away_team", "home_odds", "away_odds",
+        "league", "event_id", "commence_time",
+        "home_team_id", "away_team_id",
+    }
     assert set(games[0].keys()) == expected_keys
+    assert games[0]["home_team_id"] == 57
+    assert games[0]["away_team_id"] == 61
     assert "stage" not in games[0]
     assert "group" not in games[0]
+
+
+def test_fetch_today_games_team_id_missing_fallback():
+    """fetch_today_games() returns home_team_id=0 / away_team_id=0 when id field is absent."""
+    client = FootballDataClient(api_key="testkey")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status.return_value = None
+    mock_resp.json.return_value = {
+        "matches": [
+            {
+                "id": 100,
+                "utcDate": "2026-06-18T15:00:00Z",
+                "homeTeam": {"name": "Arsenal"},   # no "id" key
+                "awayTeam": {"name": "Chelsea"},   # no "id" key
+            }
+        ]
+    }
+
+    with patch(
+        "alpha.data.ingestion.football_data_client.requests.get",
+        return_value=mock_resp,
+    ):
+        games = client.fetch_today_games("epl")
+
+    assert len(games) == 1
+    assert games[0]["home_team_id"] == 0
+    assert games[0]["away_team_id"] == 0
+
+
+def test_fetch_team_matches_returns_list():
+    """fetch_team_matches() returns a list of match dicts when API responds successfully."""
+    client = FootballDataClient(api_key="testkey")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status.return_value = None
+    mock_resp.json.return_value = {
+        "matches": [
+            {
+                "id": 1,
+                "utcDate": "2025-12-01T15:00:00Z",
+                "homeTeam": {"id": 57, "name": "Arsenal"},
+                "awayTeam": {"id": 61, "name": "Chelsea"},
+                "score": {"winner": "HOME_WIN", "fullTime": {"home": 2, "away": 1}},
+            }
+        ]
+    }
+
+    with patch(
+        "alpha.data.ingestion.football_data_client.requests.get",
+        return_value=mock_resp,
+    ):
+        matches = client.fetch_team_matches(57, status="FINISHED", limit=10)
+
+    assert len(matches) == 1
+    assert matches[0]["homeTeam"]["id"] == 57
+
+
+def test_fetch_team_matches_returns_empty_when_not_configured():
+    """fetch_team_matches() returns [] when no API key is set."""
+    client = FootballDataClient(api_key="")
+
+    with patch(
+        "alpha.data.ingestion.football_data_client.requests.get"
+    ) as mock_get:
+        result = client.fetch_team_matches(57)
+
+    mock_get.assert_not_called()
+    assert result == []
+
+
+def test_fetch_team_matches_returns_empty_on_http_error():
+    """fetch_team_matches() returns [] on HTTPError (does not raise)."""
+    client = FootballDataClient(api_key="testkey")
+    import requests as req_lib2
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    http_err = req_lib2.exceptions.HTTPError(response=mock_resp)
+
+    with patch(
+        "alpha.data.ingestion.football_data_client.requests.get",
+        side_effect=http_err,
+    ):
+        result = client.fetch_team_matches(57)
+
+    assert result == []

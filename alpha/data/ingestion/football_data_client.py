@@ -73,6 +73,8 @@ class FootballDataClient:
                 "league": str,
                 "event_id": str,
                 "commence_time": str,
+                "home_team_id": int,  # homeTeam.id from API (0 if missing)
+                "away_team_id": int,  # awayTeam.id from API (0 if missing)
             }
 
         Returns [] on any failure.
@@ -106,6 +108,8 @@ class FootballDataClient:
                 commence = match.get("utcDate", "")
                 if not home or not away:
                     continue
+                home_id = match.get("homeTeam", {}).get("id") or 0
+                away_id = match.get("awayTeam", {}).get("id") or 0
                 games.append({
                     "home_team": home,
                     "away_team": away,
@@ -114,6 +118,8 @@ class FootballDataClient:
                     "league": league_key,
                     "event_id": match_id,
                     "commence_time": commence,
+                    "home_team_id": int(home_id),
+                    "away_team_id": int(away_id),
                 })
 
             logger.info(
@@ -182,3 +188,38 @@ class FootballDataClient:
         except Exception as exc:
             logger.warning("football-data.org WC error: %s", exc)
         return []
+
+    def fetch_team_matches(
+        self,
+        team_id: int,
+        *,
+        status: str = "FINISHED",
+        limit: int = 10,
+    ) -> list[dict]:
+        """
+        Fetch recent matches for a specific team.
+
+        Args:
+            team_id: football-data.org numeric team ID (e.g. 57 = Arsenal).
+            status: match status filter (default "FINISHED").
+            limit: maximum number of matches to return (default 10).
+
+        Returns a list of raw match dicts from the API.
+        Returns [] when not configured or on any failure.
+        """
+        if not self.is_configured():
+            logger.warning("FOOTBALL_API_KEY not set — team %d match fetch skipped", team_id)
+            return []
+
+        try:
+            resp = _get_with_retry(
+                f"{_BASE_URL}/teams/{team_id}/matches",
+                headers={"X-Auth-Token": self.api_key},
+                params={"status": status, "limit": limit},
+                timeout=10,
+            )
+            data = resp.json()
+            return data.get("matches", [])
+        except Exception as exc:
+            logger.warning("football-data.org team %d match fetch failed: %s", team_id, exc)
+            return []
