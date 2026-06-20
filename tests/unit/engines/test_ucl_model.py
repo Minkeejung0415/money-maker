@@ -14,9 +14,9 @@ _ELO_FALLBACK = 1500.0
 
 @pytest.fixture(autouse=True)
 def mock_elo(monkeypatch):
-    """Patch load_club_elo_ratings in club_elo module before UCLEloModel is instantiated."""
-    import alpha.data.ingestion.club_elo as club_elo_module
-    monkeypatch.setattr(club_elo_module, "load_club_elo_ratings", lambda *a, **kw: RATINGS)
+    """Patch load_club_elo_ratings in ucl_model module's namespace."""
+    import alpha.engines.sports.ucl_model as ucl_module
+    monkeypatch.setattr(ucl_module, "load_club_elo_ratings", lambda *a, **kw: RATINGS)
 
 
 @pytest.fixture()
@@ -30,11 +30,12 @@ def model():
 # ---------------------------------------------------------------------------
 
 def test_predict_equal_elo_probs_sum(model):
-    """win_prob + draw_prob + loss_prob == 1.0 (within 1e-9)."""
+    """win_prob + draw_prob + loss_prob == 1.0 within rounding tolerance (4dp)."""
     game = {"league": "ucl", "home_team": "Arsenal", "away_team": "Arsenal", "home_odds": -110}
     result = model.predict(game)
     total = result["win_prob"] + result["draw_prob"] + result["loss_prob"]
-    assert abs(total - 1.0) < 1e-9, f"Probs sum to {total}, expected 1.0"
+    # Values are rounded to 4dp so sum may differ by up to 3 * 0.00005 = 0.00015
+    assert abs(total - 1.0) < 1e-3, f"Probs sum to {total}, expected ~1.0"
 
 
 def test_predict_home_advantage_applied(model):
@@ -192,15 +193,18 @@ def test_elo_edge_false(model):
 
 def test_fallback_empty_ratings(monkeypatch):
     """Empty ratings dict → predict() still runs, probs sum to 1.0."""
-    import alpha.data.ingestion.club_elo as club_elo_module
-    monkeypatch.setattr(club_elo_module, "load_club_elo_ratings", lambda *a, **kw: {})
+    import alpha.engines.sports.ucl_model as ucl_module
+    # Override the autouse fixture's patch to return empty dict
+    monkeypatch.setattr(ucl_module, "load_club_elo_ratings", lambda *a, **kw: {})
     from alpha.engines.sports.ucl_model import UCLEloModel
     m = UCLEloModel()
+    # Verify empty ratings actually loaded
+    assert len(m._elo_ratings) == 0
     game = {"league": "ucl", "home_team": "Arsenal", "away_team": "Chelsea", "home_odds": -110}
     result = m.predict(game)
     total = result["win_prob"] + result["draw_prob"] + result["loss_prob"]
-    assert abs(total - 1.0) < 1e-9, f"Probs sum to {total}"
-    # Both teams get fallback 1500.0; after +40 home boost win_prob > 0.5*(1-draw)
+    assert abs(total - 1.0) < 1e-3, f"Probs sum to {total}"
+    # Both teams get fallback 1500.0 (ELO_FALLBACK from get_club_elo_rating)
     assert result["home_elo"] == _ELO_FALLBACK
     assert result["away_elo"] == _ELO_FALLBACK
 
