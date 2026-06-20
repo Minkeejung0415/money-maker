@@ -223,7 +223,7 @@ Tests: 493/493 passing.
 
 ## Phases (v1.4)
 
-- [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
+- [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
 - [ ] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel)
 - [ ] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage
 
@@ -252,10 +252,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. EPL XGBoost retrained on 3 seasons of historical data (~1,140 games) with form + H2H + days-rest + set pieces + xG features
   2. EPL model calibrated (Platt scaling preferred) and benchmarked on chronological test set — Brier score vs. market-implied baseline recorded
-  3. `UCLEloModel` produces W/D/L probabilities using Club Elo-logistic formula matching WCMatchModel pattern (neutral venue, no home boost)
-  4. `soccer_scanner.py` routes EPL games to XGBoost, UCL games to UCLEloModel — no cross-routing
+  3. `UCLEloModel` produces W/D/L probabilities using Club Elo-logistic formula with +40 Elo home advantage (half of standard 80pt — UCL elite clubs)
+  4. `soccer_scanner.py` routes EPL games to XGBoost, UCL games to UCLEloModel — no cross-routing (Phase 14)
   5. Existing fallback chain preserved: EPL = XGBoost → market_implied; UCL = UCLEloModel → market_implied
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [x] 13-01-PLAN.md — EPL training pipeline: epl_training.py (14-feature schema + leakage-safe row builder) + train_epl_moneyline.py + tests
+- [ ] 13-02-PLAN.md — UCLEloModel (ucl_model.py, +40 home advantage, Club Elo) + SoccerModel EPL artifact gate + tests
 
 ### Phase 14: Draw Betting + Scanner Integration
 **Goal**: Users see draw legs in parlay output (annotated `*DRAW RISK*`) when model EV > 5%, scanner shows independent model probabilities for both EPL and UCL
@@ -274,5 +277,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
-| 13. Soccer Model Upgrade | 0/TBD | Not Started | — |
+| 13. Soccer Model Upgrade | 1/2 | In Progress|  |
 | 14. Draw Betting + Scanner Integration | 0/TBD | Not Started | — |

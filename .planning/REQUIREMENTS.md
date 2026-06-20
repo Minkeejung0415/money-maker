@@ -12,7 +12,7 @@
 
 ## Soccer Models
 
-- [ ] **SMODEL-01**: Retrain and calibrate the EPL model on the expanded pregame feature schema.
+- [x] **SMODEL-01**: Retrain and calibrate the EPL model on the expanded pregame feature schema.
 - [ ] **SMODEL-02**: Build a Club Elo logistic UCL model with independent W/D/L probabilities.
 - [ ] **SMODEL-03**: Preserve explicit, league-specific fallback behavior and prevent cross-routing.
 
@@ -38,7 +38,7 @@
 | SDATA-02 | Phase 12 | Complete |
 | SDATA-03 | Phase 12 | Complete |
 | SDATA-04 | Phase 12 | Complete |
-| SMODEL-01 | Phase 13 | Pending |
+| SMODEL-01 | Phase 13 | Complete |
 | SMODEL-02 | Phase 13 | Pending |
 | SMODEL-03 | Phase 13 | Pending |
 | SDRAW-01 | Phase 14 | Pending |
