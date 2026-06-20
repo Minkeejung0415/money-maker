@@ -4,7 +4,13 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.3 — MLB Win Probability Model (Complete)
+## Current Milestone: v1.4 — Soccer Mode Upgrade
+
+**Goal:** Upgrade EPL/UCL predictions with independent form, H2H, rest, set-piece, and Club Elo features, then enable model-gated draw betting.
+
+**Current state:** Phase 12 complete — the soccer feature data pipeline is verified and ready for model training.
+
+## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
 **Goal:** Replace the 50/50 MLB fallback with independently trained, historically validated home/away win probabilities for every daily MLB game.
 
@@ -64,12 +70,18 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Show daily home/away probabilities and fair odds in the MLB scanner
 - [x] Support optional manually supplied sportsbook odds for edge comparison
 
+### Validated (v1.4)
+
+- [x] Last-five form, H2H, and days-rest features from football-data.org
+- [x] Daily Club Elo ratings with two-day stale fallback
+- [x] FBref corners, aerial-win, and pressing-proxy feature ingestion
+- [x] EPL/UCL cache isolation under `data/.soccer_cache/`
+
 ### Out of Scope
 
 - MLB player props — requires a dependable prop-odds source and broader modeling scope
 - MLB parlay optimization — deferred until single-game probabilities are validated
 - Paid baseball or odds feeds — free data only for v1.3
-- NBA and soccer model changes — milestone scope is MLB game outcomes only
 
 ## Context
 
@@ -131,4 +143,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-19 — Milestone v1.3 started*
+*Last updated: 2026-06-19 — Phase 12 soccer feature pipeline complete*

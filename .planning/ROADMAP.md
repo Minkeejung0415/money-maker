@@ -171,7 +171,7 @@ Plans:
 Tests: 493/493 passing.
 ---
 
-## Current Milestone: v1.3 — MLB Win Probability Model
+## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
 ## Phases (v1.3)
 
@@ -216,3 +216,63 @@ Tests: 493/493 passing.
 | 9. Historical Data and Feature Contract | 1/1 | Complete | 2026-06-19 |
 | 10. Training, Calibration, and Validation | 1/1 | Complete | 2026-06-19 |
 | 11. Runtime and Scanner Integration | 1/1 | Complete | 2026-06-19 |
+
+---
+
+## Current Milestone: v1.4 — Soccer Mode Upgrade
+
+## Phases (v1.4)
+
+- [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
+- [ ] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel)
+- [ ] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage
+
+## Phase Details (v1.4)
+
+### Phase 12: Soccer Feature Data Pipeline
+**Goal**: Form, H2H, days-rest, FBref set piece stats, and Club Elo ratings are all accessible to downstream EPL/UCL model code
+**Depends on**: Nothing (first phase of v1.4)
+**Requirements**: SDATA-01, SDATA-02, SDATA-03, SDATA-04
+**Success Criteria** (what must be TRUE):
+  1. `fetch_team_form(team_id, n=5)` returns last-5-game W/D/L record + goals scored/conceded from football-data.org
+  2. `fetch_h2h(home_id, away_id, n=5)` returns last 5 meetings between the two teams
+  3. `fetch_days_rest(team_id, match_date)` returns integer days since last game (for fatigue multiplier)
+  4. FBref set piece stats (corners/game, aerial duels %, PPDA) accessible via soccerdata for EPL teams
+  5. Club Elo ratings for UCL teams load from clubelo.com (daily cache in `data/.soccer_cache/club_elo.csv`)
+  6. All new ingestion modules are isolated from the WC pipeline (separate cache namespace)
+**Plans**: 2 plans
+Plans:
+- [x] 12-01-PLAN.md — FootballDataClient extension (fetch_team_matches + team IDs) + soccer_form.py (form/H2H/rest) + tests
+- [x] 12-02-PLAN.md — club_elo.py (Club Elo CSV loader) + soccer_fbref.py (FBref set pieces) + tests
+
+### Phase 13: Soccer Model Upgrade
+**Goal**: EPL uses a retrained XGBoost model with 5 expanded features; UCL uses a Club Elo-logistic model instead of market-implied fallback
+**Depends on**: Phase 12
+**Requirements**: SMODEL-01, SMODEL-02, SMODEL-03
+**Success Criteria** (what must be TRUE):
+  1. EPL XGBoost retrained on 3 seasons of historical data (~1,140 games) with form + H2H + days-rest + set pieces + xG features
+  2. EPL model calibrated (Platt scaling preferred) and benchmarked on chronological test set — Brier score vs. market-implied baseline recorded
+  3. `UCLEloModel` produces W/D/L probabilities using Club Elo-logistic formula matching WCMatchModel pattern (neutral venue, no home boost)
+  4. `soccer_scanner.py` routes EPL games to XGBoost, UCL games to UCLEloModel — no cross-routing
+  5. Existing fallback chain preserved: EPL = XGBoost → market_implied; UCL = UCLEloModel → market_implied
+**Plans**: TBD
+
+### Phase 14: Draw Betting + Scanner Integration
+**Goal**: Users see draw legs in parlay output (annotated `*DRAW RISK*`) when model EV > 5%, scanner shows independent model probabilities for both EPL and UCL
+**Depends on**: Phase 13
+**Requirements**: SDRAW-01, SDRAW-02, SSCAN-01, STEST-01
+**Success Criteria** (what must be TRUE):
+  1. Draw legs appear in SGP combos when model-estimated draw probability produces EV > 5% vs. market draw odds
+  2. Draw legs are annotated `*DRAW RISK*` in scanner output — user can identify them at a glance
+  3. Draw legs from market-implied fallback are never included (model gate enforced)
+  4. `soccer_scanner.py --mode parlay --league epl` shows EPL XGBoost probabilities; `--league ucl` shows UCL Elo probabilities
+  5. All new components have unit tests; total test count ≥ 636 with zero regressions
+**Plans**: TBD
+
+## Progress (v1.4)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
+| 13. Soccer Model Upgrade | 0/TBD | Not Started | — |
+| 14. Draw Betting + Scanner Integration | 0/TBD | Not Started | — |

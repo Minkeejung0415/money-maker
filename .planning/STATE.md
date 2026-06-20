@@ -1,16 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: MLB Win Probability Model
-status: completed
-last_updated: "2026-06-19T20:52:32.614Z"
-last_activity: 2026-06-19
+milestone: v1.4
+milestone_name: Soccer Mode Upgrade
+status: ready_to_plan
+stopped_at: Phase 12 complete (2/2) — ready to discuss Phase 13
+last_updated: 2026-06-19T23:42:22.524Z
+last_activity: 2026-06-19 -- Phase 12 completed and verified
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 33
 ---
 
 # Project State
@@ -20,20 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Phase 11 — runtime-scanner-integration
+**Current focus:** Phase 13 — soccer models
 
 ## Current Position
 
-Phase: 11 — COMPLETE
-Plan: 1 of 1
-Status: Milestone v1.3 complete
-Last activity: 2026-06-19 — Milestone v1.3 completed
+Phase: 13
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-19
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0 (v1.2)
+- Total plans completed: 2 (v1.2)
 - Average duration: - min
 - Total execution time: 0 hours
 
