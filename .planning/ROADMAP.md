@@ -224,7 +224,7 @@ Tests: 493/493 passing.
 ## Phases (v1.4)
 
 - [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
-- [ ] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel)
+- [x] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel) (completed 2026-06-20)
 - [ ] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage
 
 ## Phase Details (v1.4)
@@ -258,7 +258,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 13-01-PLAN.md — EPL training pipeline: epl_training.py (14-feature schema + leakage-safe row builder) + train_epl_moneyline.py + tests
-- [ ] 13-02-PLAN.md — UCLEloModel (ucl_model.py, +40 home advantage, Club Elo) + SoccerModel EPL artifact gate + tests
+- [x] 13-02-PLAN.md — UCLEloModel (ucl_model.py, +40 home advantage, Club Elo) + SoccerModel EPL artifact gate + tests
 
 ### Phase 14: Draw Betting + Scanner Integration
 **Goal**: Users see draw legs in parlay output (annotated `*DRAW RISK*`) when model EV > 5%, scanner shows independent model probabilities for both EPL and UCL
@@ -277,5 +277,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
-| 13. Soccer Model Upgrade | 1/2 | In Progress|  |
+| 13. Soccer Model Upgrade | 2/2 | Complete   | 2026-06-20 |
 | 14. Draw Betting + Scanner Integration | 0/TBD | Not Started | — |
