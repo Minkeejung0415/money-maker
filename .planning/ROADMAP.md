@@ -270,7 +270,10 @@ Plans:
   3. Draw legs from market-implied fallback are never included (model gate enforced)
   4. `soccer_scanner.py --mode parlay --league epl` shows EPL XGBoost probabilities; `--league ucl` shows UCL Elo probabilities
   5. All new components have unit tests; total test count ≥ 636 with zero regressions
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 14-01-PLAN.md — SoccerSGPBuilder draw leg gate: _build_draw_legs() with EV > 5% guard (D-11), is_draw annotation, same-game combo exclusion
+- [ ] 14-02-PLAN.md — Soccer scanner UCL routing (D-13) + *DRAW RISK* annotation (D-12) + D% probability column + 8 unit tests
 
 ## Progress (v1.4)
 
@@ -278,4 +281,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
 | 13. Soccer Model Upgrade | 2/2 | Complete   | 2026-06-20 |
-| 14. Draw Betting + Scanner Integration | 0/TBD | Not Started | — |
+| 14. Draw Betting + Scanner Integration | 0/2 | Not Started | — |
