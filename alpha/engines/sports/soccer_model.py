@@ -31,6 +31,9 @@ _MODEL_SEARCH_DIRS = [
     _PROPHITBET_DIR,
 ]
 
+# EPL XGBoost artifact (from Plan 13-01 training pipeline)
+_EPL_ARTIFACT = Path("alpha/models/epl_win_probability.pkl")
+
 
 class SoccerModel:
     def __init__(self, min_edge: float = 0.04, kelly_fraction: float = 0.25):
@@ -43,7 +46,14 @@ class SoccerModel:
         self._injury_impact: dict = {}
         self._injury_loaded: bool = False
 
+        # EPL XGBoost artifact (loaded from epl_win_probability.pkl if present)
+        self._epl_model = None
+        self._epl_calibrator = None
+        self._epl_team_state: dict = {}
+        self._epl_artifact_loaded: bool = False
+
         self._load_xgb_models()
+        self._load_epl_artifact()
 
     # ------------------------------------------------------------------
     # Public
@@ -65,6 +75,33 @@ class SoccerModel:
         """
         home_team = game.get("home_team", "")
         away_team = game.get("away_team", "")
+
+        # EPL artifact path (takes priority over ProphitBet model)
+        if self._epl_artifact_loaded:
+            try:
+                probs = self._predict_epl_bundle(game)
+                if probs is not None:
+                    home_p, draw_p, away_p = probs
+                    # Cap any single outcome at MAX_XGB_CONF and re-normalize
+                    home_p = min(home_p, MAX_XGB_CONF)
+                    away_p = min(away_p, MAX_XGB_CONF)
+                    draw_p = min(draw_p, MAX_XGB_CONF)
+                    total = home_p + draw_p + away_p
+                    if total > 0:
+                        home_p /= total
+                        draw_p /= total
+                        away_p /= total
+                    return {
+                        "home_team": home_team,
+                        "away_team": away_team,
+                        "home_win_prob": round(home_p, 4),
+                        "draw_prob": round(draw_p, 4),
+                        "away_win_prob": round(away_p, 4),
+                        "source": "epl_xgboost",
+                        "model_name": "epl_xgboost_v1",
+                    }
+            except Exception as exc:
+                logger.debug("EPL artifact predict failed, falling through: %s", exc)
 
         if self._xgb_models_loaded:
             try:
@@ -193,6 +230,7 @@ class SoccerModel:
             "draw_prob": round(d_prob, 4),
             "away_win_prob": round(a_prob, 4),
             "source": "market_implied",
+            "model_name": "market_implied",
         }
 
     # ------------------------------------------------------------------
@@ -217,6 +255,75 @@ class SoccerModel:
             logger.info("Loaded ProphitBet model: %s", model_path.name)
         except Exception as exc:
             logger.debug("ProphitBet model load skipped: %s", exc)
+
+    def _load_epl_artifact(self) -> None:
+        """
+        Attempt to load the EPL XGBoost artifact from epl_win_probability.pkl.
+
+        Schema gate (T-13-05 mitigation):
+          - kind must be "epl_win_probability_bundle"
+          - validated must be True
+          - feature_names must exactly match EPL_FEATURE_NAMES set
+        Rejects silently on any mismatch — never uses a bad artifact.
+        """
+        try:
+            import joblib  # noqa: PLC0415
+            if not _EPL_ARTIFACT.exists():
+                return
+            bundle = joblib.load(_EPL_ARTIFACT)
+            # Schema gate
+            if bundle.get("kind") != "epl_win_probability_bundle":
+                logger.warning("EPL artifact kind mismatch — skipping")
+                return
+            if not bundle.get("validated"):
+                logger.warning("EPL artifact not validated — skipping")
+                return
+            from alpha.engines.sports.epl_training import EPL_FEATURE_NAMES  # noqa: PLC0415
+            if set(bundle.get("feature_names", [])) != set(EPL_FEATURE_NAMES):
+                logger.warning("EPL artifact feature_names mismatch — skipping")
+                return
+            self._epl_model = bundle["model"]
+            self._epl_calibrator = bundle["calibrator"]
+            self._epl_team_state = bundle.get("team_state", {})
+            self._epl_artifact_loaded = True
+            logger.info("Loaded EPL artifact: epl_win_probability.pkl")
+        except Exception as exc:
+            logger.debug("EPL artifact load skipped: %s", exc)
+
+    def _predict_epl_bundle(self, game: dict) -> tuple[float, float, float] | None:
+        """
+        Run the EPL XGBoost model and return (home_prob, draw_prob, away_prob).
+        Returns None on any failure — caller falls through to market-implied.
+        """
+        try:
+            import numpy as np  # noqa: PLC0415
+            from alpha.engines.sports.epl_training import EPL_FEATURE_NAMES, live_epl_feature_vector  # noqa: PLC0415
+            from alpha.engines.sports.epl_training import calibrated  # noqa: PLC0415
+            import datetime as _dt  # noqa: PLC0415
+
+            game_date = str(game.get("commence_time", ""))[:10] or _dt.date.today().isoformat()
+            home_team_id = int(game.get("home_team_id", 0))
+            away_team_id = int(game.get("away_team_id", 0))
+            features = live_epl_feature_vector(
+                game.get("home_team", ""),
+                game.get("away_team", ""),
+                game_date,
+                self._epl_team_state,
+                home_team_id=home_team_id,
+                away_team_id=away_team_id,
+                fetch_live=True,
+            )
+            X = np.asarray([[features[n] for n in EPL_FEATURE_NAMES]], dtype=float)
+            raw = self._epl_model.predict_proba(X)[:, 1]
+            home_prob = float(calibrated(self._epl_calibrator, raw)[0])
+            away_prob = 1.0 - home_prob
+            # Blend: EPL model gives 2-way (home/away); preserve market draw estimate
+            draw_prob_raw = self._market_implied_predict(game).get("draw_prob", 0.25)
+            scale = 1.0 - draw_prob_raw
+            return home_prob * scale, draw_prob_raw, away_prob * scale
+        except Exception as exc:
+            logger.debug("EPL bundle prediction failed: %s", exc)
+            return None
 
     def _find_model_path(self) -> Path | None:
         """Search known locations for a .pkl or .json model file."""
