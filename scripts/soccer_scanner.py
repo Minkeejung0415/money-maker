@@ -167,17 +167,52 @@ def main() -> None:
         sys.exit(0)
     print(f"    Found {len(all_games)} game(s) across {leagues_to_scan}")
 
-    # Enrich with SoccerModel win probabilities
+    # Enrich with model win probabilities (EPL → SoccerModel, UCL → UCLEloModel)
     soccer_model = SoccerModel()
-    for game in all_games:
-        pred = soccer_model.predict(game)
-        game["home_model_prob"] = pred["home_win_prob"]
-        game["away_model_prob"] = pred["away_win_prob"]
-        game["draw_prob"] = pred.get("draw_prob", 0.25)
+    try:
+        from alpha.engines.sports.ucl_model import UCLEloModel
+        ucl_model = UCLEloModel()
+        ucl_available = True
+    except Exception as exc:
+        logger.warning("UCLEloModel unavailable: %s", exc)
+        ucl_model = None
+        ucl_available = False
 
-    if args.validate:
-        src = "XGBoost (ProphitBet)" if soccer_model._xgb_models_loaded else "market-implied"
-        print(f"    Model source: {src}")
+    for game in all_games:
+        league = game.get("league", "epl")
+        if league == "ucl" and ucl_available and ucl_model is not None:
+            try:
+                game = ucl_model.predict(game)  # mutates in place and returns
+                game["home_model_prob"] = game["win_prob"]
+                game["away_model_prob"] = game["loss_prob"]
+                # model_name already set by UCLEloModel.predict ("ucl_elo_logistic")
+            except Exception as exc:
+                logger.warning(
+                    "UCLEloModel prediction failed for %s: %s",
+                    game.get("home_team"), exc,
+                )
+                pred = soccer_model.predict(game)
+                game["home_model_prob"] = pred["home_win_prob"]
+                game["away_model_prob"] = pred["away_win_prob"]
+                game["draw_prob"] = pred.get("draw_prob", 0.25)
+                game["model_name"] = pred.get("model_name", "market_implied")
+        else:
+            pred = soccer_model.predict(game)
+            game["home_model_prob"] = pred["home_win_prob"]
+            game["away_model_prob"] = pred["away_win_prob"]
+            game["draw_prob"] = pred.get("draw_prob", 0.25)
+            game["model_name"] = pred.get("model_name", "market_implied")
+
+    # Print game probability table (H/D/A columns)
+    print("Game probabilities:")
+    for game in all_games:
+        print(
+            f"  {game.get('home_team', '?')} vs {game.get('away_team', '?')}  "
+            f"H: {game.get('home_model_prob', 0):.1%}  "
+            f"D: {game.get('draw_prob', 0):.1%}  "
+            f"A: {game.get('away_model_prob', 0):.1%}  "
+            f"[{game.get('model_name', '?')}]"
+        )
 
     # ── Step 2: Fetch props ──────────────────────────────────────────────
     prop_legs_raw: list[dict] = []
@@ -233,7 +268,8 @@ def main() -> None:
     # ── Step 5: Validation ───────────────────────────────────────────────
     if args.validate:
         src = "XGBoost (ProphitBet)" if soccer_model._xgb_models_loaded else "market-implied"
-        print(f"[5/6] Model info: {src}")
+        ucl_src = "UCLEloModel" if ucl_available else "unavailable (fallback to market-implied)"
+        print(f"[5/6] Model info: EPL={src} | UCL={ucl_src}")
     else:
         print("[5/6] Skipping validation  (run with --validate to check model source)")
 
@@ -276,9 +312,12 @@ def main() -> None:
         print("    Legs:")
         for leg in combo.legs:
             if isinstance(leg, dict):
-                print(f"      * {leg.get('team', '?')} ML  "
+                is_draw = leg.get("is_draw") or leg.get("type") == "draw"
+                draw_flag = "  *DRAW RISK*" if is_draw else ""
+                leg_label = "DRAW" if is_draw else "ML"
+                print(f"      * {leg.get('team', '?')} {leg_label}  "
                       f"({leg.get('decimal_odds', 0):.2f}x)  "
-                      f"model: {leg.get('model_prob', 0):.1%}")
+                      f"model: {leg.get('model_prob', 0):.1%}{draw_flag}")
             else:
                 print(f"      * {leg.player}: OVER {leg.line} {_market_label(leg.market)}  "
                       f"({leg.over_odds:+d})  "
