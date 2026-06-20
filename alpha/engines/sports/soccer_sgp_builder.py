@@ -209,9 +209,23 @@ class SoccerSGPBuilder:
         ml_legs = [self._best_ml_leg(g) for g in ml_games]
         ml_legs = [leg for leg in ml_legs if leg is not None]
 
+        draw_legs = self._build_draw_legs(ml_games)
+        all_legs = ml_legs + draw_legs
+
         results: list[ParlayCombination] = []
         for n in range(2, min(self._max_legs, 4) + 1):
-            for combo in itertools.combinations(ml_legs, n):
+            for combo in itertools.combinations(all_legs, n):
+                # Same-game guard: skip combos that pair draw + win from the same game
+                event_ids_by_type: dict[str, set[str]] = {}
+                for leg in combo:
+                    leg_type = leg.get("type", "ml")
+                    eid = leg.get("event_id", "")
+                    event_ids_by_type.setdefault(leg_type, set()).add(eid)
+                draw_eids = event_ids_by_type.get("draw", set())
+                ml_eids = event_ids_by_type.get("ml", set())
+                if draw_eids & ml_eids:
+                    continue  # same game contributes draw + win — illogical
+
                 combined_model = 1.0
                 combined_market = 1.0
                 combined_odds = 1.0
@@ -234,6 +248,46 @@ class SoccerSGPBuilder:
                     edge=round(edge, 4),
                 ))
         return results
+
+    def _build_draw_legs(self, ml_games: list[dict]) -> list[dict]:
+        """
+        Build draw-market legs for games that pass the D-11 gate:
+          1. model_name must not be None or "market_implied"
+          2. draw_prob must be > 0
+          3. draw EV (using draw_odds) must be > 0.05
+
+        Returns a list of leg dicts with is_draw=True for scanner annotation.
+        """
+        draw_legs: list[dict] = []
+        for game in ml_games:
+            # Gate 1: model must be a real predictive model (D-11)
+            model_name = game.get("model_name")
+            if model_name in (None, "market_implied"):
+                continue
+
+            # Gate 2: draw probability must be present and positive
+            draw_prob = game.get("draw_prob")
+            if draw_prob is None or draw_prob <= 0:
+                continue
+
+            # Gate 3: EV must exceed 5% threshold
+            draw_odds_raw = game.get("draw_odds", 300)  # default +300 american
+            draw_dec = _EV_CALC.american_to_decimal(draw_odds_raw)
+            draw_ev = _EV_CALC.expected_value(draw_prob, draw_dec)
+            if draw_ev <= 0.05:
+                continue
+
+            draw_legs.append({
+                "type": "draw",
+                "team": "Draw",
+                "model_prob": draw_prob,
+                "decimal_odds": draw_dec,
+                "event_id": game.get("event_id", ""),
+                "home_team": game.get("home_team", ""),
+                "away_team": game.get("away_team", ""),
+                "is_draw": True,
+            })
+        return draw_legs
 
     # ------------------------------------------------------------------
     # Scoring helpers
