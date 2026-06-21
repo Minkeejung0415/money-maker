@@ -6,11 +6,11 @@
 
 ## Goal-Market Model
 
-- [ ] **WCSGP-01**: Produce coherent probabilities for match result, over/under 2.5 goals, and both-teams-to-score yes/no.
-- [ ] **WCSGP-02**: Use cached World Cup team priors with documented neutral fallbacks and bounded goal rates.
-- [ ] **WCSGP-03**: Preserve the existing WC Elo model's 1X2 probabilities as scoreline-distribution marginals.
-- [ ] **WCSGP-04**: Calculate multi-leg joint probabilities from one calibrated scoreline distribution, not by multiplying correlated marginals.
-- [ ] **WCSGP-05**: Reject invalid, contradictory, or stage-incompatible leg combinations.
+- [x] **WCSGP-01**: Produce coherent probabilities for match result, over/under 2.5 goals, and both-teams-to-score yes/no.
+- [x] **WCSGP-02**: Use cached World Cup team priors with documented neutral fallbacks and bounded goal rates.
+- [x] **WCSGP-03**: Preserve the existing WC Elo model's 1X2 probabilities as scoreline-distribution marginals.
+- [x] **WCSGP-04**: Calculate multi-leg joint probabilities from one calibrated scoreline distribution, not by multiplying correlated marginals.
+- [x] **WCSGP-05**: Reject invalid, contradictory, or stage-incompatible leg combinations.
 
 ## Market Prices and Construction
 
@@ -36,11 +36,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WCSGP-01 | Phase 15 | Pending |
-| WCSGP-02 | Phase 15 | Pending |
-| WCSGP-03 | Phase 15 | Pending |
-| WCSGP-04 | Phase 15 | Pending |
-| WCSGP-05 | Phase 15 | Pending |
+| WCSGP-01 | Phase 15 | Complete |
+| WCSGP-02 | Phase 15 | Complete |
+| WCSGP-03 | Phase 15 | Complete |
+| WCSGP-04 | Phase 15 | Complete |
+| WCSGP-05 | Phase 15 | Complete |
 | WCSGP-06 | Phase 16 | Pending |
 | WCSGP-07 | Phase 16 | Pending |
 | WCSGP-08 | Phase 16 | Pending |

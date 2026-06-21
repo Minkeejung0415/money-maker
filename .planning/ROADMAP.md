@@ -289,7 +289,7 @@ Plans:
 
 ## Phases (v1.5)
 
-- [ ] **Phase 15: Scoreline Goal-Market Model** - Calibrate a scoreline distribution to WC Elo 1X2 marginals and expose totals, BTTS, and exact joint probabilities.
+- [x] **Phase 15: Scoreline Goal-Market Model** - Calibrate a scoreline distribution to WC Elo 1X2 marginals and expose totals, BTTS, and exact joint probabilities. (completed 2026-06-21)
 - [ ] **Phase 16: True SGP Builder and Scanner** - Normalize market prices, build stage-safe same-match combinations, and add `--mode sgp` output.
 
 ## Phase Details (v1.5)
@@ -322,5 +322,5 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 15. Scoreline Goal-Market Model | 0/1 | Not started | - |
+| 15. Scoreline Goal-Market Model | 1/1 | Complete | 2026-06-21 |
 | 16. True SGP Builder and Scanner | 0/1 | Not started | - |
