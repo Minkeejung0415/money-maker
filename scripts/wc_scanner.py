@@ -104,7 +104,7 @@ Examples:
     )
     parser.add_argument(
         "--top", type=int, default=5,
-        help="Number of top combinations to display (default: 5)",
+        help="Top classic parlays to display; SGP mode always shows all (default: 5)",
     )
     parser.add_argument(
         "--validate", action="store_true",
@@ -192,7 +192,7 @@ def main() -> None:
         team_stats=getattr(wc_model, "_wc_stats", {}),
     )
     if args.mode == "sgp":
-        results = builder.build_probability_same_game(enriched, top_n=args.top)
+        results = builder.build_probability_same_game(enriched)
     else:
         results = builder.build(enriched, top_n=args.top)
 
@@ -206,18 +206,22 @@ def main() -> None:
     print(header)
     print(f"{'='*65}")
 
+    if args.mode == "sgp" and results:
+        print(f"\nFull probability set: {len(results)} nonzero compatible combinations.")
+
     if not results:
         print(f"\nNo combinations found with >={args.min_edge:.1%} edge in this date range.")
         if args.mode == "sgp":
-            print("  SGP needs real prices from at least two compatible market families "
-                  "for one match in data/wc_odds_override.json (1X2, O/U 2.5, or BTTS).")
+            print("  No nonzero compatible scoreline combinations were produced.")
         print(f"  ({len(enriched)} games enriched — try --min-edge 0.02 or expand date range)")
         return
 
     for rank, combo in enumerate(results, 1):
         if args.mode == "sgp":
-            print(f"\n#{rank}  Joint win probability: {combo.combined_model_prob:.1%}  |  "
-                  f"Model fair odds: {combo.fair_decimal_odds:.2f}x")
+            warning = "  |  REDUNDANT LEG" if combo.redundant else ""
+            print(f"\n#{rank}  {combo.home_team} vs {combo.away_team}")
+            print(f"    Joint win probability: {combo.combined_model_prob:.1%}  |  "
+                  f"Model fair odds: {combo.fair_decimal_odds:.2f}x{warning}")
             print("    Legs:")
             for leg in combo.legs:
                 print(f"      * {leg['label']}  |  individual model: "

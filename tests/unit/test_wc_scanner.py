@@ -171,6 +171,7 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
     assert "Over 2.5 goals" in output or "Under 2.5 goals" in output
     assert "Joint win probability" in output
     assert "Probability only" in output
+    assert "Full probability set" in output
     assert "EV:" not in output
 
 

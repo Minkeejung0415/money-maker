@@ -35,6 +35,9 @@ class WCProbabilityCombination:
     legs: list[dict]
     combined_model_prob: float
     fair_decimal_odds: float
+    home_team: str
+    away_team: str
+    redundant: bool = False
 
 
 class WCSGPBuilder:
@@ -172,9 +175,9 @@ class WCSGPBuilder:
     def build_probability_same_game(
         self,
         games: list[dict],
-        top_n: int = 5,
+        top_n: int | None = None,
     ) -> list[WCProbabilityCombination]:
-        """Rank likely 2-3 leg same-match combinations without using odds."""
+        """Rank every compatible 2-3 leg same-match combination without odds."""
         results: list[WCProbabilityCombination] = []
         for game in games:
             distribution = self._scoreline_model.build(game)
@@ -185,30 +188,32 @@ class WCSGPBuilder:
             if distribution.outcome_available:
                 families.insert(0, ("home_win", "draw", "away_win"))
 
-            likely_legs: list[dict] = []
+            available_legs: list[dict] = []
             for family in families:
-                market = max(family, key=distribution.probability)
-                likely_legs.append({
-                    "type": "wc_sgp_probability",
-                    "market": market,
-                    "label": self._market_label(game, market),
-                    "model_prob": distribution.probability(market),
-                    "event_id": game.get(
-                        "event_id",
-                        f"{game.get('home_team', '')}|{game.get('away_team', '')}",
-                    ),
-                    "home_team": game.get("home_team", ""),
-                    "away_team": game.get("away_team", ""),
-                })
+                for market in family:
+                    available_legs.append({
+                        "type": "wc_sgp_probability",
+                        "market": market,
+                        "label": self._market_label(game, market),
+                        "model_prob": distribution.probability(market),
+                        "event_id": game.get(
+                            "event_id",
+                            f"{game.get('home_team', '')}|{game.get('away_team', '')}",
+                        ),
+                        "home_team": game.get("home_team", ""),
+                        "away_team": game.get("away_team", ""),
+                    })
 
-            for leg_count in range(2, min(3, len(likely_legs)) + 1):
-                for selected in itertools.combinations(likely_legs, leg_count):
-                    probability = distribution.joint_probability(
-                        [leg["market"] for leg in selected]
-                    )
+            for leg_count in range(2, min(3, len(available_legs)) + 1):
+                for selected in itertools.combinations(available_legs, leg_count):
+                    markets = [leg["market"] for leg in selected]
+                    try:
+                        probability = distribution.joint_probability(markets)
+                    except ValueError:
+                        continue
                     if probability <= 0:
                         continue
-                    if leg_count > 2 and any(
+                    redundant = leg_count > 2 and any(
                         math.isclose(
                             probability,
                             distribution.joint_probability(
@@ -217,15 +222,17 @@ class WCSGPBuilder:
                             abs_tol=1e-10,
                         )
                         for subset in itertools.combinations(selected, leg_count - 1)
-                    ):
-                        continue
+                    )
                     results.append(WCProbabilityCombination(
                         legs=list(selected),
                         combined_model_prob=round(probability, 5),
                         fair_decimal_odds=round(1.0 / probability, 3),
+                        home_team=str(game.get("home_team", "")),
+                        away_team=str(game.get("away_team", "")),
+                        redundant=redundant,
                     ))
         results.sort(key=lambda combo: combo.combined_model_prob, reverse=True)
-        return results[:top_n]
+        return results if top_n is None else results[:top_n]
 
     @staticmethod
     def _market_label(game: Mapping[str, object], market: str) -> str:

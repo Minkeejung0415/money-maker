@@ -1,7 +1,6 @@
 """Tests for alpha/engines/sports/wc_sgp_builder.py."""
 from __future__ import annotations
 
-import math
 import pytest
 
 from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
@@ -248,6 +247,19 @@ def test_probability_sgp_needs_no_market_odds_and_ranks_highest_first():
     )
 
 
+def test_probability_sgp_includes_every_side_for_user_selection():
+    game = _make_game(event_id="g1")
+    results = WCSGPBuilder(team_stats={}).build_probability_same_game([game])
+    observed = {leg["market"] for combo in results for leg in combo.legs}
+    assert observed == {
+        "home_win", "draw", "away_win",
+        "over_2_5", "under_2_5",
+        "btts_yes", "btts_no",
+    }
+    # 28 family combinations minus three scoreline-impossible triples.
+    assert len(results) == 25
+
+
 def test_probability_sgp_uses_only_one_selection_per_market_family():
     game = _make_game(win_prob=0.62, event_id="g1")
     results = WCSGPBuilder(team_stats={}).build_probability_same_game([game], top_n=20)
@@ -259,27 +271,21 @@ def test_probability_sgp_uses_only_one_selection_per_market_family():
         assert len(markets & {"home_win", "draw", "away_win"}) <= 1
 
 
-def test_probability_sgp_removes_logically_redundant_third_leg():
+def test_probability_sgp_labels_logically_redundant_third_leg():
     game = _make_game("Spain", "Saudi Arabia", win_prob=0.70, event_id="g1")
     results = WCSGPBuilder(team_stats={}).build_probability_same_game([game], top_n=20)
-    probabilities_by_markets = {
-        frozenset(leg["market"] for leg in combo.legs): combo.combined_model_prob
-        for combo in results
-    }
-    for markets, probability in probabilities_by_markets.items():
-        if len(markets) != 3:
-            continue
-        assert all(
-            not math.isclose(probability, pair_probability, abs_tol=1e-5)
-            for pair, pair_probability in probabilities_by_markets.items()
-            if len(pair) == 2 and pair < markets
-        )
+    redundant = [combo for combo in results if combo.redundant]
+    assert redundant
+    assert all(len(combo.legs) == 3 for combo in redundant)
 
 
 def test_probability_sgp_knockout_is_goal_markets_only():
     game = _make_game(knockout=True, event_id="g1")
     results = WCSGPBuilder(team_stats={}).build_probability_same_game([game])
-    assert len(results) == 1
-    assert {leg["market"] for leg in results[0].legs} <= {
-        "over_2_5", "under_2_5", "btts_yes", "btts_no"
-    }
+    assert len(results) == 4
+    assert all(
+        {leg["market"] for leg in combo.legs} <= {
+            "over_2_5", "under_2_5", "btts_yes", "btts_no"
+        }
+        for combo in results
+    )
