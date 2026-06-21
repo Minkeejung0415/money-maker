@@ -169,10 +169,12 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
     output = capsys.readouterr().out
     assert "Mode: SGP" in output
     assert "Over 2.5 goals" in output or "Under 2.5 goals" in output
-    assert "Exact scoreline joint model" in output
+    assert "Joint win probability" in output
+    assert "Probability only" in output
+    assert "EV:" not in output
 
 
-def test_main_sgp_explains_missing_market_prices(capsys):
+def test_main_sgp_creates_probabilities_without_market_prices(capsys):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main
     with patch("sys.argv", ["wc_scanner.py", "--mode", "sgp"]), \
@@ -182,4 +184,6 @@ def test_main_sgp_explains_missing_market_prices(capsys):
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
-    assert "at least two compatible market families" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "Joint win probability" in output
+    assert "Probability only" in output

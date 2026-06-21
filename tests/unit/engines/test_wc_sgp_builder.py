@@ -1,6 +1,7 @@
 """Tests for alpha/engines/sports/wc_sgp_builder.py."""
 from __future__ import annotations
 
+import math
 import pytest
 
 from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
@@ -228,3 +229,57 @@ def test_true_sgp_knockout_excludes_1x2_legs():
         leg["market"] not in {"home_win", "draw", "away_win"}
         for combo in result for leg in combo.legs
     )
+
+
+def test_probability_sgp_needs_no_market_odds_and_ranks_highest_first():
+    games = [
+        _make_game("Brazil", "Germany", win_prob=0.62, event_id="g1"),
+        _make_game("France", "Argentina", win_prob=0.50, event_id="g2"),
+    ]
+    results = WCSGPBuilder(team_stats={}, max_legs=3).build_probability_same_game(
+        games, top_n=20
+    )
+    assert results
+    assert all(2 <= len(combo.legs) <= 3 for combo in results)
+    assert all(combo.fair_decimal_odds > 1.0 for combo in results)
+    assert all(
+        results[index].combined_model_prob >= results[index + 1].combined_model_prob
+        for index in range(len(results) - 1)
+    )
+
+
+def test_probability_sgp_uses_only_one_selection_per_market_family():
+    game = _make_game(win_prob=0.62, event_id="g1")
+    results = WCSGPBuilder(team_stats={}).build_probability_same_game([game], top_n=20)
+    assert results
+    for combo in results:
+        markets = {leg["market"] for leg in combo.legs}
+        assert not {"over_2_5", "under_2_5"} <= markets
+        assert not {"btts_yes", "btts_no"} <= markets
+        assert len(markets & {"home_win", "draw", "away_win"}) <= 1
+
+
+def test_probability_sgp_removes_logically_redundant_third_leg():
+    game = _make_game("Spain", "Saudi Arabia", win_prob=0.70, event_id="g1")
+    results = WCSGPBuilder(team_stats={}).build_probability_same_game([game], top_n=20)
+    probabilities_by_markets = {
+        frozenset(leg["market"] for leg in combo.legs): combo.combined_model_prob
+        for combo in results
+    }
+    for markets, probability in probabilities_by_markets.items():
+        if len(markets) != 3:
+            continue
+        assert all(
+            not math.isclose(probability, pair_probability, abs_tol=1e-5)
+            for pair, pair_probability in probabilities_by_markets.items()
+            if len(pair) == 2 and pair < markets
+        )
+
+
+def test_probability_sgp_knockout_is_goal_markets_only():
+    game = _make_game(knockout=True, event_id="g1")
+    results = WCSGPBuilder(team_stats={}).build_probability_same_game([game])
+    assert len(results) == 1
+    assert {leg["market"] for leg in results[0].legs} <= {
+        "over_2_5", "under_2_5", "btts_yes", "btts_no"
+    }

@@ -12,6 +12,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
+from dataclasses import dataclass
 from typing import Mapping
 
 from alpha.data.ingestion.wc_market_odds import WCMarketOdds
@@ -25,6 +26,15 @@ logger = logging.getLogger(__name__)
 
 _EV_CALC = EVCalculator(min_edge=0.0)
 _KELLY = KellySizer(kelly_fraction=0.25, max_stake_pct=0.05)
+
+
+@dataclass(frozen=True)
+class WCProbabilityCombination:
+    """Probability-only same-game combination with no sportsbook assumptions."""
+
+    legs: list[dict]
+    combined_model_prob: float
+    fair_decimal_odds: float
 
 
 class WCSGPBuilder:
@@ -157,6 +167,64 @@ class WCSGPBuilder:
             key=lambda combo: (combo.ev, combo.combined_model_prob, combo.combined_decimal_odds),
             reverse=True,
         )
+        return results[:top_n]
+
+    def build_probability_same_game(
+        self,
+        games: list[dict],
+        top_n: int = 5,
+    ) -> list[WCProbabilityCombination]:
+        """Rank likely 2-3 leg same-match combinations without using odds."""
+        results: list[WCProbabilityCombination] = []
+        for game in games:
+            distribution = self._scoreline_model.build(game)
+            families = [
+                ("over_2_5", "under_2_5"),
+                ("btts_yes", "btts_no"),
+            ]
+            if distribution.outcome_available:
+                families.insert(0, ("home_win", "draw", "away_win"))
+
+            likely_legs: list[dict] = []
+            for family in families:
+                market = max(family, key=distribution.probability)
+                likely_legs.append({
+                    "type": "wc_sgp_probability",
+                    "market": market,
+                    "label": self._market_label(game, market),
+                    "model_prob": distribution.probability(market),
+                    "event_id": game.get(
+                        "event_id",
+                        f"{game.get('home_team', '')}|{game.get('away_team', '')}",
+                    ),
+                    "home_team": game.get("home_team", ""),
+                    "away_team": game.get("away_team", ""),
+                })
+
+            for leg_count in range(2, min(3, len(likely_legs)) + 1):
+                for selected in itertools.combinations(likely_legs, leg_count):
+                    probability = distribution.joint_probability(
+                        [leg["market"] for leg in selected]
+                    )
+                    if probability <= 0:
+                        continue
+                    if leg_count > 2 and any(
+                        math.isclose(
+                            probability,
+                            distribution.joint_probability(
+                                [leg["market"] for leg in subset]
+                            ),
+                            abs_tol=1e-10,
+                        )
+                        for subset in itertools.combinations(selected, leg_count - 1)
+                    ):
+                        continue
+                    results.append(WCProbabilityCombination(
+                        legs=list(selected),
+                        combined_model_prob=round(probability, 5),
+                        fair_decimal_odds=round(1.0 / probability, 3),
+                    ))
+        results.sort(key=lambda combo: combo.combined_model_prob, reverse=True)
         return results[:top_n]
 
     @staticmethod

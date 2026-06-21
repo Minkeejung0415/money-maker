@@ -192,15 +192,18 @@ def main() -> None:
         team_stats=getattr(wc_model, "_wc_stats", {}),
     )
     if args.mode == "sgp":
-        results = builder.build_same_game(enriched, market_odds, top_n=args.top)
+        results = builder.build_probability_same_game(enriched, top_n=args.top)
     else:
         results = builder.build(enriched, top_n=args.top)
 
     # ── Step 4: Output ───────────────────────────────────────────────────
     print("[4/4] Ranking complete.")
     print(f"\n{'='*65}")
-    print(f"WC SCANNER — Mode: {args.mode.upper()}  |  "
-          f"{args.date_from} to {args.date_to}  |  Min edge: {args.min_edge:.1%}")
+    header = (f"WC SCANNER — Mode: {args.mode.upper()}  |  "
+              f"{args.date_from} to {args.date_to}")
+    if args.mode != "sgp":
+        header += f"  |  Min edge: {args.min_edge:.1%}"
+    print(header)
     print(f"{'='*65}")
 
     if not results:
@@ -212,6 +215,15 @@ def main() -> None:
         return
 
     for rank, combo in enumerate(results, 1):
+        if args.mode == "sgp":
+            print(f"\n#{rank}  Joint win probability: {combo.combined_model_prob:.1%}  |  "
+                  f"Model fair odds: {combo.fair_decimal_odds:.2f}x")
+            print("    Legs:")
+            for leg in combo.legs:
+                print(f"      * {leg['label']}  |  individual model: "
+                      f"{leg['model_prob']:.1%}")
+            print("    Probability only - no sportsbook odds, edge, EV, or stake assumed.")
+            continue
         print(f"\n#{rank}  EV: {combo.ev:.1%}  |  Edge: {combo.edge:.1%}  |  "
               f"Odds: {combo.combined_decimal_odds:.2f}x  |  "
               f"Stake: ${combo.stake:.2f}")
@@ -233,8 +245,6 @@ def main() -> None:
                 elo_flag = "  *ELO EDGE*" if leg.get("elo_edge") else ""
                 print(f"      * {team} {outcome}  ({odds:.2f}x)  "
                       f"model: {prob:.1%}  [Elo: {elo}]{elo_flag}")
-        if args.mode == "sgp":
-            print(f"    Note: {combo.correlation_note}")
 
     print()
 
