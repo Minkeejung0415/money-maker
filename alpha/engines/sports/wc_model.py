@@ -3,7 +3,6 @@ Elo-logistic match model for WC 2026. Standalone — never routes through Soccer
 
 Reads from the Phase 5 data layer:
   - wc_elo.py   : Elo ratings per national team (wc_priors.json)
-  - wc_stats.py : StatsBomb xG aggregates (wc_stats.pkl)
 
 Produces calibrated W/D/L probabilities for group stage, or Win-to-Advance
 probabilities for knockout rounds, with a market divergence flag.
@@ -15,7 +14,6 @@ import math
 
 from alpha.engines.sports.ev_calculator import EVCalculator
 from alpha.data.ingestion.wc_elo import load_wc_elo_ratings, get_elo_rating
-from alpha.data.ingestion.wc_stats import get_wc_team_stats
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +29,6 @@ _WC_MIN_DRAW: float = 0.05
 
 _WC_DRAW_SCALE: float = 500.0
 """Elo-points scale factor for exponential decay (500 points yields about 12%)."""
-
-_XG_ELO_SCALE: float = 35.0
-"""Elo points per 1 xG/game advantage (StatsBomb modifier)."""
-
-_XG_ADJ_CAP: float = 200.0
-"""Cap on StatsBomb xG adjustment (± Elo points)."""
 
 KNOCKOUT_STAGES: frozenset[str] = frozenset({
     "LAST_16",
@@ -65,7 +57,7 @@ class WCMatchModel:
     Elo-logistic W/D/L model for WC 2026 matches.
 
     Neutral-venue formula: no +100 home-field boost.
-    Optional StatsBomb xG modifier adjusts Elo diff by up to ±200 points.
+    Current national-team Elo supplies the match-strength signal.
     Draw suppressed in knockout rounds (stage in KNOCKOUT_STAGES).
     """
 
@@ -73,11 +65,9 @@ class WCMatchModel:
         self.ev_calc = EVCalculator(min_edge=min_edge)
         self._elo_ratings: dict[str, int] = load_wc_elo_ratings()
         # FileNotFoundError propagates — no silent fallback for Elo ratings
-        try:
-            self._wc_stats: dict[str, dict] = get_wc_team_stats()
-        except FileNotFoundError:
-            logger.warning("WC stats cache not found — running Elo-only mode")
-            self._wc_stats = {}
+        # Kept for builder compatibility; stale tournament stats are no longer
+        # loaded into the outcome model.
+        self._wc_stats: dict[str, dict] = {}
         logger.info(
             "WCMatchModel loaded %d Elo ratings, %d team stats",
             len(self._elo_ratings),
@@ -112,17 +102,21 @@ class WCMatchModel:
         away_team = game.get("away_team", "")
 
         # 1. Elo ratings (neutral venue — NO +100 home-field boost)
-        elo_home = get_elo_rating(home_team, self._elo_ratings)
-        elo_away = get_elo_rating(away_team, self._elo_ratings)
+        elo_home = (
+            int(game["home_elo_override"])
+            if game.get("home_elo_override") is not None
+            else get_elo_rating(home_team, self._elo_ratings)
+        )
+        elo_away = (
+            int(game["away_elo_override"])
+            if game.get("away_elo_override") is not None
+            else get_elo_rating(away_team, self._elo_ratings)
+        )
         elo_diff = elo_home - elo_away
 
-        # 2. StatsBomb xG modifier (only when both teams present)
-        if home_team in self._wc_stats and away_team in self._wc_stats:
-            xg_diff = self._wc_stats[home_team]["avg_xG"] - self._wc_stats[away_team]["avg_xG"]
-            elo_adj = elo_diff + xg_diff * _XG_ELO_SCALE
-            elo_adj = max(-_XG_ADJ_CAP, min(_XG_ADJ_CAP, elo_adj))
-        else:
-            elo_adj = float(elo_diff)
+        # Current Elo already incorporates recent results. The old 2018/2022
+        # xG modifier was stale and double-counted old tournament form.
+        elo_adj = float(elo_diff)
 
         # 3. 2-way Elo-logistic probability (Bradley-Terry)
         p_home_2way = 1.0 / (1.0 + 10.0 ** (-elo_adj / 400.0))

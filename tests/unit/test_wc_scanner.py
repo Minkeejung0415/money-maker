@@ -163,6 +163,7 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
          patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={"Brazil|Germany": odds}), \
+         patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value={"avg_goals": 1.2, "defense_score": 0.8}), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
@@ -182,9 +183,31 @@ def test_main_sgp_creates_probabilities_without_market_prices(capsys):
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
          patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={}), \
+         patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value={"avg_goals": 1.2, "defense_score": 0.8}), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
     output = capsys.readouterr().out
     assert "Joint win probability" in output
     assert "Probability only" in output
+
+
+def test_main_sgp_fetches_recent_form_for_every_team(capsys):
+    games = [
+        _make_enriched_game("Brazil", "Germany", event_id="101"),
+        _make_enriched_game("France", "Argentina", event_id="102"),
+    ]
+    recent = {"avg_goals": 1.2, "defense_score": 0.8}
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "sgp"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=games), \
+         patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={}), \
+         patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value=recent) as fetch, \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
+        main()
+    assert fetch.call_count == 4
+    assert {call.args[0] for call in fetch.call_args_list} == {
+        "Brazil", "Germany", "France", "Argentina"
+    }

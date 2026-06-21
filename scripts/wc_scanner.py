@@ -122,6 +122,7 @@ def main() -> None:
 
     from alpha.data.ingestion.football_data_client import FootballDataClient
     from alpha.data.ingestion.wc_market_odds import load_wc_market_odds
+    from alpha.data.ingestion.wc_recent_form import WCRecentFormClient
     from alpha.engines.sports.wc_model import WCMatchModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
 
@@ -173,15 +174,41 @@ def main() -> None:
         print(f"  Model: wc_elo_logistic | Elo ratings: {len(wc_model._elo_ratings)} | "
               f"Stats: {len(wc_model._wc_stats)} teams")
 
+    recent_client = WCRecentFormClient() if args.mode == "sgp" else None
+    if recent_client:
+        print("  Loading recent last-10 international form and Elo for every team...")
+
     enriched: list[dict] = []
     for game in all_games:
         try:
+            if recent_client:
+                commence = str(game.get("commence_time", ""))[:10]
+                as_of = date.fromisoformat(commence) if commence else date.fromisoformat(args.date_from)
+                home = recent_client.fetch(game["home_team"], as_of)
+                away = recent_client.fetch(game["away_team"], as_of)
+                if home is None or away is None:
+                    print(f"  Skipping {game.get('home_team')} vs {game.get('away_team')}: "
+                          "fewer than 5 recent pre-match results available")
+                    continue
+                game["recent_team_stats"] = {
+                    game["home_team"]: home,
+                    game["away_team"]: away,
+                }
+                if home.get("elo_rating") is not None:
+                    game["home_elo_override"] = home["elo_rating"]
+                if away.get("elo_rating") is not None:
+                    game["away_elo_override"] = away["elo_rating"]
             game = wc_model.predict(game)
             enriched.append(game)
-        except ValueError as exc:
-            logger.warning("Skipping game: %s", exc)
+        except Exception as exc:
+            logger.warning(
+                "Skipping %s vs %s: %s",
+                game.get("home_team"), game.get("away_team"), exc,
+            )
 
     print(f"  Enriched {len(enriched)} game(s) with Elo predictions")
+    if recent_client:
+        print(f"  Recent form ready for {len(enriched)} game(s)")
 
     # ── Step 3: Build SGP combinations ──────────────────────────────────
     print(f"[3/4] Building WC {args.mode} combinations...")

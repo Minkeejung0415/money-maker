@@ -18,13 +18,6 @@ _FAKE_ELO: dict[str, int] = {
     "Argentina": 2070,
 }
 
-_FAKE_STATS: dict[str, dict] = {
-    "Brazil": {"avg_goals": 2.1, "avg_xG": 1.9, "avg_shots": 14.2, "defense_score": 0.8},
-    "Germany": {"avg_goals": 1.8, "avg_xG": 1.5, "avg_shots": 13.1, "defense_score": 1.1},
-    # France and Argentina intentionally absent — enables test_xg_modifier_skipped_when_team_not_in_stats
-}
-
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -32,7 +25,6 @@ _FAKE_STATS: dict[str, dict] = {
 @pytest.fixture
 def model(monkeypatch):
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: _FAKE_ELO)
-    monkeypatch.setattr("alpha.engines.sports.wc_model.get_wc_team_stats", lambda: _FAKE_STATS)
     return WCMatchModel()
 
 
@@ -97,12 +89,8 @@ def test_init_raises_when_elo_missing(monkeypatch):
         WCMatchModel()
 
 
-def test_init_succeeds_when_stats_missing(monkeypatch):
+def test_init_does_not_load_stale_tournament_stats(monkeypatch):
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: _FAKE_ELO)
-    monkeypatch.setattr(
-        "alpha.engines.sports.wc_model.get_wc_team_stats",
-        lambda: (_ for _ in ()).throw(FileNotFoundError("wc_stats.pkl missing")),
-    )
     m = WCMatchModel()
     assert m._wc_stats == {}
 
@@ -174,7 +162,6 @@ def test_elo_edge_flag_set_when_divergence_exceeds_5pp(monkeypatch):
     # Brazil=2100, Germany=1500 => large Elo diff => win_prob well above market implied at -110
     fake_elo = {"Brazil": 2100, "Germany": 1500, "France": 2050, "Argentina": 2070}
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: fake_elo)
-    monkeypatch.setattr("alpha.engines.sports.wc_model.get_wc_team_stats", lambda: {})
     m = WCMatchModel()
     game = {"home_team": "Brazil", "away_team": "Germany", "league": "wc", "home_odds": -110}
     result = m.predict(game)
@@ -195,21 +182,33 @@ def test_model_name_is_wc_elo_logistic(model):
 # xG modifier
 # ---------------------------------------------------------------------------
 
-def test_xg_modifier_applied_when_stats_available(model):
-    # Both Brazil and Germany are in _FAKE_STATS — elo_diff should be adjusted
+def test_stale_historical_xg_does_not_modify_current_elo(model):
+    # Current Elo already includes recent results; old tournament xG is ignored.
     game = {"home_team": "Brazil", "away_team": "Germany", "league": "wc"}
     result = model.predict(game)
     raw_elo_diff = _FAKE_ELO["Brazil"] - _FAKE_ELO["Germany"]
-    # elo_diff in output should NOT equal raw diff (xG modifier applied)
-    assert result["elo_diff"] != pytest.approx(raw_elo_diff, abs=0.01)
+    assert result["elo_diff"] == pytest.approx(raw_elo_diff, abs=0.01)
 
 
-def test_xg_modifier_skipped_when_team_not_in_stats(model):
-    # France and Argentina not in _FAKE_STATS — raw Elo diff should be used
+def test_current_elo_used_for_every_team(model):
     game = {"home_team": "France", "away_team": "Argentina", "league": "wc"}
     result = model.predict(game)
     raw_elo_diff = _FAKE_ELO["France"] - _FAKE_ELO["Argentina"]
     assert result["elo_diff"] == pytest.approx(raw_elo_diff, abs=0.01)
+
+
+def test_recent_elo_overrides_static_file_rating(model):
+    game = {
+        "home_team": "Brazil",
+        "away_team": "Germany",
+        "league": "wc",
+        "home_elo_override": 2200,
+        "away_elo_override": 1700,
+    }
+    result = model.predict(game)
+    assert result["home_elo"] == 2200
+    assert result["away_elo"] == 1700
+    assert result["elo_diff"] == 500
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +217,6 @@ def test_xg_modifier_skipped_when_team_not_in_stats(model):
 
 def test_evaluate_bet_returns_none_when_no_edge(monkeypatch):
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: _FAKE_ELO)
-    monkeypatch.setattr("alpha.engines.sports.wc_model.get_wc_team_stats", lambda: _FAKE_STATS)
     m = WCMatchModel(min_edge=0.99)  # impossibly high threshold
     game = {"home_team": "Brazil", "away_team": "Germany", "league": "wc", "home_odds": -130, "away_odds": 110}
     assert m.evaluate_bet(game) is None
@@ -226,7 +224,6 @@ def test_evaluate_bet_returns_none_when_no_edge(monkeypatch):
 
 def test_evaluate_bet_returns_game_when_edge_exists(monkeypatch):
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: _FAKE_ELO)
-    monkeypatch.setattr("alpha.engines.sports.wc_model.get_wc_team_stats", lambda: _FAKE_STATS)
     m = WCMatchModel(min_edge=0.0)  # always has edge
     # Brazil at +200 (underdog price) but strong Elo team — clear EV
     game = {"home_team": "Brazil", "away_team": "Germany", "league": "wc", "home_odds": 200, "away_odds": -240}
@@ -241,7 +238,6 @@ def test_evaluate_bet_returns_game_when_edge_exists(monkeypatch):
 
 def test_evaluate_batch_returns_list(monkeypatch):
     monkeypatch.setattr("alpha.engines.sports.wc_model.load_wc_elo_ratings", lambda: _FAKE_ELO)
-    monkeypatch.setattr("alpha.engines.sports.wc_model.get_wc_team_stats", lambda: _FAKE_STATS)
     m = WCMatchModel(min_edge=0.0)
     games = [
         {"home_team": "Brazil", "away_team": "Germany", "league": "wc", "home_odds": -130, "away_odds": 110},

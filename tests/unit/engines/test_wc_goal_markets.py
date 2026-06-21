@@ -31,6 +31,23 @@ def test_goal_rates_use_team_attack_and_opponent_defense():
     assert distribution.away_lambda == pytest.approx(1.15)
 
 
+def test_recent_per_game_stats_override_stale_historical_stats():
+    game = _game(recent_team_stats={
+        "Brazil": {"avg_goals": 1.2, "defense_score": 0.4},
+        "Germany": {"avg_goals": 0.7, "defense_score": 0.8},
+    })
+    distribution = WCScorelineModel(TEAM_STATS).build(game)
+    assert distribution.home_lambda == pytest.approx(1.0)
+    assert distribution.away_lambda == pytest.approx(0.55)
+
+
+def test_current_elo_mismatch_suppresses_underdog_goal_rate():
+    even = WCScorelineModel(TEAM_STATS).build(_game(elo_diff=0.0))
+    mismatch = WCScorelineModel(TEAM_STATS).build(_game(elo_diff=500.0))
+    assert mismatch.home_lambda > even.home_lambda
+    assert mismatch.away_lambda < even.away_lambda
+
+
 def test_missing_stats_use_neutral_bounded_fallback():
     distribution = WCScorelineModel({}).build(_game())
     assert 0.25 <= distribution.home_lambda <= 3.5
@@ -83,4 +100,3 @@ def test_knockout_goal_markets_do_not_use_advance_probabilities_as_1x2():
     assert distribution.probability("over_2_5") > 0
     with pytest.raises(ValueError, match="not available"):
         distribution.probability("home_win")
-

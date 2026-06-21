@@ -97,16 +97,23 @@ class WCScorelineModel:
             rate = _NEUTRAL_GOALS
         return max(_MIN_GOALS, min(_MAX_GOALS, rate))
 
-    def _goal_rates(self, home_team: str, away_team: str) -> tuple[float, float]:
-        home = self._team_stats.get(home_team, {})
-        away = self._team_stats.get(away_team, {})
+    def _goal_rates(
+        self,
+        home_team: str,
+        away_team: str,
+        team_stats: Mapping[str, Mapping[str, float]],
+        elo_diff: float,
+    ) -> tuple[float, float]:
+        home = team_stats.get(home_team, {})
+        away = team_stats.get(away_team, {})
         home_attack = self._bounded_rate(home.get("avg_xG", home.get("avg_goals")))
         away_attack = self._bounded_rate(away.get("avg_xG", away.get("avg_goals")))
         home_defense = self._bounded_rate(home.get("defense_score"))
         away_defense = self._bounded_rate(away.get("defense_score"))
+        matchup_factor = math.sqrt(10.0 ** (max(-800.0, min(800.0, elo_diff)) / 1600.0))
         return (
-            self._bounded_rate((home_attack + away_defense) / 2.0),
-            self._bounded_rate((away_attack + home_defense) / 2.0),
+            self._bounded_rate(((home_attack + away_defense) / 2.0) * matchup_factor),
+            self._bounded_rate(((away_attack + home_defense) / 2.0) / matchup_factor),
         )
 
     @staticmethod
@@ -140,8 +147,13 @@ class WCScorelineModel:
         return WCScorelineModel._normalize(calibrated)
 
     def build(self, game: Mapping[str, object]) -> WCScorelineDistribution:
+        recent_stats = game.get("recent_team_stats")
+        team_stats = recent_stats if isinstance(recent_stats, Mapping) else self._team_stats
         home_lambda, away_lambda = self._goal_rates(
-            str(game.get("home_team", "")), str(game.get("away_team", ""))
+            str(game.get("home_team", "")),
+            str(game.get("away_team", "")),
+            team_stats,
+            float(game.get("elo_diff", 0.0)),
         )
         cells = {
             (home_goals, away_goals): _poisson_probability(home_goals, home_lambda)
