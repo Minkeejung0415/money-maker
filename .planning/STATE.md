@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: World Cup True SGP
-status: executing
-phase: 15
-phase_name: Scoreline Goal-Market Model
+status: complete
+phase: 16
+phase_name: True SGP Builder and Scanner
 plan: 01
 last_updated: "2026-06-21T10:19:19.275Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 2
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Build a calibrated scoreline distribution for true World Cup SGP markets.
+**Current focus:** Milestone v1.5 complete and verified.
 
 ## Current Position
 
-Phase: 15 of 16 - Scoreline Goal-Market Model
+Phase: 16 of 16 - True SGP Builder and Scanner
 Plan: 01
-Status: Executing
-Last activity: 2026-06-21 - Started Phase 15 implementation
+Status: Complete
+Last activity: 2026-06-21 - v1.5 audit passed; 753 tests passing
 
 ## Performance Metrics
 

@@ -15,7 +15,7 @@ A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UC
 - Real market prices with no assumed or synthetic odds
 - `wc_scanner.py --mode sgp` alongside the existing classic parlay mode
 
-**Current state:** Milestone defined; Phase 15 goal-market modeling is next.
+**Current state:** Complete and verified with 753 passing tests. Live SGP output awaits compatible totals or BTTS prices in the local override file.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -84,12 +84,12 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] FBref corners, aerial-win, and pressing-proxy feature ingestion
 - [x] EPL/UCL cache isolation under `data/.soccer_cache/`
 
-### Active (v1.5)
+### Validated (v1.5)
 
-- [ ] Scoreline-calibrated World Cup goal-market probabilities
-- [ ] True same-match 2-3 leg combinations with exact joint probability
-- [ ] Normalized 1X2, total-goals, and BTTS market prices
-- [ ] Stage-safe scanner mode with complete test coverage
+- [x] Scoreline-calibrated World Cup goal-market probabilities
+- [x] True same-match 2-3 leg combinations with exact joint probability
+- [x] Normalized 1X2, total-goals, and BTTS market prices
+- [x] Stage-safe scanner mode with complete test coverage
 
 ### Out of Scope
 

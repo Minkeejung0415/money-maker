@@ -14,16 +14,16 @@
 
 ## Market Prices and Construction
 
-- [ ] **WCSGP-06**: Normalize 1X2, total-goals, and BTTS decimal prices while remaining backward compatible with existing moneyline overrides.
-- [ ] **WCSGP-07**: Keep missing market prices unavailable; never invent default odds.
-- [ ] **WCSGP-08**: Build same-match 2-3 leg combinations and report joint probability, fair odds, sportsbook odds, edge, and EV in deterministic rank order.
-- [ ] **WCSGP-09**: Use 90-minute 1X2 only in group play; knockout combinations exclude 1X2 unless an explicit compatible market exists.
+- [x] **WCSGP-06**: Normalize 1X2, total-goals, and BTTS decimal prices while remaining backward compatible with existing moneyline overrides.
+- [x] **WCSGP-07**: Keep missing market prices unavailable; never invent default odds.
+- [x] **WCSGP-08**: Build same-match 2-3 leg combinations and report joint probability, fair odds, sportsbook odds, edge, and EV in deterministic rank order.
+- [x] **WCSGP-09**: Use 90-minute 1X2 only in group play; knockout combinations exclude 1X2 unless an explicit compatible market exists.
 
 ## Scanner and Quality
 
-- [ ] **WCSGP-10**: `scripts/wc_scanner.py --mode sgp` prints true same-game candidates and explains missing-price or compatibility failures.
-- [ ] **WCSGP-11**: Existing `--mode parlay` behavior remains available without regression.
-- [ ] **WCSGP-12**: Tests cover probability coherence, joint calculations, compatibility, odds parsing, ranking, scanner routing, and the full suite.
+- [x] **WCSGP-10**: `scripts/wc_scanner.py --mode sgp` prints true same-game candidates and explains missing-price or compatibility failures.
+- [x] **WCSGP-11**: Existing `--mode parlay` behavior remains available without regression.
+- [x] **WCSGP-12**: Tests cover probability coherence, joint calculations, compatibility, odds parsing, ranking, scanner routing, and the full suite.
 
 ## Out of Scope
 
@@ -41,13 +41,13 @@
 | WCSGP-03 | Phase 15 | Complete |
 | WCSGP-04 | Phase 15 | Complete |
 | WCSGP-05 | Phase 15 | Complete |
-| WCSGP-06 | Phase 16 | Pending |
-| WCSGP-07 | Phase 16 | Pending |
-| WCSGP-08 | Phase 16 | Pending |
-| WCSGP-09 | Phase 16 | Pending |
-| WCSGP-10 | Phase 16 | Pending |
-| WCSGP-11 | Phase 16 | Pending |
-| WCSGP-12 | Phases 15-16 | Pending |
+| WCSGP-06 | Phase 16 | Complete |
+| WCSGP-07 | Phase 16 | Complete |
+| WCSGP-08 | Phase 16 | Complete |
+| WCSGP-09 | Phase 16 | Complete |
+| WCSGP-10 | Phase 16 | Complete |
+| WCSGP-11 | Phase 16 | Complete |
+| WCSGP-12 | Phases 15-16 | Complete |
 
 **Coverage:** 12/12 requirements mapped.
 
