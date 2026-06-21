@@ -2,12 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: World Cup True SGP
-status: complete
-phase: 16
-phase_name: True SGP Builder and Scanner
-plan: 01
-last_updated: "2026-06-21T10:19:19.275Z"
-last_activity: 2026-06-21
+status: Awaiting next milestone
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-06-21T10:33:58.295Z"
+last_activity: 2026-06-21 — Milestone v1.5 completed and archived
 progress:
   total_phases: 2
   completed_phases: 2
@@ -27,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 16 of 16 - True SGP Builder and Scanner
-Plan: 01
-Status: Complete
-Last activity: 2026-06-21 - v1.5 audit passed; 753 tests passing
+Phase: Milestone v1.5 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-21 — Milestone v1.5 completed and archived
 
 ## Performance Metrics
 
@@ -91,4 +89,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Start the next milestone with /gsd:new-milestone

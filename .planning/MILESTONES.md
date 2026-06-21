@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.5 World Cup True SGP (Shipped: 2026-06-21)
+
+**Phases completed:** 2 phases, 2 plans
+
+**Key accomplishments:**
+
+- Scoreline distribution calibrated to the existing WC Elo model's 1X2 probabilities
+- Coherent over/under 2.5 and BTTS probabilities with exact correlated joint evaluation
+- Normalized real-price contract for 1X2, totals, and BTTS without default odds
+- Stage-safe 2-3 leg same-match builder with knockout 1X2 protection
+- `wc_scanner.py --mode sgp` added while classic parlay behavior remains intact
+- 753-test full regression suite passed
+
+---
+
 ## v1.4 Soccer Mode Upgrade (Shipped: 2026-06-21)
 
 **Phases completed:** 3 phases, 6 plans, 10 tasks
