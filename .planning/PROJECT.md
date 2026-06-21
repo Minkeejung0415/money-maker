@@ -4,11 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.4 — Soccer Mode Upgrade
+## Current Milestone: v1.5 - World Cup True SGP
 
-**Goal:** Upgrade EPL/UCL predictions with independent form, H2H, rest, set-piece, and Club Elo features, then enable model-gated draw betting.
+**Goal:** Build real same-game World Cup combinations from match-result, total-goals, and BTTS markets using a calibrated scoreline distribution that accounts for correlation.
 
-**Current state:** Phase 12 complete — the soccer feature data pipeline is verified and ready for model training.
+**Target features:**
+- Coherent 1X2, over/under 2.5, and BTTS probabilities
+- Exact scoreline-based joint probabilities for correlated legs
+- Stage-safe compatibility rules for group and knockout matches
+- Real market prices with no assumed or synthetic odds
+- `wc_scanner.py --mode sgp` alongside the existing classic parlay mode
+
+**Current state:** Milestone defined; Phase 15 goal-market modeling is next.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -77,11 +84,20 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] FBref corners, aerial-win, and pressing-proxy feature ingestion
 - [x] EPL/UCL cache isolation under `data/.soccer_cache/`
 
+### Active (v1.5)
+
+- [ ] Scoreline-calibrated World Cup goal-market probabilities
+- [ ] True same-match 2-3 leg combinations with exact joint probability
+- [ ] Normalized 1X2, total-goals, and BTTS market prices
+- [ ] Stage-safe scanner mode with complete test coverage
+
 ### Out of Scope
 
 - MLB player props — requires a dependable prop-odds source and broader modeling scope
 - MLB parlay optimization — deferred until single-game probabilities are validated
 - Paid baseball or odds feeds — free data only for v1.3
+- World Cup player props - no dependable free player-prop odds source
+- Invented SGP prices - recommendations require actual supplied prices
 
 ## Context
 
@@ -143,4 +159,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-19 — Phase 12 soccer feature pipeline complete*
+*Last updated: 2026-06-21 - v1.5 World Cup True SGP milestone started*

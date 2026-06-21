@@ -1,52 +1,55 @@
-# Requirements: v1.4 - Soccer Mode Upgrade
+# Requirements: World Cup True SGP
 
-**Defined:** 2026-06-19
-**Core Value:** EPL and UCL percentages must come from independent, auditable model inputs rather than silent market-implied fallback.
+**Milestone:** v1.5
+**Defined:** 2026-06-21
+**Status:** Active
 
-## Data Pipeline
+## Goal-Market Model
 
-- [x] **SDATA-01**: Last-five team form includes W/D/L, points, goals for, goals against, and goal difference.
-- [x] **SDATA-02**: Last-five head-to-head meetings expose home wins, draws, away wins, and home win rate.
-- [x] **SDATA-03**: Pregame days rest is available as an integer bounded from 0 to 7.
-- [x] **SDATA-04**: Club Elo and FBref set-piece features are cached under an EPL/UCL namespace isolated from World Cup data.
+- [ ] **WCSGP-01**: Produce coherent probabilities for match result, over/under 2.5 goals, and both-teams-to-score yes/no.
+- [ ] **WCSGP-02**: Use cached World Cup team priors with documented neutral fallbacks and bounded goal rates.
+- [ ] **WCSGP-03**: Preserve the existing WC Elo model's 1X2 probabilities as scoreline-distribution marginals.
+- [ ] **WCSGP-04**: Calculate multi-leg joint probabilities from one calibrated scoreline distribution, not by multiplying correlated marginals.
+- [ ] **WCSGP-05**: Reject invalid, contradictory, or stage-incompatible leg combinations.
 
-## Soccer Models
+## Market Prices and Construction
 
-- [x] **SMODEL-01**: Retrain and calibrate the EPL model on the expanded pregame feature schema.
-- [x] **SMODEL-02**: Build a Club Elo logistic UCL model with independent W/D/L probabilities.
-- [x] **SMODEL-03**: Preserve explicit, league-specific fallback behavior and prevent cross-routing.
+- [ ] **WCSGP-06**: Normalize 1X2, total-goals, and BTTS decimal prices while remaining backward compatible with existing moneyline overrides.
+- [ ] **WCSGP-07**: Keep missing market prices unavailable; never invent default odds.
+- [ ] **WCSGP-08**: Build same-match 2-3 leg combinations and report joint probability, fair odds, sportsbook odds, edge, and EV in deterministic rank order.
+- [ ] **WCSGP-09**: Use 90-minute 1X2 only in group play; knockout combinations exclude 1X2 unless an explicit compatible market exists.
 
-## Draw Betting and Scanner
+## Scanner and Quality
 
-- [x] **SDRAW-01**: Include draw legs only when independent model EV exceeds 5%.
-- [x] **SDRAW-02**: Annotate accepted draw legs with `*DRAW RISK*` and reject fallback-derived draw legs.
-- [x] **SSCAN-01**: Route EPL scans to the EPL model and UCL scans to the UCL Elo model.
-- [x] **STEST-01**: Cover all new soccer components and pass the full repository suite without regression.
+- [ ] **WCSGP-10**: `scripts/wc_scanner.py --mode sgp` prints true same-game candidates and explains missing-price or compatibility failures.
+- [ ] **WCSGP-11**: Existing `--mode parlay` behavior remains available without regression.
+- [ ] **WCSGP-12**: Tests cover probability coherence, joint calculations, compatibility, odds parsing, ranking, scanner routing, and the full suite.
 
 ## Out of Scope
 
-- In-play prediction
-- Travel-distance fatigue
-- Paid soccer data feeds
-- Automatic sportsbook wagering
+- Player props: no dependable free World Cup player-prop odds source is available.
+- Synthetic or assumed sportsbook prices.
+- Cross-match combinations, which remain in classic parlay mode.
+- Any claim of guaranteed profitability.
 
 ## Traceability
 
 | Requirement | Phase | Status |
-|---|---|---|
-| SDATA-01 | Phase 12 | Complete |
-| SDATA-02 | Phase 12 | Complete |
-| SDATA-03 | Phase 12 | Complete |
-| SDATA-04 | Phase 12 | Complete |
-| SMODEL-01 | Phase 13 | Complete |
-| SMODEL-02 | Phase 13 | Complete |
-| SMODEL-03 | Phase 13 | Complete |
-| SDRAW-01 | Phase 14 | Complete |
-| SDRAW-02 | Phase 14 | Complete |
-| SSCAN-01 | Phase 14 | Complete |
-| STEST-01 | Phase 14 | Complete |
+|-------------|-------|--------|
+| WCSGP-01 | Phase 15 | Pending |
+| WCSGP-02 | Phase 15 | Pending |
+| WCSGP-03 | Phase 15 | Pending |
+| WCSGP-04 | Phase 15 | Pending |
+| WCSGP-05 | Phase 15 | Pending |
+| WCSGP-06 | Phase 16 | Pending |
+| WCSGP-07 | Phase 16 | Pending |
+| WCSGP-08 | Phase 16 | Pending |
+| WCSGP-09 | Phase 16 | Pending |
+| WCSGP-10 | Phase 16 | Pending |
+| WCSGP-11 | Phase 16 | Pending |
+| WCSGP-12 | Phases 15-16 | Pending |
 
-**Coverage:** 11 requirements, 11 mapped, 0 unmapped.
+**Coverage:** 12/12 requirements mapped.
 
 ---
-*Requirements updated: 2026-06-21 after Phase 14 completion*
+*Last updated: 2026-06-21 after milestone definition*

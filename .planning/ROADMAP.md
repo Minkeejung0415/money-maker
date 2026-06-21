@@ -282,3 +282,45 @@ Plans:
 | 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
 | 13. Soccer Model Upgrade | 2/2 | Complete   | 2026-06-20 |
 | 14. Draw Betting + Scanner Integration | 2/2 | Complete    | 2026-06-21 |
+
+---
+
+## Current Milestone: v1.5 - World Cup True SGP
+
+## Phases (v1.5)
+
+- [ ] **Phase 15: Scoreline Goal-Market Model** - Calibrate a scoreline distribution to WC Elo 1X2 marginals and expose totals, BTTS, and exact joint probabilities.
+- [ ] **Phase 16: True SGP Builder and Scanner** - Normalize market prices, build stage-safe same-match combinations, and add `--mode sgp` output.
+
+## Phase Details (v1.5)
+
+### Phase 15: Scoreline Goal-Market Model
+**Goal**: Each World Cup match has one coherent scoreline distribution supporting correlated market probabilities.
+**Depends on**: Existing WC Elo outcome model and cached WC team statistics
+**Requirements**: WCSGP-01, WCSGP-02, WCSGP-03, WCSGP-04, WCSGP-05, WCSGP-12
+**Success Criteria**:
+1. Goal rates use bounded World Cup attack/defense priors with neutral fallbacks.
+2. Scoreline weights reproduce WC Elo home/draw/away marginals within numerical tolerance.
+3. Totals and BTTS binary markets each sum to one.
+4. Multi-leg probability is evaluated directly against scorelines and rejects contradictions.
+5. Focused and full regression tests pass.
+**Plans**: 1 plan
+
+### Phase 16: True SGP Builder and Scanner
+**Goal**: Users can request ranked, real-price, same-match World Cup combinations without changing classic parlay behavior.
+**Depends on**: Phase 15
+**Requirements**: WCSGP-06, WCSGP-07, WCSGP-08, WCSGP-09, WCSGP-10, WCSGP-11, WCSGP-12
+**Success Criteria**:
+1. Normalized odds accept 1X2, over/under 2.5, and BTTS prices.
+2. Missing odds are explicit and never replaced with assumptions.
+3. Builder emits only compatible 2-3 leg selections from one match and ranks by EV.
+4. Knockout matches exclude standard 90-minute 1X2 while permitting compatible goal combinations.
+5. `--mode sgp` is tested and `--mode parlay` remains unchanged.
+**Plans**: 1 plan
+
+## Progress (v1.5)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 15. Scoreline Goal-Market Model | 0/1 | Not started | - |
+| 16. True SGP Builder and Scanner | 0/1 | Not started | - |
