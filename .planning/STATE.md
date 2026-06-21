@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Soccer Mode Upgrade
-status: milestone_complete
-stopped_at: Milestone complete (Phase 14 was final phase)
-last_updated: 2026-06-21T10:15:15.234Z
-last_activity: 2026-06-21
+status: Awaiting next milestone
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-06-21T10:17:08.571Z"
+last_activity: 2026-06-21 — Milestone v1.4 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 14
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-06-21
+Phase: Milestone v1.4 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-21 — Milestone v1.4 completed and archived
 
 ## Performance Metrics
 
@@ -86,3 +86,7 @@ Last activity: 2026-06-21
 Last session: 2026-06-20T10:50:44.470Z
 Stopped at: Completed 08-01-PLAN.md
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
