@@ -62,7 +62,8 @@ def _parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Modes:
-  parlay   -- Classic multi-game moneyline parlay (recommended, only mode in v1.1)
+  parlay   -- Classic multi-game moneyline parlay
+  sgp      -- Same-match 1X2, total-goals, and BTTS combinations
 
 Data sources:
   Games : football-data.org (requires FOOTBALL_API_KEY in .env)
@@ -75,9 +76,9 @@ Examples:
     )
     parser.add_argument(
         "--mode",
-        choices=["parlay"],
+        choices=["parlay", "sgp"],
         default="parlay",
-        help="Parlay mode (default: parlay)",
+        help="Combination mode (default: parlay)",
     )
     parser.add_argument(
         "--date-from",
@@ -120,6 +121,7 @@ def main() -> None:
     args = _parse_args()
 
     from alpha.data.ingestion.football_data_client import FootballDataClient
+    from alpha.data.ingestion.wc_market_odds import load_wc_market_odds
     from alpha.engines.sports.wc_model import WCMatchModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
 
@@ -140,6 +142,23 @@ def main() -> None:
         print("  No WC games found in date range. Exiting.")
         sys.exit(0)
     print(f"  Found {len(all_games)} WC fixture(s)")
+
+    # ── Odds override: patch real decimal odds from data/wc_odds_override.json ──
+    _odds_path = ROOT / "data" / "wc_odds_override.json"
+    market_odds = {}
+    if _odds_path.exists():
+        market_odds = load_wc_market_odds(_odds_path)
+        patched = 0
+        for game in all_games:
+            key = f"{game['home_team']}|{game['away_team']}"
+            prices = market_odds.get(key)
+            if prices and "home_win" in prices.prices and "away_win" in prices.prices:
+                h = prices.prices["home_win"]
+                a = prices.prices["away_win"]
+                game["home_odds"] = round(-100 / (h - 1)) if h < 2 else round((h - 1) * 100)
+                game["away_odds"] = round(-100 / (a - 1)) if a < 2 else round((a - 1) * 100)
+                patched += 1
+        print(f"  Odds override applied to {patched}/{len(all_games)} game(s) from {_odds_path.name}")
 
     # ── Step 2: Run Elo model ────────────────────────────────────────────
     print("[2/4] Running Elo-logistic model (WCMatchModel)...")
@@ -165,13 +184,17 @@ def main() -> None:
     print(f"  Enriched {len(enriched)} game(s) with Elo predictions")
 
     # ── Step 3: Build SGP combinations ──────────────────────────────────
-    print("[3/4] Building WC parlay combinations...")
+    print(f"[3/4] Building WC {args.mode} combinations...")
     builder = WCSGPBuilder(
         bankroll=args.bankroll,
         min_edge=args.min_edge,
         max_legs=args.max_legs,
+        team_stats=getattr(wc_model, "_wc_stats", {}),
     )
-    results = builder.build(enriched, top_n=args.top)
+    if args.mode == "sgp":
+        results = builder.build_same_game(enriched, market_odds, top_n=args.top)
+    else:
+        results = builder.build(enriched, top_n=args.top)
 
     # ── Step 4: Output ───────────────────────────────────────────────────
     print("[4/4] Ranking complete.")
@@ -182,6 +205,9 @@ def main() -> None:
 
     if not results:
         print(f"\nNo combinations found with >={args.min_edge:.1%} edge in this date range.")
+        if args.mode == "sgp":
+            print("  SGP needs real prices from at least two compatible market families "
+                  "for one match in data/wc_odds_override.json (1X2, O/U 2.5, or BTTS).")
         print(f"  ({len(enriched)} games enriched — try --min-edge 0.02 or expand date range)")
         return
 
@@ -194,6 +220,10 @@ def main() -> None:
         print("    Legs:")
         for leg in combo.legs:
             if isinstance(leg, dict):
+                if leg.get("type") == "wc_sgp":
+                    print(f"      * {leg['label']}  ({leg['decimal_odds']:.2f}x)  "
+                          f"model: {leg['model_prob']:.1%}")
+                    continue
                 team = leg.get("team", "?")
                 odds = leg.get("decimal_odds", 0)
                 prob = leg.get("model_prob", 0)
@@ -203,6 +233,8 @@ def main() -> None:
                 elo_flag = "  *ELO EDGE*" if leg.get("elo_edge") else ""
                 print(f"      * {team} {outcome}  ({odds:.2f}x)  "
                       f"model: {prob:.1%}  [Elo: {elo}]{elo_flag}")
+        if args.mode == "sgp":
+            print(f"    Note: {combo.correlation_note}")
 
     print()
 

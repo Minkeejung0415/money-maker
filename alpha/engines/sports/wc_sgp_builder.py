@@ -11,10 +11,15 @@ from __future__ import annotations
 
 import itertools
 import logging
+import math
+from typing import Mapping
 
+from alpha.data.ingestion.wc_market_odds import WCMarketOdds
+from alpha.data.ingestion.wc_stats import get_wc_team_stats
 from alpha.engines.sports.ev_calculator import EVCalculator
 from alpha.engines.sports.kelly import KellySizer
 from alpha.engines.sports.soccer_sgp_builder import ParlayCombination, SGPMode
+from alpha.engines.sports.wc_goal_markets import WCScorelineModel
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +40,17 @@ class WCSGPBuilder:
         bankroll: float = 10_000.0,
         min_edge: float = 0.05,
         max_legs: int = 4,
+        team_stats: Mapping[str, Mapping[str, float]] | None = None,
     ) -> None:
         self._bankroll = bankroll
         self._min_edge = min_edge
         self._max_legs = max_legs
+        if team_stats is None:
+            try:
+                team_stats = get_wc_team_stats()
+            except FileNotFoundError:
+                team_stats = {}
+        self._scoreline_model = WCScorelineModel(team_stats)
 
     def build(self, ml_games: list[dict], top_n: int = 5) -> list[ParlayCombination]:
         """
@@ -62,6 +74,103 @@ class WCSGPBuilder:
         positive = [c for c in combos if c.edge >= self._min_edge]
         positive.sort(key=lambda c: c.ev, reverse=True)
         return positive[:top_n]
+
+    def build_same_game(
+        self,
+        games: list[dict],
+        market_odds: Mapping[str, WCMarketOdds],
+        top_n: int = 5,
+    ) -> list[ParlayCombination]:
+        """Build 2-3 leg combinations within each individual WC match.
+
+        The model joint is evaluated directly from scoreline cells. Combined
+        decimal odds are the product of the supplied standalone market prices;
+        callers should replace these with a book's quoted SGP price when one is
+        available.
+        """
+        results: list[ParlayCombination] = []
+        for game in games:
+            event_key = f"{game.get('home_team', '')}|{game.get('away_team', '')}"
+            odds = market_odds.get(event_key)
+            if odds is None:
+                continue
+            distribution = self._scoreline_model.build(game)
+            available = dict(odds.prices)
+            if not distribution.outcome_available:
+                for market in ("home_win", "draw", "away_win"):
+                    available.pop(market, None)
+            legs = []
+            for market, decimal_odds in available.items():
+                try:
+                    probability = distribution.probability(market)
+                except ValueError:
+                    continue
+                legs.append({
+                    "type": "wc_sgp",
+                    "market": market,
+                    "label": self._market_label(game, market),
+                    "model_prob": probability,
+                    "decimal_odds": decimal_odds,
+                    "event_id": game.get("event_id", event_key),
+                    "home_team": game.get("home_team", ""),
+                    "away_team": game.get("away_team", ""),
+                })
+            if len(legs) < 2:
+                continue
+
+            max_legs = min(3, self._max_legs, len(legs))
+            for leg_count in range(2, max_legs + 1):
+                for selected in itertools.combinations(legs, leg_count):
+                    markets = [leg["market"] for leg in selected]
+                    try:
+                        joint_probability = distribution.joint_probability(markets)
+                    except ValueError:
+                        continue
+                    if joint_probability <= 0:
+                        continue
+                    combined_odds = math.prod(leg["decimal_odds"] for leg in selected)
+                    market_probability = _EV_CALC.implied_prob(combined_odds)
+                    edge = joint_probability - market_probability
+                    if edge < self._min_edge:
+                        continue
+                    ev = _EV_CALC.expected_value(joint_probability, combined_odds)
+                    combo = ParlayCombination(
+                        legs=list(selected),
+                        mode=SGPMode.MIXED_SGP,
+                        combined_model_prob=round(joint_probability, 5),
+                        combined_market_prob=round(market_probability, 5),
+                        combined_decimal_odds=round(combined_odds, 4),
+                        ev=round(ev, 4),
+                        edge=round(edge, 4),
+                        correlation_note=(
+                            "Exact scoreline joint model; displayed odds are the product "
+                            "of supplied standalone prices"
+                        ),
+                    )
+                    combo.stake = _KELLY.bet_size(
+                        win_prob=joint_probability,
+                        decimal_odds=combined_odds,
+                        bankroll=self._bankroll,
+                    )
+                    results.append(combo)
+        results.sort(
+            key=lambda combo: (combo.ev, combo.combined_model_prob, combo.combined_decimal_odds),
+            reverse=True,
+        )
+        return results[:top_n]
+
+    @staticmethod
+    def _market_label(game: Mapping[str, object], market: str) -> str:
+        labels = {
+            "home_win": f"{game.get('home_team', '')} win (90 min)",
+            "draw": "Draw (90 min)",
+            "away_win": f"{game.get('away_team', '')} win (90 min)",
+            "over_2_5": "Over 2.5 goals",
+            "under_2_5": "Under 2.5 goals",
+            "btts_yes": "Both teams to score - Yes",
+            "btts_no": "Both teams to score - No",
+        }
+        return labels[market]
 
     def _best_wc_leg(self, game: dict) -> dict | None:
         """

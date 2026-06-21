@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
+from alpha.data.ingestion.wc_market_odds import WCMarketOdds
 
 
 # ---------------------------------------------------------------------------
@@ -163,3 +164,67 @@ def test_top_n_limits_output():
     ]
     result = WCSGPBuilder(min_edge=0.0).build(games, top_n=2)
     assert len(result) <= 2
+
+
+# ---------------------------------------------------------------------------
+# True same-game World Cup combinations
+# ---------------------------------------------------------------------------
+
+def _true_sgp_odds(home="Brazil", away="Germany"):
+    return WCMarketOdds(
+        event_key=f"{home}|{away}",
+        prices={
+            "home_win": 2.10,
+            "draw": 3.40,
+            "away_win": 3.80,
+            "over_2_5": 2.05,
+            "under_2_5": 1.85,
+            "btts_yes": 2.00,
+            "btts_no": 1.90,
+        },
+    )
+
+
+def test_true_sgp_contains_only_one_event_and_two_or_three_legs():
+    game = _make_game(win_prob=0.62, event_id="g1")
+    result = WCSGPBuilder(min_edge=-1.0, max_legs=3).build_same_game(
+        [game], {"Brazil|Germany": _true_sgp_odds()}, top_n=20
+    )
+    assert result
+    for combo in result:
+        assert 2 <= len(combo.legs) <= 3
+        assert {leg["event_id"] for leg in combo.legs} == {"g1"}
+
+
+def test_true_sgp_uses_exact_correlated_joint_probability():
+    game = _make_game(win_prob=0.62, event_id="g1")
+    builder = WCSGPBuilder(min_edge=-1.0)
+    combo = next(
+        item for item in builder.build_same_game(
+            [game], {"Brazil|Germany": _true_sgp_odds()}, top_n=100
+        )
+        if {leg["market"] for leg in item.legs} == {"home_win", "over_2_5"}
+    )
+    naive = combo.legs[0]["model_prob"] * combo.legs[1]["model_prob"]
+    assert combo.combined_model_prob != pytest.approx(naive, abs=1e-3)
+    assert "scoreline" in combo.correlation_note.lower()
+
+
+def test_true_sgp_skips_games_without_two_real_market_prices():
+    game = _make_game(event_id="g1")
+    odds = WCMarketOdds("Brazil|Germany", {"home_win": 2.10})
+    assert WCSGPBuilder(min_edge=-1.0).build_same_game(
+        [game], {"Brazil|Germany": odds}
+    ) == []
+
+
+def test_true_sgp_knockout_excludes_1x2_legs():
+    game = _make_game(knockout=True, event_id="g1")
+    result = WCSGPBuilder(min_edge=-1.0).build_same_game(
+        [game], {"Brazil|Germany": _true_sgp_odds()}, top_n=20
+    )
+    assert result
+    assert all(
+        leg["market"] not in {"home_win", "draw", "away_win"}
+        for combo in result for leg in combo.legs
+    )
