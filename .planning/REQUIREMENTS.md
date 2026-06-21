@@ -18,10 +18,10 @@
 
 ## Draw Betting and Scanner
 
-- [ ] **SDRAW-01**: Include draw legs only when independent model EV exceeds 5%.
-- [ ] **SDRAW-02**: Annotate accepted draw legs with `*DRAW RISK*` and reject fallback-derived draw legs.
-- [ ] **SSCAN-01**: Route EPL scans to the EPL model and UCL scans to the UCL Elo model.
-- [ ] **STEST-01**: Cover all new soccer components and pass the full repository suite without regression.
+- [x] **SDRAW-01**: Include draw legs only when independent model EV exceeds 5%.
+- [x] **SDRAW-02**: Annotate accepted draw legs with `*DRAW RISK*` and reject fallback-derived draw legs.
+- [x] **SSCAN-01**: Route EPL scans to the EPL model and UCL scans to the UCL Elo model.
+- [x] **STEST-01**: Cover all new soccer components and pass the full repository suite without regression.
 
 ## Out of Scope
 
@@ -41,12 +41,12 @@
 | SMODEL-01 | Phase 13 | Complete |
 | SMODEL-02 | Phase 13 | Complete |
 | SMODEL-03 | Phase 13 | Complete |
-| SDRAW-01 | Phase 14 | Pending |
-| SDRAW-02 | Phase 14 | Pending |
-| SSCAN-01 | Phase 14 | Pending |
-| STEST-01 | Phase 14 | Pending |
+| SDRAW-01 | Phase 14 | Complete |
+| SDRAW-02 | Phase 14 | Complete |
+| SSCAN-01 | Phase 14 | Complete |
+| STEST-01 | Phase 14 | Complete |
 
 **Coverage:** 11 requirements, 11 mapped, 0 unmapped.
 
 ---
-*Requirements updated: 2026-06-19 after Phase 12 completion*
+*Requirements updated: 2026-06-21 after Phase 14 completion*
