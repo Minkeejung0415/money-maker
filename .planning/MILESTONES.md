@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.6 World Cup Tactical Matchups (Shipped: 2026-06-22)
+
+**Phases completed:** 3 phases, 3 plans
+
+**Key accomplishments:**
+
+- Cached recent national-team tactical profiles from ESPN match summaries
+- Formation, possession, passing, directness, width, pressing-proxy, set-piece, and defensive-block comparison
+- Symmetric and explainable tactical attack multipliers capped to 0.90-1.10
+- Tactical Elo and scoreline-rate integration with no-tactics baseline deltas
+- Pacific/UTC adjacent-date team resolution and fail-closed sample gates
+- Live four-game audit produced 100 coherent SGP probabilities; 777 tests passed
+
+---
+
 ## v1.5 World Cup True SGP (Shipped: 2026-06-21)
 
 **Phases completed:** 2 phases, 2 plans
