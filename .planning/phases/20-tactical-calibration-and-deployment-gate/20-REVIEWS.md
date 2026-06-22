@@ -48,3 +48,24 @@ CYCLE_SUMMARY: current_high=4
 - The World Cup holdout definition is infeasible and under-specified.
 - Mixed market gates can break coherent SGP probabilities.
 - Promotion statistics are under-specified.
+
+---
+
+## Cycle 2 - Claude Review
+
+### Prior HIGH Resolution
+
+- **ESPN coverage: RESOLVED.** The coverage preflight makes attainability an explicit fail-closed gate before fitting.
+- **Holdout definition: RESOLVED.** The plan now separates 50 pre-tournament validation matches from a sealed 30+ match 2026 World Cup external audit with explicit IDs, hashes, and immutable versions.
+- **SGP coherence: RESOLVED.** Every SGP uses one complete tactical or baseline scoreline distribution; mixed marginals are forbidden.
+- **Promotion statistics: RESOLVED.** The plan locks 10,000 paired bootstrap replicates, two-sided 95% intervals, Holm correction, 0.002 Brier/log-loss materiality, and comparisons against both controls.
+
+### New HIGH Concerns
+
+None. The stringent promotion rule may produce no promoted market, but that is an intended fail-safe outcome rather than a phase failure.
+
+CYCLE_SUMMARY: current_high=0
+
+## Current HIGH Concerns
+
+None.
