@@ -54,7 +54,7 @@ def _get_with_retry(url: str, *, headers: dict, params: dict, timeout: int = 10)
 
 class FootballDataClient:
     def __init__(self, api_key: str | None = None):
-        self.api_key: str = api_key or os.environ.get("FOOTBALL_API_KEY", "")
+        self.api_key: str = os.environ.get("FOOTBALL_API_KEY", "") if api_key is None else api_key
 
     def is_configured(self) -> bool:
         """Return True if an API key is set and non-empty."""

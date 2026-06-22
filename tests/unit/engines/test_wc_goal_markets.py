@@ -52,6 +52,7 @@ def test_current_elo_mismatch_suppresses_underdog_goal_rate():
 def test_tactical_multipliers_adjust_both_goal_rates():
     baseline = WCScorelineModel(TEAM_STATS).build(_game())
     adjusted = WCScorelineModel(TEAM_STATS).build(_game(
+        tactical_goal_authorized=True,
         tactical_comparison=SimpleNamespace(
             home_attack_multiplier=1.08, away_attack_multiplier=0.93
         )

@@ -156,7 +156,7 @@ class WCScorelineModel:
     def build(self, game: Mapping[str, object]) -> WCScorelineDistribution:
         recent_stats = game.get("recent_team_stats")
         team_stats = dict(recent_stats) if isinstance(recent_stats, Mapping) else dict(self._team_stats)
-        if game.get("tactical_comparison") is not None:
+        if game.get("tactical_comparison") is not None and game.get("tactical_goal_authorized") is True:
             team_stats["__tactical_comparison__"] = game["tactical_comparison"]
         home_lambda, away_lambda = self._goal_rates(
             str(game.get("home_team", "")),

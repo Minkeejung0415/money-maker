@@ -260,6 +260,19 @@ def test_probability_sgp_includes_every_side_for_user_selection():
     assert len(results) == 25
 
 
+def test_probability_sgp_falls_back_as_whole_when_joint_gate_fails():
+    baseline = _make_game(win_prob=0.45, event_id="g1")
+    adjusted = _make_game(win_prob=0.75, event_id="g1")
+    adjusted["tactical_joint_approved"] = False
+    adjusted["tactical_baseline_game"] = baseline
+    builder = WCSGPBuilder(team_stats={})
+    baseline_results = builder.build_probability_same_game([baseline])
+    fallback_results = builder.build_probability_same_game([adjusted])
+    assert [item.combined_model_prob for item in fallback_results] == [
+        item.combined_model_prob for item in baseline_results
+    ]
+
+
 def test_probability_sgp_uses_only_one_selection_per_market_family():
     game = _make_game(win_prob=0.62, event_id="g1")
     results = WCSGPBuilder(team_stats={}).build_probability_same_game([game], top_n=20)

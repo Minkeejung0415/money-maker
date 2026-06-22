@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
 import math
 from typing import Callable, Iterable, Sequence
 
@@ -71,6 +75,14 @@ class OutcomeResidualModel:
         result = _softmax(logits)[0]
         return tuple(float(value) for value in result)
 
+    def elo_adjustment(self, home_components: dict[str, float], away_components: dict[str, float]) -> float:
+        feature = np.asarray(
+            [float(home_components[name]) - float(away_components[name]) for name in TACTICAL_COMPONENTS]
+        )
+        adjustment = float(self.standardizer.transform(feature[None, :])[0] @ np.asarray(self.weights))
+        elo = adjustment * 400.0 / math.log(10.0)
+        return max(-MAX_TACTICAL_ELO, min(MAX_TACTICAL_ELO, elo))
+
 
 @dataclass(frozen=True)
 class GoalResidualModel:
@@ -85,6 +97,16 @@ class GoalResidualModel:
         home_adjustment = max(MIN_LOG_GOAL_ADJUSTMENT, min(MAX_LOG_GOAL_ADJUSTMENT, float(home @ weights)))
         away_adjustment = max(MIN_LOG_GOAL_ADJUSTMENT, min(MAX_LOG_GOAL_ADJUSTMENT, float(away @ weights)))
         return row.baseline_home_lambda * math.exp(home_adjustment), row.baseline_away_lambda * math.exp(away_adjustment)
+
+    def multipliers(self, home_components: dict[str, float], away_components: dict[str, float]) -> tuple[float, float]:
+        weights = np.asarray(self.weights)
+        values = []
+        for components in (home_components, away_components):
+            feature = np.asarray([float(components[name]) for name in TACTICAL_COMPONENTS])
+            adjustment = float(self.standardizer.transform(feature[None, :])[0] @ weights)
+            adjustment = max(MIN_LOG_GOAL_ADJUSTMENT, min(MAX_LOG_GOAL_ADJUSTMENT, adjustment))
+            values.append(math.exp(adjustment))
+        return float(values[0]), float(values[1])
 
 
 def fit_outcome(rows: Sequence[TacticalHistoryRow], regularization: float) -> OutcomeResidualModel:
@@ -409,3 +431,110 @@ def evaluate_candidate(
         "metrics": metrics,
         "gates": gates,
     }
+
+
+ARTIFACT_SCHEMA_VERSION = 1
+
+
+@dataclass(frozen=True)
+class TacticalCalibrationArtifact:
+    schema_version: int
+    feature_order: tuple[str, ...]
+    trained_through: str
+    dataset_fingerprint: str
+    development_rows: int
+    validation_rows: int
+    audit_rows: int
+    outcome: OutcomeResidualModel
+    goals: GoalResidualModel
+    gates: dict[str, MarketGate]
+
+    @property
+    def joint_approved(self) -> bool:
+        return all(self.gates.get(market, MarketGate(market, False, "missing gate", ())).passed for market in ("1x2", "totals", "btts"))
+
+    def validate(self, *, target_kickoff: datetime | None = None) -> None:
+        if self.schema_version != ARTIFACT_SCHEMA_VERSION:
+            raise ValueError("unsupported tactical artifact schema")
+        if self.feature_order != TACTICAL_COMPONENTS:
+            raise ValueError("tactical artifact feature mismatch")
+        if not self.dataset_fingerprint or len(self.dataset_fingerprint) != 64:
+            raise ValueError("invalid dataset fingerprint")
+        if self.development_rows < 200 or self.validation_rows < 50 or self.audit_rows < 30:
+            raise ValueError("artifact does not satisfy 200/50/30 sample gates")
+        cutoff = datetime.fromisoformat(self.trained_through.replace("Z", "+00:00"))
+        if cutoff.tzinfo is None:
+            cutoff = cutoff.replace(tzinfo=timezone.utc)
+        if target_kickoff is not None and cutoff >= target_kickoff:
+            raise ValueError("artifact cutoff must be before target kickoff")
+        if set(self.gates) != {"1x2", "totals", "btts"}:
+            raise ValueError("artifact market gates are incomplete")
+        values = [*self.outcome.weights, *self.outcome.standardizer.mean, *self.outcome.standardizer.scale,
+                  *self.goals.weights, *self.goals.standardizer.mean, *self.goals.standardizer.scale]
+        if not all(math.isfinite(float(value)) for value in values):
+            raise ValueError("artifact contains non-finite model values")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "feature_order": list(self.feature_order),
+            "trained_through": self.trained_through,
+            "dataset_fingerprint": self.dataset_fingerprint,
+            "development_rows": self.development_rows,
+            "validation_rows": self.validation_rows,
+            "audit_rows": self.audit_rows,
+            "outcome": asdict(self.outcome),
+            "goals": asdict(self.goals),
+            "gates": {name: gate.to_dict() for name, gate in self.gates.items()},
+            "joint_approved": self.joint_approved,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "TacticalCalibrationArtifact":
+        def model(data: object, model_type: type[OutcomeResidualModel] | type[GoalResidualModel]):
+            values = dict(data)  # type: ignore[arg-type]
+            standardizer = Standardizer(**values.pop("standardizer"))
+            return model_type(standardizer=standardizer, **values)
+
+        artifact = cls(
+            schema_version=int(payload["schema_version"]),
+            feature_order=tuple(payload["feature_order"]),  # type: ignore[arg-type]
+            trained_through=str(payload["trained_through"]),
+            dataset_fingerprint=str(payload["dataset_fingerprint"]),
+            development_rows=int(payload["development_rows"]),
+            validation_rows=int(payload["validation_rows"]),
+            audit_rows=int(payload["audit_rows"]),
+            outcome=model(payload["outcome"], OutcomeResidualModel),
+            goals=model(payload["goals"], GoalResidualModel),
+            gates={name: MarketGate(**values) for name, values in dict(payload["gates"]).items()},  # type: ignore[arg-type]
+        )
+        artifact.validate()
+        return artifact
+
+
+def dataset_fingerprint(manifest: dict[str, object]) -> str:
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def save_artifact(artifact: TacticalCalibrationArtifact, path: str | Path) -> None:
+    artifact.validate()
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(artifact.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def load_artifact(
+    path: str | Path,
+    *,
+    target_kickoff: datetime | None = None,
+) -> tuple[TacticalCalibrationArtifact | None, dict[str, str]]:
+    target = Path(path)
+    if not target.exists():
+        return None, {"status": "fallback", "reason": "artifact missing"}
+    try:
+        artifact = TacticalCalibrationArtifact.from_dict(json.loads(target.read_text(encoding="utf-8")))
+        artifact.validate(target_kickoff=target_kickoff)
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        return None, {"status": "fallback", "reason": str(exc)}
+    return artifact, {"status": "loaded", "reason": "validated artifact"}

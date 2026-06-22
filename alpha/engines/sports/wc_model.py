@@ -118,8 +118,11 @@ class WCMatchModel:
         # xG modifier was stale and double-counted old tournament form.
         elo_adj = float(elo_diff)
         tactical_elo = 0.0
+        if game.get("tactical_elo_adjustment_override") is not None:
+            tactical_elo = max(-40.0, min(40.0, float(game["tactical_elo_adjustment_override"])))
+            elo_adj += tactical_elo
         tactical = game.get("tactical_comparison")
-        if tactical is not None:
+        if tactical is not None and game.get("tactical_authorized") is True:
             home_multiplier = float(getattr(tactical, "home_attack_multiplier", 1.0))
             away_multiplier = float(getattr(tactical, "away_attack_multiplier", 1.0))
             if home_multiplier > 0 and away_multiplier > 0:

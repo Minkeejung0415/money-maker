@@ -177,6 +177,9 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
     assert "Probability only" in output
     assert "Full probability set" in output
     assert "TACTICAL MATCHUPS" in output
+    assert "Artifact: fallback" in output
+    assert "1x2=FALLBACK" in output
+    assert "descriptive only" in output
     assert "1X2 H/D/A" in output
     assert "EV:" not in output
 

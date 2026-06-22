@@ -128,6 +128,7 @@ def main() -> None:
     from alpha.engines.sports.wc_goal_markets import WCScorelineModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
     from alpha.engines.sports.wc_tactical_matchup import compare_tactics
+    from alpha.engines.sports.wc_tactical_calibration import load_artifact
 
     # ── Step 1: Fetch WC fixtures ────────────────────────────────────────
     print(f"[1/4] Fetching WC fixtures ({args.date_from} to {args.date_to})...")
@@ -179,8 +180,12 @@ def main() -> None:
 
     recent_client = WCRecentFormClient() if args.mode == "sgp" else None
     tactics_client = WCTacticsClient() if args.mode == "sgp" else None
+    tactical_artifact, artifact_status = load_artifact(
+        ROOT / "data" / ".wc_cache" / "tactical_calibration.json"
+    ) if args.mode == "sgp" else (None, {"status": "fallback", "reason": "not used"})
     if recent_client:
         print("  Loading recent last-10 international form and Elo for every team...")
+        print(f"  Tactical calibration: {artifact_status['status']} ({artifact_status['reason']})")
 
     enriched: list[dict] = []
     for game in all_games:
@@ -222,7 +227,42 @@ def main() -> None:
                     game["home_team"]: home_profile,
                     game["away_team"]: away_profile,
                 }
-                game["tactical_comparison"] = comparison
+                game["tactical_explanation"] = comparison
+                game["tactical_baseline_game"] = baseline_game
+                gates = {market: False for market in ("1x2", "totals", "btts")}
+                if tactical_artifact is not None:
+                    try:
+                        tactical_artifact.validate(target_kickoff=kickoff)
+                    except ValueError as exc:
+                        game["tactical_artifact_status"] = {"status": "fallback", "reason": str(exc)}
+                    else:
+                        gates = {market: tactical_artifact.gates[market].passed for market in gates}
+                        game["tactical_artifact_status"] = {
+                            "status": "loaded",
+                            "reason": "validated artifact",
+                            "schema_version": tactical_artifact.schema_version,
+                            "trained_through": tactical_artifact.trained_through,
+                        }
+                        if gates["1x2"]:
+                            game["tactical_elo_adjustment_override"] = tactical_artifact.outcome.elo_adjustment(
+                                comparison.home_components, comparison.away_components
+                            )
+                        if gates["totals"] or gates["btts"]:
+                            home_multiplier, away_multiplier = tactical_artifact.goals.multipliers(
+                                comparison.home_components, comparison.away_components
+                            )
+                            from dataclasses import replace
+                            game["tactical_comparison"] = replace(
+                                comparison,
+                                home_attack_multiplier=home_multiplier,
+                                away_attack_multiplier=away_multiplier,
+                            )
+                            game["tactical_applied_comparison"] = game["tactical_comparison"]
+                            game["tactical_goal_authorized"] = True
+                        game["tactical_joint_approved"] = tactical_artifact.joint_approved
+                else:
+                    game["tactical_artifact_status"] = artifact_status
+                game["tactical_market_gates"] = gates
             game = wc_model.predict(game)
             if recent_client:
                 baseline_distribution = WCScorelineModel().build(baseline_game)
@@ -235,8 +275,8 @@ def main() -> None:
                     "btts_yes": baseline_distribution.probability("btts_yes"),
                 }
                 game["tactical_adjusted"] = {
-                    "over_2_5": adjusted_distribution.probability("over_2_5"),
-                    "btts_yes": adjusted_distribution.probability("btts_yes"),
+                    "over_2_5": adjusted_distribution.probability("over_2_5") if gates["totals"] else baseline_distribution.probability("over_2_5"),
+                    "btts_yes": adjusted_distribution.probability("btts_yes") if gates["btts"] else baseline_distribution.probability("btts_yes"),
                 }
             enriched.append(game)
         except Exception as exc:
@@ -276,18 +316,29 @@ def main() -> None:
         print(f"\nFull probability set: {len(results)} nonzero compatible combinations.")
         print("\nTACTICAL MATCHUPS")
         for game in enriched:
-            comparison = game["tactical_comparison"]
+            comparison = game["tactical_explanation"]
             profiles = game["tactical_profiles"]
             home_profile = profiles[game["home_team"]]
             away_profile = profiles[game["away_team"]]
             baseline = game["tactical_baseline"]
             adjusted = game["tactical_adjusted"]
+            statuses = game["tactical_market_gates"]
+            artifact = game["tactical_artifact_status"]
             print(f"  {game['home_team']} [{home_profile.formation}] vs "
                   f"{game['away_team']} [{away_profile.formation}]")
-            print(f"    Attack multipliers: {game['home_team']} "
-                  f"{comparison.home_attack_multiplier:.3f}x | {game['away_team']} "
-                  f"{comparison.away_attack_multiplier:.3f}x | tactical Elo "
-                  f"{game.get('tactical_elo_adjustment', 0.0):+.1f}")
+            print(f"    Artifact: {artifact['status']} - {artifact['reason']}")
+            print("    Gates: " + " | ".join(
+                f"{market}={'PASS' if statuses[market] else 'FALLBACK'}"
+                for market in ("1x2", "totals", "btts")
+            ))
+            applied = game.get("tactical_applied_comparison")
+            if applied is not None:
+                print(f"    Learned goal multipliers: {game['home_team']} "
+                      f"{applied.home_attack_multiplier:.3f}x | {game['away_team']} "
+                      f"{applied.away_attack_multiplier:.3f}x | tactical Elo "
+                      f"{game.get('tactical_elo_adjustment', 0.0):+.1f}")
+            else:
+                print("    Tactical weights inactive; matchup components are descriptive only.")
             print(f"    1X2 H/D/A: {baseline['win_prob']:.1%}/{baseline['draw_prob']:.1%}/"
                   f"{baseline['loss_prob']:.1%} -> {game['win_prob']:.1%}/"
                   f"{game['draw_prob']:.1%}/{game['loss_prob']:.1%}")

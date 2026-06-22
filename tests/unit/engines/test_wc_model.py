@@ -219,9 +219,20 @@ def test_tactical_comparison_adjusts_outcome_but_is_capped(model):
         "tactical_comparison": SimpleNamespace(
             home_attack_multiplier=1.10, away_attack_multiplier=0.90
         ),
+        "tactical_authorized": True,
     })
     assert adjusted["win_prob"] > baseline["win_prob"]
     assert 0 < adjusted["tactical_elo_adjustment"] <= 40
+
+
+def test_unvalidated_tactical_comparison_falls_back_to_baseline(model):
+    baseline = model.predict({"home_team": "Brazil", "away_team": "Germany", "league": "wc"})
+    unvalidated = model.predict({
+        "home_team": "Brazil", "away_team": "Germany", "league": "wc",
+        "tactical_comparison": SimpleNamespace(home_attack_multiplier=1.10, away_attack_multiplier=0.90),
+    })
+    assert unvalidated["win_prob"] == baseline["win_prob"]
+    assert unvalidated["tactical_elo_adjustment"] == 0.0
 
 
 # ---------------------------------------------------------------------------

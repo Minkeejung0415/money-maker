@@ -107,7 +107,8 @@ class WCSGPBuilder:
             odds = market_odds.get(event_key)
             if odds is None:
                 continue
-            distribution = self._scoreline_model.build(game)
+            distribution_game = game if game.get("tactical_joint_approved") else game.get("tactical_baseline_game", game)
+            distribution = self._scoreline_model.build(distribution_game)
             available = dict(odds.prices)
             if not distribution.outcome_available:
                 for market in ("home_win", "draw", "away_win"):
@@ -180,7 +181,8 @@ class WCSGPBuilder:
         """Rank every compatible 2-3 leg same-match combination without odds."""
         results: list[WCProbabilityCombination] = []
         for game in games:
-            distribution = self._scoreline_model.build(game)
+            distribution_game = game if game.get("tactical_joint_approved") else game.get("tactical_baseline_game", game)
+            distribution = self._scoreline_model.build(distribution_game)
             families = [
                 ("over_2_5", "under_2_5"),
                 ("btts_yes", "btts_no"),

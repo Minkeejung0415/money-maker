@@ -123,7 +123,7 @@ class OddsAPIClient:
         regions: list[str] | None = None,
         max_paid_fetches_per_day: int = 1,
     ):
-        self.api_key: str = api_key or os.environ.get("ODDS_API_KEY", "")
+        self.api_key: str = os.environ.get("ODDS_API_KEY", "") if api_key is None else api_key
         self._cache_dir = cache_dir
         self.regions = list(regions) if regions is not None else list(DEFAULT_REGIONS)
         self.max_paid_fetches_per_day = max_paid_fetches_per_day

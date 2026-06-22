@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+import json
 import math
 
 import pytest
 
 from alpha.engines.sports.wc_tactical_calibration import (
     BootstrapDelta,
+    ARTIFACT_SCHEMA_VERSION,
+    MarketGate,
+    TacticalCalibrationArtifact,
     expanding_folds,
     evaluate_candidate,
     fit_goals,
@@ -15,6 +19,8 @@ from alpha.engines.sports.wc_tactical_calibration import (
     holm_rejections,
     paired_bootstrap_delta,
     promotion_gate,
+    load_artifact,
+    save_artifact,
 )
 from tests.unit.data.test_wc_tactical_history import _row
 
@@ -96,3 +102,33 @@ def test_evaluation_returns_independent_market_gates():
     result = evaluate_candidate(outcome, goals, rows[:50], rows[70:100], repetitions=200)
     assert result["status"] == "evaluated"
     assert set(result["gates"]) == {"1x2", "totals", "btts"}
+
+
+def test_artifact_round_trip_and_fail_closed_validation(tmp_path):
+    rows = _rows(80)
+    outcome = fit_outcome(rows, 1.0)
+    goals = fit_goals(rows, 1.0)
+    gate = MarketGate("1x2", False, "not promoted", ())
+    artifact = TacticalCalibrationArtifact(
+        schema_version=ARTIFACT_SCHEMA_VERSION,
+        feature_order=tuple(rows[0].home_components),
+        trained_through="2025-12-31T00:00:00+00:00",
+        dataset_fingerprint="a" * 64,
+        development_rows=200,
+        validation_rows=50,
+        audit_rows=30,
+        outcome=outcome,
+        goals=goals,
+        gates={"1x2": gate, "totals": MarketGate("totals", False, "not promoted", ()), "btts": MarketGate("btts", False, "not promoted", ())},
+    )
+    path = tmp_path / "artifact.json"
+    save_artifact(artifact, path)
+    loaded, status = load_artifact(path, target_kickoff=datetime(2026, 6, 21, tzinfo=timezone.utc))
+    assert loaded is not None
+    assert status["status"] == "loaded"
+    payload = json.loads(path.read_text())
+    payload["feature_order"] = ["wrong"]
+    path.write_text(json.dumps(payload))
+    loaded, status = load_artifact(path)
+    assert loaded is None
+    assert status["status"] == "fallback"
