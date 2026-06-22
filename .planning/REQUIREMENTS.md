@@ -1,55 +1,46 @@
-# Requirements: World Cup True SGP
+# Requirements: World Cup Tactical Matchups
 
-**Milestone:** v1.5
+**Milestone:** v1.6
 **Defined:** 2026-06-21
 **Status:** Active
 
-## Goal-Market Model
+## Tactical Data
 
-- [x] **WCSGP-01**: Produce coherent probabilities for match result, over/under 2.5 goals, and both-teams-to-score yes/no.
-- [x] **WCSGP-02**: Use cached World Cup team priors with documented neutral fallbacks and bounded goal rates.
-- [x] **WCSGP-03**: Preserve the existing WC Elo model's 1X2 probabilities as scoreline-distribution marginals.
-- [x] **WCSGP-04**: Calculate multi-leg joint probabilities from one calibrated scoreline distribution, not by multiplying correlated marginals.
-- [x] **WCSGP-05**: Reject invalid, contradictory, or stage-incompatible leg combinations.
+- [ ] **WCTAC-01**: Fetch recent completed national-team match summaries with formations and measurable tactical statistics from a free source.
+- [ ] **WCTAC-02**: Use only matches completed before the target fixture and retain a minimum sample-size gate.
+- [ ] **WCTAC-03**: Cache schedules and immutable event summaries under the isolated WC cache namespace.
+- [ ] **WCTAC-04**: Normalize possession, passing, long-ball, crossing, shot, corner, pressing-proxy, and low-block metrics into one team profile.
+- [ ] **WCTAC-05**: Missing or malformed tactical data fails closed without silently inventing a neutral profile.
 
-## Market Prices and Construction
+## Tactical Comparison
 
-- [x] **WCSGP-06**: Normalize 1X2, total-goals, and BTTS decimal prices while remaining backward compatible with existing moneyline overrides.
-- [x] **WCSGP-07**: Keep missing market prices unavailable; never invent default odds.
-- [x] **WCSGP-08**: Build same-match 2-3 leg combinations and report joint probability, fair odds, sportsbook odds, edge, and EV in deterministic rank order.
-- [x] **WCSGP-09**: Use 90-minute 1X2 only in group play; knockout combinations exclude 1X2 unless an explicit compatible market exists.
+- [ ] **WCTAC-06**: Compare both teams symmetrically across chance creation, control, press resistance, directness, width, set pieces, and defensive block.
+- [ ] **WCTAC-07**: Produce bounded home/away attack multipliers and named matchup explanations.
+- [ ] **WCTAC-08**: Formation information is descriptive context, not a deterministic prediction rule.
+- [ ] **WCTAC-09**: Reversing the teams reverses comparison direction without changing absolute matchup strength.
 
-## Scanner and Quality
+## Model Integration
 
-- [x] **WCSGP-10**: `scripts/wc_scanner.py --mode sgp` prints true same-game candidates and explains missing-price or compatibility failures.
-- [x] **WCSGP-11**: Existing `--mode parlay` behavior remains available without regression.
-- [x] **WCSGP-12**: Tests cover probability coherence, joint calculations, compatibility, odds parsing, ranking, scanner routing, and the full suite.
+- [ ] **WCTAC-10**: Tactical multipliers adjust scoreline goal rates before market probabilities are calculated.
+- [ ] **WCTAC-11**: Tactical adjustments are capped so they cannot overwhelm recent form or Elo.
+- [ ] **WCTAC-12**: Scanner output shows each team’s profile, tactical edges, and probability change from the no-tactics baseline.
+- [ ] **WCTAC-13**: Probability coherence, stage rules, and all existing SGP options remain valid.
+- [ ] **WCTAC-14**: Focused tests and the complete regression suite pass, followed by a live multi-game audit.
 
 ## Out of Scope
 
-- Player props: no dependable free World Cup player-prop odds source is available.
-- Synthetic or assumed sportsbook prices.
-- Cross-match combinations, which remain in classic parlay mode.
-- Any claim of guaranteed profitability.
+- Manual claims about a coach’s intentions or unannounced lineup.
+- Paid tracking data such as player coordinates, pressures, or possession chains.
+- Treating formation alone as tactics; formations are context around measured behavior.
+- Unbounded probability overrides or guaranteed-pick claims.
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WCSGP-01 | Phase 15 | Complete |
-| WCSGP-02 | Phase 15 | Complete |
-| WCSGP-03 | Phase 15 | Complete |
-| WCSGP-04 | Phase 15 | Complete |
-| WCSGP-05 | Phase 15 | Complete |
-| WCSGP-06 | Phase 16 | Complete |
-| WCSGP-07 | Phase 16 | Complete |
-| WCSGP-08 | Phase 16 | Complete |
-| WCSGP-09 | Phase 16 | Complete |
-| WCSGP-10 | Phase 16 | Complete |
-| WCSGP-11 | Phase 16 | Complete |
-| WCSGP-12 | Phases 15-16 | Complete |
-
-**Coverage:** 12/12 requirements mapped.
+| WCTAC-01..05 | Phase 17 | Pending |
+| WCTAC-06..09 | Phase 18 | Pending |
+| WCTAC-10..14 | Phase 19 | Pending |
 
 ---
 *Last updated: 2026-06-21 after milestone definition*

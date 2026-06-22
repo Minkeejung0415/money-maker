@@ -4,18 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.5 - World Cup True SGP
+## Current Milestone: v1.6 - World Cup Tactical Matchups
 
-**Goal:** Build real same-game World Cup combinations from match-result, total-goals, and BTTS markets using a calibrated scoreline distribution that accounts for correlation.
+**Goal:** Compare how national-team tactical styles interact and apply bounded, explainable matchup adjustments to World Cup probabilities.
 
 **Target features:**
-- Coherent 1X2, over/under 2.5, and BTTS probabilities
-- Exact scoreline-based joint probabilities for correlated legs
-- Stage-safe compatibility rules for group and knockout matches
-- Real market prices with no assumed or synthetic odds
-- `wc_scanner.py --mode sgp` alongside the existing classic parlay mode
+- Recent formation and tactical-stat profiles for every scheduled team
+- Symmetric comparison of control, pressing, directness, width, chance creation, set pieces, and defensive block
+- Bounded attack-rate adjustments with named tactical explanations
+- Scanner display of baseline versus tactics-adjusted probabilities
+- Fail-closed data quality and full regression coverage
 
-**Current state:** Complete and verified with 753 passing tests. Live SGP output awaits compatible totals or BTTS prices in the local override file.
+**Current state:** Milestone defined; Phase 17 tactical data ingestion is next.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -91,6 +91,13 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Normalized 1X2, total-goals, and BTTS market prices
 - [x] Stage-safe scanner mode with complete test coverage
 
+### Active (v1.6)
+
+- [ ] Recent tactical data ingestion and caching
+- [ ] Explainable team-style comparison
+- [ ] Bounded scoreline-model integration
+- [ ] Scanner tactical comparison output and validation
+
 ### Out of Scope
 
 - MLB player props — requires a dependable prop-odds source and broader modeling scope
@@ -159,4 +166,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-21 - v1.5 World Cup True SGP milestone started*
+*Last updated: 2026-06-21 - v1.6 World Cup Tactical Matchups started*

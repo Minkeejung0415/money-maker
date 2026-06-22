@@ -324,3 +324,40 @@ Plans:
 |-------|----------------|--------|-----------|
 | 15. Scoreline Goal-Market Model | 1/1 | Complete | 2026-06-21 |
 | 16. True SGP Builder and Scanner | 1/1 | Complete | 2026-06-21 |
+
+---
+
+## Current Milestone: v1.6 - World Cup Tactical Matchups
+
+## Phases (v1.6)
+
+- [ ] **Phase 17: Recent Tactical Data Pipeline** - Fetch, cache, normalize, and quality-gate recent ESPN tactical match summaries.
+- [ ] **Phase 18: Tactical Style Comparison** - Build symmetric team profiles and explainable bounded matchup scoring.
+- [ ] **Phase 19: Probability and Scanner Integration** - Apply tactical multipliers to scorelines, show baseline deltas, and validate live output.
+
+## Phase Details (v1.6)
+
+### Phase 17: Recent Tactical Data Pipeline
+**Goal**: Every scheduled WC team can receive a leakage-safe recent tactical profile from measurable match statistics.
+**Requirements**: WCTAC-01, WCTAC-02, WCTAC-03, WCTAC-04, WCTAC-05
+**Plans**: 1 plan
+
+### Phase 18: Tactical Style Comparison
+**Goal**: Two profiles produce symmetric, bounded matchup multipliers and human-readable tactical edges.
+**Depends on**: Phase 17
+**Requirements**: WCTAC-06, WCTAC-07, WCTAC-08, WCTAC-09
+**Plans**: 1 plan
+
+### Phase 19: Probability and Scanner Integration
+**Goal**: Tactical comparisons safely adjust WC scorelines and appear transparently in complete SGP output.
+**Depends on**: Phase 18
+**Requirements**: WCTAC-10, WCTAC-11, WCTAC-12, WCTAC-13, WCTAC-14
+**Plans**: 1 plan
+
+## Progress (v1.6)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 17. Recent Tactical Data Pipeline | 0/1 | Not started | - |
+| 18. Tactical Style Comparison | 0/1 | Not started | - |
+| 19. Probability and Scanner Integration | 0/1 | Not started | - |

@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: World Cup True SGP
-status: Awaiting next milestone
-stopped_at: Completed 16-01-PLAN.md
-last_updated: "2026-06-21T10:33:58.295Z"
-last_activity: 2026-06-21 — Milestone v1.5 completed and archived
+milestone: v1.6
+milestone_name: World Cup Tactical Matchups
+status: planning
+last_updated: "2026-06-22T00:07:40.872Z"
+last_activity: 2026-06-22
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: Milestone v1.5 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-21 — Milestone v1.5 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-22 — Milestone v1.6 started
 
 ## Performance Metrics
 
