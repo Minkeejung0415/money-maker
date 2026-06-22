@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: - Tactical Calibration and Validation
 status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-06-22T00:57:37.702Z"
-last_activity: 2026-06-22 -- Phase 20 planning complete
+stopped_at: Completed 20-01-PLAN.md
+last_updated: "2026-06-22T01:00:45.217Z"
+last_activity: 2026-06-22
 progress:
   total_phases: 19
   completed_phases: 16
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Phase 20 tactical calibration and deployment gating is planned.
+**Current focus:** Phase 20 — Tactical Calibration and Deployment Gate
 
 ## Current Position
 
-Phase: 20 of 20 (Tactical Calibration and Deployment Gate)
-Plan: 0 of 3
+Phase: 20 (Tactical Calibration and Deployment Gate) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-22 -- Phase 20 planning complete
+Last activity: 2026-06-22
 
 ## Performance Metrics
 
@@ -83,8 +83,8 @@ Last activity: 2026-06-22 -- Phase 20 planning complete
 
 ## Session Continuity
 
-Last session: 2026-06-20T10:50:44.470Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-06-22T01:00:45.208Z
+Stopped at: Completed 20-01-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

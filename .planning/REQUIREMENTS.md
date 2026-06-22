@@ -6,10 +6,10 @@
 
 ## Historical Dataset
 
-- [ ] **WCCAL-01**: Build deduplicated historical international-match rows with final scores and tactical matchup components.
-- [ ] **WCCAL-02**: Every feature must use only matches completed before the target fixture kickoff.
-- [ ] **WCCAL-03**: Run a source-coverage preflight and exclude source matches with known red cards, extra-time contamination, unsupported competition context, or missing required summaries.
-- [ ] **WCCAL-04**: Persist dataset provenance, feature schema, cutoff timestamps, exclusions, and coverage diagnostics.
+- [x] **WCCAL-01**: Build deduplicated historical international-match rows with final scores and tactical matchup components.
+- [x] **WCCAL-02**: Every feature must use only matches completed before the target fixture kickoff.
+- [x] **WCCAL-03**: Run a source-coverage preflight and exclude source matches with known red cards, extra-time contamination, unsupported competition context, or missing required summaries.
+- [x] **WCCAL-04**: Persist dataset provenance, feature schema, cutoff timestamps, exclusions, and coverage diagnostics.
 
 ## Training and Evaluation
 
