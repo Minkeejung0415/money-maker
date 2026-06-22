@@ -27,7 +27,7 @@ completed: 2026-06-21
 
 # Phase 20 Plan 01: Leakage-Safe Historical Tactical Dataset Summary
 
-Implemented versioned historical-row contracts, strict pre-kickoff provenance checks, deterministic development/validation/external-audit splitting, content-hashed manifests, and the canonical 200/50/30 coverage gate.
+Implemented direct ESPN-cache row reconstruction, versioned historical-row contracts, strict pre-kickoff provenance checks, deterministic development/validation/external-audit splitting, content-hashed manifests, and the canonical 200/50/30 coverage gate.
 
 ## Verification
 
@@ -44,7 +44,7 @@ The CLI consumes versioned source JSONL rather than silently crawling undocument
 
 ## Issues Encountered
 
-The live source coverage gate has not been claimed as passed. Downstream training must remain blocked until a real input dataset satisfies it.
+The real cache audit discovered 198 summaries but only 16 eligible rows: 0 development, 6 validation, and 10 World Cup audit. Downstream training is correctly blocked.
 
 ## Self-Check: PASSED
 

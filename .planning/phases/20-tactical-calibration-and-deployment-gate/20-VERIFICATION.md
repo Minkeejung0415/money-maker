@@ -24,7 +24,7 @@ Replace hand-set tactical influence with validated, regularized residual adjustm
 - Focused Wave 1: 8 passed.
 - Focused Wave 2: 10 passed.
 - Focused Wave 3: 65 passed.
-- Full suite: 791 passed, 5 skipped.
+- Full suite: 792 passed, 5 skipped.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ Replace hand-set tactical influence with validated, regularized residual adjustm
 
 ## Deployment Result
 
-No tactical artifact was promoted because the repository does not yet contain a sealed dataset satisfying the evidence gate. Production remains baseline-only. This is the required safe result, not a validation failure.
+The real cache audit discovered 198 ESPN summaries but produced only 16 strict rows (0 development, 6 validation, 10 World Cup audit). No tactical artifact was promoted because this fails 200/50/30. Production remains baseline-only. This is the required safe result, not a validation failure.
 
 ## Live Audit
 

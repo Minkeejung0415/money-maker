@@ -32,7 +32,7 @@ Implemented schema/version/cutoff/sample validation, bounded runtime residuals, 
 ## Verification
 
 - Focused runtime suite: 65 passed.
-- Complete repository suite: 791 passed, 5 skipped.
+- Complete repository suite after audit closure: 792 passed, 5 skipped.
 - Scanner audit for June 21 and cached June 19: source returned no fixtures, so no live probabilities were generated.
 
 ## Deviations from Plan
