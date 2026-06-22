@@ -4,18 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.6 - World Cup Tactical Matchups
+## Current Milestone: v1.7 - Tactical Calibration and Validation
 
-**Goal:** Compare how national-team tactical styles interact and apply bounded, explainable matchup adjustments to World Cup probabilities.
+**Goal:** Replace hand-set tactical weights with leakage-safe, regularized estimates and deploy them only where chronological out-of-sample probability quality improves.
 
 **Target features:**
-- Recent formation and tactical-stat profiles for every scheduled team
-- Symmetric comparison of control, pressing, directness, width, chance creation, set pieces, and defensive block
-- Bounded attack-rate adjustments with named tactical explanations
-- Scanner display of baseline versus tactics-adjusted probabilities
-- Fail-closed data quality and full regression coverage
+- Historical international-match training rows built only from information available before kickoff
+- Regularized residual tactical weights that complement, rather than duplicate, the baseline model
+- Chronological validation using Brier score and log loss as primary metrics
+- Independent deployment gates for 1X2, totals, and BTTS
+- Versioned model artifacts with baseline fallback on missing, stale, or unvalidated weights
 
-**Current state:** Complete and verified with 777 passing tests and a live four-game tactical audit.
+**Current state:** Planning Phase 20 after the fixed-weight layer produced mixed out-of-sample results on 35 completed World Cup matches.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -166,4 +166,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-21 - v1.6 World Cup Tactical Matchups started*
+*Last updated: 2026-06-21 - v1.7 Tactical Calibration and Validation planned*

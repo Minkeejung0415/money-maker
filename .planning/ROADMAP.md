@@ -361,3 +361,31 @@ Plans:
 | 17. Recent Tactical Data Pipeline | 1/1 | Complete | 2026-06-21 |
 | 18. Tactical Style Comparison | 1/1 | Complete | 2026-06-21 |
 | 19. Probability and Scanner Integration | 1/1 | Complete | 2026-06-21 |
+
+---
+
+## Current Milestone: v1.7 - Tactical Calibration and Validation
+
+## Phases (v1.7)
+
+- [ ] **Phase 20: Tactical Calibration and Deployment Gate** - Learn leakage-safe tactical residuals, validate them chronologically, and enable only markets that improve probability quality.
+
+## Phase Details (v1.7)
+
+### Phase 20: Tactical Calibration and Deployment Gate
+**Goal**: Replace hand-set tactical influence with validated, regularized residual adjustments while preserving the no-tactics baseline whenever evidence is insufficient.
+**Depends on**: Phase 19 and the v1.6 chronological tactical backtest
+**Requirements**: WCCAL-01, WCCAL-02, WCCAL-03, WCCAL-04, WCCAL-05, WCCAL-06, WCCAL-07, WCCAL-08, WCCAL-09, WCCAL-10, WCCAL-11, WCCAL-12, WCCAL-13, WCCAL-14
+**Success Criteria**:
+1. A reproducible historical dataset contains at least 200 eligible matches, with at least 50 matches in the untouched holdout; otherwise deployment is blocked.
+2. Expanding-window validation reports Brier score, log loss, calibration, accuracy, and uncertainty against no-tactics and fixed-weight baselines.
+3. Tactical effects are conditional residuals with shrinkage and retain existing Elo and goal-rate caps.
+4. 1X2, totals, and BTTS are promoted independently only when their holdout probability-quality gate passes.
+5. Invalid or unvalidated artifacts fail closed to the no-tactics baseline and the full regression suite passes.
+**Plans**: 3 plans
+
+## Progress (v1.7)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 20. Tactical Calibration and Deployment Gate | 0/3 | Planned | - |

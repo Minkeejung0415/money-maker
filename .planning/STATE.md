@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: World Cup Tactical Matchups
-status: Awaiting next milestone
-stopped_at: Completed 19-01-PLAN.md
-last_updated: "2026-06-22T00:21:09.650Z"
-last_activity: 2026-06-22 — Milestone v1.6 completed and archived
+milestone: v1.7
+milestone_name: Tactical Calibration and Validation
+status: planned
+last_updated: "2026-06-22T00:33:24.073Z"
+last_activity: 2026-06-22
 progress:
-  total_phases: 3
-  completed_phases: 3
+  total_phases: 1
+  completed_phases: 0
   total_plans: 3
-  completed_plans: 3
-  percent: 100
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Milestone v1.6 complete and verified.
+**Current focus:** Phase 20 tactical calibration and deployment gating is planned.
 
 ## Current Position
 
-Phase: Milestone v1.6 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-22 — Milestone v1.6 completed and archived
+Phase: 20 of 20 (Tactical Calibration and Deployment Gate)
+Plan: 0 of 3
+Status: Ready to execute
+Last activity: 2026-06-22 — Phase 20 planned
 
 ## Performance Metrics
 
