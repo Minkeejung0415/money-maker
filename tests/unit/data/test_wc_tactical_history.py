@@ -10,6 +10,7 @@ from alpha.data.ingestion.wc_tactical_history import (
     TACTICAL_COMPONENTS,
     TacticalHistoryRow,
     audit_rows,
+    _summary_event,
     partition_rows,
     write_dataset,
 )
@@ -77,3 +78,23 @@ def test_dataset_is_deterministic_and_manifest_is_sealed(tmp_path):
     second = write_dataset(reversed(rows), tmp_path, audit_cutoff=cutoff)
     assert first == second
     assert json.loads((tmp_path / "manifest.json").read_text())["schema_version"] == 1
+
+
+def test_cached_summary_event_extracts_teams_score_and_card_status():
+    summary = {
+        "boxscore": {"form": [
+            {"team": {"id": "1", "displayName": "A"}, "events": [{
+                "id": "10", "gameDate": "2025-01-01T00:00Z", "homeTeamId": "1",
+                "awayTeamId": "2", "homeTeamScore": "2", "awayTeamScore": "1",
+                "competitionName": "Qualifier",
+            }]},
+            {"team": {"id": "2", "displayName": "B"}, "events": []},
+        ]},
+        "commentary": [{"play": {"period": {"number": 2}, "type": {"type": "goal"}}}],
+        "header": {"competitions": [{"neutralSite": True}]},
+    }
+    event = _summary_event(summary, "10")
+    assert event is not None
+    assert (event["home_team"], event["away_team"]) == ("A", "B")
+    assert event["card_status_known"] is True
+    assert event["had_red_card"] is False

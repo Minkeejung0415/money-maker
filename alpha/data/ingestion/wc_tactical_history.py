@@ -245,3 +245,150 @@ def load_rows(path: str | Path) -> list[TacticalHistoryRow]:
             except (TypeError, ValueError, json.JSONDecodeError) as exc:
                 raise ValueError(f"invalid row {line_number}: {exc}") from exc
     return rows
+
+
+def _summary_event(summary: Mapping[str, Any], event_id: str) -> dict[str, Any] | None:
+    forms = summary.get("boxscore", {}).get("form", [])
+    teams = {
+        str(item.get("team", {}).get("id", "")): str(item.get("team", {}).get("displayName", ""))
+        for item in forms
+    }
+    event = next(
+        (event for item in forms for event in item.get("events", []) if str(event.get("id", "")) == event_id),
+        None,
+    )
+    header_competition = (summary.get("header", {}).get("competitions") or [{}])[0]
+    if event is None:
+        competitors = header_competition.get("competitors", [])
+        home_entry = next((item for item in competitors if item.get("homeAway") == "home"), None)
+        away_entry = next((item for item in competitors if item.get("homeAway") == "away"), None)
+        if home_entry is None or away_entry is None:
+            return None
+        event = {
+            "gameDate": header_competition.get("date", ""),
+            "competitionName": summary.get("header", {}).get("season", {}).get("name", "international"),
+            "roundName": (header_competition.get("status", {}).get("type", {}).get("detail") or "GROUP_STAGE"),
+            "homeTeamScore": home_entry.get("score", 0),
+            "awayTeamScore": away_entry.get("score", 0),
+        }
+        home = str(home_entry.get("team", {}).get("displayName", ""))
+        away = str(away_entry.get("team", {}).get("displayName", ""))
+    else:
+        home_id, away_id = str(event.get("homeTeamId", "")), str(event.get("awayTeamId", ""))
+        home, away = teams.get(home_id, ""), teams.get(away_id, "")
+    if not home or not away:
+        return None
+    commentary = summary.get("commentary")
+    card_status_known = isinstance(commentary, list) or bool(header_competition.get("commentaryAvailable"))
+    commentary_text = json.dumps({"commentary": commentary or [], "keyEvents": summary.get("keyEvents", [])}).lower()
+    had_red_card = "red card" in commentary_text or '"type":"red-card"' in commentary_text
+    extra_time = "extra time" in commentary_text or any(
+        int(item.get("play", {}).get("period", {}).get("number", 0) or 0) > 2
+        for item in (commentary or []) if isinstance(item, Mapping)
+    )
+    return {
+        "event_id": event_id,
+        "kickoff": str(event.get("gameDate", "")),
+        "competition": str(event.get("competitionName") or event.get("leagueName") or "international"),
+        "stage": str(event.get("roundName") or "GROUP_STAGE").upper().replace(" ", "_"),
+        "home_team": home,
+        "away_team": away,
+        "home_goals": int(event.get("homeTeamScore", 0)),
+        "away_goals": int(event.get("awayTeamScore", 0)),
+        "neutral": bool(header_competition.get("neutralSite", False)),
+        "card_status_known": card_status_known,
+        "had_red_card": had_red_card,
+        "extra_time": extra_time,
+        "summary": summary,
+    }
+
+
+def build_rows_from_espn_cache(cache_dir: str | Path) -> list[TacticalHistoryRow]:
+    """Reconstruct historical rows directly from immutable cached ESPN summaries."""
+    from alpha.data.ingestion.wc_tactics import aggregate_tactical_profile, parse_tactical_match
+    from alpha.engines.sports.wc_goal_markets import WCScorelineModel
+    from alpha.engines.sports.wc_model import WCMatchModel
+    from alpha.engines.sports.wc_tactical_matchup import compare_tactics
+
+    events = []
+    for path in sorted(Path(cache_dir).glob("event_*.json")):
+        event_id = path.stem.removeprefix("event_")
+        try:
+            summary = json.loads(path.read_text(encoding="utf-8"))
+            event = _summary_event(summary, event_id)
+            if event is not None and event["kickoff"]:
+                event["source_path"] = path.as_posix()
+                events.append(event)
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            continue
+    events.sort(key=lambda event: (_utc(event["kickoff"]), event["event_id"]))
+
+    tactical_history: dict[str, list[dict[str, Any]]] = {}
+    result_history: dict[str, list[dict[str, Any]]] = {}
+    elo: dict[str, float] = {}
+    rows: list[TacticalHistoryRow] = []
+    model = WCMatchModel()
+    scoreline_model = WCScorelineModel()
+
+    for event in events:
+        kickoff = _utc(event["kickoff"])
+        home, away = event["home_team"], event["away_team"]
+        home_profile = aggregate_tactical_profile(home, list(tactical_history.get(home, [])))
+        away_profile = aggregate_tactical_profile(away, list(tactical_history.get(away, [])))
+        home_results, away_results = result_history.get(home, []), result_history.get(away, [])
+        eligible = (
+            home_profile is not None and away_profile is not None
+            and len(home_results) >= 3 and len(away_results) >= 3
+            and event["card_status_known"] and not event["had_red_card"] and not event["extra_time"]
+        )
+        if eligible:
+            comparison = compare_tactics(home_profile, away_profile)
+            home_goal_rate = sum(item["goals_for"] for item in home_results[-5:]) / min(5, len(home_results))
+            away_goal_rate = sum(item["goals_for"] for item in away_results[-5:]) / min(5, len(away_results))
+            home_defense = sum(item["goals_against"] for item in home_results[-5:]) / min(5, len(home_results))
+            away_defense = sum(item["goals_against"] for item in away_results[-5:]) / min(5, len(away_results))
+            game = model.predict({
+                "home_team": home, "away_team": away, "league": "wc", "stage": "GROUP_STAGE",
+                "home_elo_override": round(elo.get(home, 1500.0)),
+                "away_elo_override": round(elo.get(away, 1500.0)),
+                "recent_team_stats": {
+                    home: {"avg_goals": home_goal_rate, "defense_score": home_defense},
+                    away: {"avg_goals": away_goal_rate, "defense_score": away_defense},
+                },
+            })
+            distribution = scoreline_model.build(game)
+            latest_result = max(home_results[-1]["kickoff"], away_results[-1]["kickoff"])
+            rows.append(TacticalHistoryRow(
+                event_id=event["event_id"], kickoff=kickoff.isoformat(), competition=event["competition"],
+                home_team=home, away_team=away, home_goals=event["home_goals"], away_goals=event["away_goals"],
+                stage=event["stage"], neutral=event["neutral"], card_status_known=True,
+                had_red_card=False, extra_time=False,
+                home_profile_latest=f"{home_profile.latest_match}T00:00:00+00:00",
+                away_profile_latest=f"{away_profile.latest_match}T00:00:00+00:00",
+                home_profile_matches=home_profile.matches, away_profile_matches=away_profile.matches,
+                home_elo=game["home_elo"], away_elo=game["away_elo"], elo_as_of=latest_result,
+                home_goal_rate=home_goal_rate, away_goal_rate=away_goal_rate, goal_rates_as_of=latest_result,
+                baseline_home=game["win_prob"], baseline_draw=game["draw_prob"], baseline_away=game["loss_prob"],
+                baseline_home_lambda=distribution.home_lambda, baseline_away_lambda=distribution.away_lambda,
+                home_components=comparison.home_components, away_components=comparison.away_components,
+                source_url=f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event={event['event_id']}",
+            ))
+
+        home_elo, away_elo = elo.get(home, 1500.0), elo.get(away, 1500.0)
+        expected_home = 1.0 / (1.0 + 10.0 ** ((away_elo - home_elo) / 400.0))
+        actual_home = 1.0 if event["home_goals"] > event["away_goals"] else 0.0 if event["home_goals"] < event["away_goals"] else 0.5
+        change = 30.0 * (actual_home - expected_home)
+        elo[home], elo[away] = home_elo + change, away_elo - change
+        for team, opponent, goals_for, goals_against in (
+            (home, away, event["home_goals"], event["away_goals"]),
+            (away, home, event["away_goals"], event["home_goals"]),
+        ):
+            result_history.setdefault(team, []).append({
+                "kickoff": kickoff.isoformat(), "opponent": opponent,
+                "goals_for": goals_for, "goals_against": goals_against,
+            })
+            if event["card_status_known"] and not event["had_red_card"] and not event["extra_time"]:
+                metrics = parse_tactical_match(event["summary"], team)
+                if metrics is not None:
+                    tactical_history.setdefault(team, []).append({"date": kickoff.date().isoformat(), "metrics": metrics})
+    return rows
