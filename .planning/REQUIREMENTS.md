@@ -14,10 +14,10 @@
 
 ## Tactical Comparison
 
-- [ ] **WCTAC-06**: Compare both teams symmetrically across chance creation, control, press resistance, directness, width, set pieces, and defensive block.
-- [ ] **WCTAC-07**: Produce bounded home/away attack multipliers and named matchup explanations.
-- [ ] **WCTAC-08**: Formation information is descriptive context, not a deterministic prediction rule.
-- [ ] **WCTAC-09**: Reversing the teams reverses comparison direction without changing absolute matchup strength.
+- [x] **WCTAC-06**: Compare both teams symmetrically across chance creation, control, press resistance, directness, width, set pieces, and defensive block.
+- [x] **WCTAC-07**: Produce bounded home/away attack multipliers and named matchup explanations.
+- [x] **WCTAC-08**: Formation information is descriptive context, not a deterministic prediction rule.
+- [x] **WCTAC-09**: Reversing the teams reverses comparison direction without changing absolute matchup strength.
 
 ## Model Integration
 
@@ -39,7 +39,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | WCTAC-01..05 | Phase 17 | Complete |
-| WCTAC-06..09 | Phase 18 | Pending |
+| WCTAC-06..09 | Phase 18 | Complete |
 | WCTAC-10..14 | Phase 19 | Pending |
 
 ---

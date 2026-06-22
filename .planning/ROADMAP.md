@@ -332,7 +332,7 @@ Plans:
 ## Phases (v1.6)
 
 - [x] **Phase 17: Recent Tactical Data Pipeline** - Fetch, cache, normalize, and quality-gate recent ESPN tactical match summaries. (completed 2026-06-21)
-- [ ] **Phase 18: Tactical Style Comparison** - Build symmetric team profiles and explainable bounded matchup scoring.
+- [x] **Phase 18: Tactical Style Comparison** - Build symmetric team profiles and explainable bounded matchup scoring. (completed 2026-06-21)
 - [ ] **Phase 19: Probability and Scanner Integration** - Apply tactical multipliers to scorelines, show baseline deltas, and validate live output.
 
 ## Phase Details (v1.6)
@@ -359,5 +359,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 17. Recent Tactical Data Pipeline | 1/1 | Complete | 2026-06-21 |
-| 18. Tactical Style Comparison | 0/1 | Not started | - |
+| 18. Tactical Style Comparison | 1/1 | Complete | 2026-06-21 |
 | 19. Probability and Scanner Integration | 0/1 | Not started | - |
