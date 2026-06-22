@@ -26,6 +26,25 @@ Replace hand-set tactical influence with validated, regularized residual adjustm
 - Focused Wave 3: 65 passed.
 - Full suite: 791 passed, 5 skipped.
 
+## Requirements
+
+| Requirement | Source Plan | Status | Evidence |
+|-------------|-------------|--------|----------|
+| WCCAL-01 | 20-01 | Passed | Versioned historical row contract and deterministic split writer |
+| WCCAL-02 | 20-01 | Passed | Strict pre-kickoff timestamp validation and leakage tests |
+| WCCAL-03 | 20-01 | Passed | Coverage, red-card, extra-time, and missing-card gates |
+| WCCAL-04 | 20-01 | Passed | Content-hashed dataset manifest and exclusion diagnostics |
+| WCCAL-05 | 20-02 | Passed | Fixed-baseline L2 outcome and goal residuals |
+| WCCAL-06 | 20-02 | Passed | Expanding chronological folds and fold-local standardizers |
+| WCCAL-07 | 20-02 | Passed | Separate 50-match validation and sealed 30-match audit contracts |
+| WCCAL-08 | 20-02 | Passed | Four controls, bootstrap intervals, and Holm correction |
+| WCCAL-09 | 20-02 | Passed | Numeric sample, materiality, and uncertainty promotion gates |
+| WCCAL-10 | 20-03 | Passed | Versioned schema-checked artifact with cutoff and fingerprint |
+| WCCAL-11 | 20-03 | Passed | Independent single-market and whole-SGP fallback tests |
+| WCCAL-12 | 20-03 | Passed | Elo/goal caps, normalization, and stage regression tests |
+| WCCAL-13 | 20-03 | Passed | Scanner artifact and per-market gate status output |
+| WCCAL-14 | 20-03 | Passed | 65 focused and 791 full-suite tests passed |
+
 ## Deployment Result
 
 No tactical artifact was promoted because the repository does not yet contain a sealed dataset satisfying the evidence gate. Production remains baseline-only. This is the required safe result, not a validation failure.

@@ -38,9 +38,20 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WCCAL-01..04 | Phase 20 / Plan 01 | Planned |
-| WCCAL-05..09 | Phase 20 / Plan 02 | Planned |
-| WCCAL-10..14 | Phase 20 / Plan 03 | Planned |
+| WCCAL-01 | Phase 20 / Plan 01 | Complete |
+| WCCAL-02 | Phase 20 / Plan 01 | Complete |
+| WCCAL-03 | Phase 20 / Plan 01 | Complete |
+| WCCAL-04 | Phase 20 / Plan 01 | Complete |
+| WCCAL-05 | Phase 20 / Plan 02 | Complete |
+| WCCAL-06 | Phase 20 / Plan 02 | Complete |
+| WCCAL-07 | Phase 20 / Plan 02 | Complete |
+| WCCAL-08 | Phase 20 / Plan 02 | Complete |
+| WCCAL-09 | Phase 20 / Plan 02 | Complete |
+| WCCAL-10 | Phase 20 / Plan 03 | Complete |
+| WCCAL-11 | Phase 20 / Plan 03 | Complete |
+| WCCAL-12 | Phase 20 / Plan 03 | Complete |
+| WCCAL-13 | Phase 20 / Plan 03 | Complete |
+| WCCAL-14 | Phase 20 / Plan 03 | Complete |
 
 ---
-*Last updated: 2026-06-21 after Phase 20 planning*
+*Last updated: 2026-06-22 after Phase 20 verification*
