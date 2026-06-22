@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.7 Tactical Calibration and Validation (Shipped: 2026-06-22)
+
+**Phases completed:** 1 phase, 3 plans, 9 tasks
+
+**Key accomplishments:**
+
+- ESPN-cache summaries now produce deterministic, leakage-checked historical tactical rows and sealed split manifests.
+- Regularized residual outcome and goal models use expanding chronological folds and bounded adjustments.
+- Promotion requires material Brier and log-loss gains over baseline and recalibration with corrected bootstrap uncertainty.
+- Versioned artifacts validate schema, features, cutoff, fingerprint, and 200/50/30 sample gates.
+- Single markets gate independently while every SGP uses one coherent tactical or baseline distribution.
+- Real coverage audit found only 16 eligible rows, so no tactical market was promoted and production remains baseline-only.
+
+---
+
 ## v1.6 World Cup Tactical Matchups (Shipped: 2026-06-22)
 
 **Phases completed:** 3 phases, 3 plans

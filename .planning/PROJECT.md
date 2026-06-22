@@ -15,7 +15,7 @@ A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UC
 - Independent deployment gates for 1X2, totals, and BTTS
 - Versioned model artifacts with baseline fallback on missing, stale, or unvalidated weights
 
-**Current state:** Planning Phase 20 after the fixed-weight layer produced mixed out-of-sample results on 35 completed World Cup matches.
+**Current state:** v1.7 complete. The learned tactical path is implemented, but the real 16-row eligible sample fails the 200/50/30 gate, so production remains on the no-tactics baseline.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -97,6 +97,14 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Explainable team-style comparison
 - [x] Bounded scoreline-model integration
 - [x] Scanner tactical comparison output and validation
+
+### Validated (v1.7)
+
+- [x] Leakage-safe historical tactical row builder and immutable split manifests
+- [x] Regularized chronological residual training and strict probability-quality gates
+- [x] Versioned runtime artifact validation with independent market fallback
+- [x] One-distribution-per-SGP coherence and visible scanner gate status
+- [x] Real coverage audit blocks promotion when evidence is insufficient
 
 ### Out of Scope
 
