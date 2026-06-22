@@ -13,11 +13,11 @@
 
 ## Training and Evaluation
 
-- [ ] **WCCAL-05**: Fit tactical effects as strongly regularized residual adjustments conditional on the existing Elo and scoreline baseline.
-- [ ] **WCCAL-06**: Select hyperparameters using expanding-window chronological validation, never random cross-validation.
-- [ ] **WCCAL-07**: Use at least 50 later pre-tournament matches for chronological validation and seal at least 30 completed 2026 World Cup matches as a never-trained external audit.
-- [ ] **WCCAL-08**: Report multiplicity-corrected paired-bootstrap uncertainty, calibration diagnostics, sample counts, and comparisons against no-tactics, fixed-weight, and baseline-only recalibration controls.
-- [ ] **WCCAL-09**: Refuse model promotion when the historical sample is below the declared minimum or improvement is not robust out of sample.
+- [x] **WCCAL-05**: Fit tactical effects as strongly regularized residual adjustments conditional on the existing Elo and scoreline baseline.
+- [x] **WCCAL-06**: Select hyperparameters using expanding-window chronological validation, never random cross-validation.
+- [x] **WCCAL-07**: Use at least 50 later pre-tournament matches for chronological validation and seal at least 30 completed 2026 World Cup matches as a never-trained external audit.
+- [x] **WCCAL-08**: Report multiplicity-corrected paired-bootstrap uncertainty, calibration diagnostics, sample counts, and comparisons against no-tactics, fixed-weight, and baseline-only recalibration controls.
+- [x] **WCCAL-09**: Refuse model promotion when the historical sample is below the declared minimum or improvement is not robust out of sample.
 
 ## Safe Deployment
 
