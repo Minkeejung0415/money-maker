@@ -377,10 +377,10 @@ Plans:
 **Depends on**: Phase 19 and the v1.6 chronological tactical backtest
 **Requirements**: WCCAL-01, WCCAL-02, WCCAL-03, WCCAL-04, WCCAL-05, WCCAL-06, WCCAL-07, WCCAL-08, WCCAL-09, WCCAL-10, WCCAL-11, WCCAL-12, WCCAL-13, WCCAL-14
 **Success Criteria**:
-1. A reproducible historical dataset contains at least 200 eligible matches, with at least 50 matches in the untouched holdout; otherwise deployment is blocked.
+1. A source audit proves coverage before modeling; the dataset then contains at least 200 development matches, 50 later chronological validation matches, and a sealed external audit of at least 30 completed 2026 World Cup matches, or deployment is blocked.
 2. Expanding-window validation reports Brier score, log loss, calibration, accuracy, and uncertainty against no-tactics and fixed-weight baselines.
 3. Tactical effects are conditional residuals with shrinkage and retain existing Elo and goal-rate caps.
-4. 1X2, totals, and BTTS are promoted independently only when their holdout probability-quality gate passes.
+4. Single markets are promoted independently only when numeric probability-quality gates pass, while every SGP uses one coherent approved distribution or falls back entirely.
 5. Invalid or unvalidated artifacts fail closed to the no-tactics baseline and the full regression suite passes.
 **Plans**: 3 plans
 

@@ -9,9 +9,10 @@ The fixed tactical layer was evaluated chronologically on 35 completed 2026 Worl
 - This work belongs to a new v1.7 milestone, not a reopening of archived v1.6.
 - Primary optimization target is probability quality: Brier score and log loss. Accuracy is secondary because threshold flips can hide or exaggerate calibration changes.
 - The existing no-tactics model is the production fallback.
-- Tactical markets are promoted independently. Evidence for 1X2 never authorizes totals or BTTS.
-- The current World Cup matches remain an untouched final holdout.
+- Single tactical markets are promoted independently. Evidence for 1X2 never authorizes totals or BTTS. Every SGP combination must use one distribution; if all constituent market families are not approved on that distribution, the entire combination uses the no-tactics distribution.
+- All eligible completed World Cup matches from 2026-06-11 through the frozen manifest creation cutoff remain a never-trained external audit. The manifest must contain at least 30 matches and cannot be appended in place; later tournament audits require a new version.
 - Missing, incompatible, undersized, or unvalidated artifacts fail closed.
+- Promotion requires at least 200 development matches plus 50 later pre-tournament chronological validation matches before the separate World Cup audit is examined.
 
 ## Technical Direction
 
@@ -23,7 +24,7 @@ The fixed tactical layer was evaluated chronologically on 35 completed 2026 Worl
 
 ## Agent Discretion
 
-- Exact regularization grid, bootstrap method, and calibration-bin count.
+- Exact regularization grid and calibration-bin count. Bootstrap repetitions, interval level, multiplicity correction, and promotion deltas are locked below.
 - Whether score-state bias is handled through exclusions, control features, or both, provided the choice is documented and tested.
 - Exact artifact serialization format, provided it is deterministic, versioned, human-auditable, and schema checked.
 
