@@ -15,6 +15,15 @@ _CACHE_DIR = Path("data/.wc_cache/espn_tactics")
 _DECAY = 0.82
 _MIN_MATCHES = 3
 
+_ESPN_TO_CANONICAL = {
+    "Cape Verde": "Cape Verde Islands",
+    "Türkiye": "Turkey",
+}
+
+
+def _canonical_team_name(name: str) -> str:
+    return _ESPN_TO_CANONICAL.get(name, name)
+
 
 @dataclass(frozen=True)
 class WCTacticalProfile:
@@ -58,7 +67,11 @@ def parse_tactical_match(summary: dict[str, Any], team_name: str) -> dict[str, A
     """Extract one team's tactical metrics with opponent context."""
     teams = summary.get("boxscore", {}).get("teams", [])
     target = next(
-        (entry for entry in teams if entry.get("team", {}).get("displayName") == team_name),
+        (
+            entry for entry in teams
+            if _canonical_team_name(str(entry.get("team", {}).get("displayName", "")))
+            == team_name
+        ),
         None,
     )
     opponent = next((entry for entry in teams if entry is not target), None)
@@ -76,7 +89,7 @@ def parse_tactical_match(summary: dict[str, Any], team_name: str) -> dict[str, A
     defensive_actions = _number(stats, "totalTackles") + _number(stats, "interceptions")
     formation = ""
     for roster in summary.get("rosters", []):
-        if roster.get("team", {}).get("displayName") == team_name:
+        if _canonical_team_name(str(roster.get("team", {}).get("displayName", ""))) == team_name:
             formation = str(roster.get("formation") or "")
             break
     return {
@@ -168,7 +181,12 @@ class WCTacticsClient:
                 for competitor in event.get("competitions", [{}])[0].get("competitors", []):
                     team = competitor.get("team", {})
                     if team.get("displayName") and team.get("id"):
-                        result[str(team["displayName"])] = str(team["id"])
+                        display_name = str(team["displayName"])
+                        team_id = str(team["id"])
+                        result[display_name] = team_id
+                        canonical = _ESPN_TO_CANONICAL.get(display_name)
+                        if canonical:
+                            result[canonical] = team_id
         return result
 
     def fetch_profile(self, team_name: str, team_id: str, as_of: datetime, n: int = 5) -> WCTacticalProfile | None:

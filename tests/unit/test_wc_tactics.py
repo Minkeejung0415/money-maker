@@ -90,3 +90,16 @@ def test_team_resolution_merges_adjacent_display_dates(monkeypatch, tmp_path):
 
     monkeypatch.setattr(client, "_cached_json", fake_cached)
     assert client.resolve_team_ids(date(2026, 6, 22))["Egypt"] == "2620"
+
+
+def test_team_resolution_adds_canonical_name_aliases(monkeypatch, tmp_path):
+    client = WCTacticsClient(tmp_path)
+    monkeypatch.setattr(client, "_cached_json", lambda *args: {
+        "events": [{"competitions": [{"competitors": [
+            {"team": {"displayName": "Türkiye", "id": "2036"}},
+            {"team": {"displayName": "Cape Verde", "id": "1321"}},
+        ]}]}]
+    })
+    result = client.resolve_team_ids(date(2026, 6, 22))
+    assert result["Turkey"] == "2036"
+    assert result["Cape Verde Islands"] == "1321"
