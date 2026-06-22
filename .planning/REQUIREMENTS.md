@@ -21,11 +21,11 @@
 
 ## Safe Deployment
 
-- [ ] **WCCAL-10**: Store trained weights and validation metadata in a versioned, schema-checked artifact.
-- [ ] **WCCAL-11**: Gate single-market 1X2, totals, and BTTS independently, while every multi-leg SGP uses exactly one coherent scoreline distribution and falls back as a whole when any constituent family is unapproved.
-- [ ] **WCCAL-12**: Preserve bounded adjustments, probability coherence, tactical explanations, and all existing stage rules.
-- [ ] **WCCAL-13**: Scanner output must identify the active artifact and show whether each market passed, failed, or fell back.
-- [ ] **WCCAL-14**: Focused tests and the complete regression suite must pass before any tactical artifact becomes the default.
+- [x] **WCCAL-10**: Store trained weights and validation metadata in a versioned, schema-checked artifact.
+- [x] **WCCAL-11**: Gate single-market 1X2, totals, and BTTS independently, while every multi-leg SGP uses exactly one coherent scoreline distribution and falls back as a whole when any constituent family is unapproved.
+- [x] **WCCAL-12**: Preserve bounded adjustments, probability coherence, tactical explanations, and all existing stage rules.
+- [x] **WCCAL-13**: Scanner output must identify the active artifact and show whether each market passed, failed, or fell back.
+- [x] **WCCAL-14**: Focused tests and the complete regression suite must pass before any tactical artifact becomes the default.
 
 ## Out of Scope
 

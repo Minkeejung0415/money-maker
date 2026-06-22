@@ -428,7 +428,7 @@ Plans:
 
 ## Phases (v1.7)
 
-- [ ] **Phase 20: Tactical Calibration and Deployment Gate** - Learn leakage-safe tactical residuals, validate them chronologically, and enable only markets that improve probability quality.
+- [x] **Phase 20: Tactical Calibration and Deployment Gate** - Learn leakage-safe tactical residuals, validate them chronologically, and enable only markets that improve probability quality. (completed 2026-06-22)
 
 ## Phase Details (v1.7)
 
@@ -451,4 +451,4 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 20. Tactical Calibration and Deployment Gate | 2/3 | In Progress|  |
+| 20. Tactical Calibration and Deployment Gate | 3/3 | Complete   | 2026-06-22 |
