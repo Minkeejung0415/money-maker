@@ -6,11 +6,11 @@
 
 ## Tactical Data
 
-- [ ] **WCTAC-01**: Fetch recent completed national-team match summaries with formations and measurable tactical statistics from a free source.
-- [ ] **WCTAC-02**: Use only matches completed before the target fixture and retain a minimum sample-size gate.
-- [ ] **WCTAC-03**: Cache schedules and immutable event summaries under the isolated WC cache namespace.
-- [ ] **WCTAC-04**: Normalize possession, passing, long-ball, crossing, shot, corner, pressing-proxy, and low-block metrics into one team profile.
-- [ ] **WCTAC-05**: Missing or malformed tactical data fails closed without silently inventing a neutral profile.
+- [x] **WCTAC-01**: Fetch recent completed national-team match summaries with formations and measurable tactical statistics from a free source.
+- [x] **WCTAC-02**: Use only matches completed before the target fixture and retain a minimum sample-size gate.
+- [x] **WCTAC-03**: Cache schedules and immutable event summaries under the isolated WC cache namespace.
+- [x] **WCTAC-04**: Normalize possession, passing, long-ball, crossing, shot, corner, pressing-proxy, and low-block metrics into one team profile.
+- [x] **WCTAC-05**: Missing or malformed tactical data fails closed without silently inventing a neutral profile.
 
 ## Tactical Comparison
 
@@ -38,7 +38,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WCTAC-01..05 | Phase 17 | Pending |
+| WCTAC-01..05 | Phase 17 | Complete |
 | WCTAC-06..09 | Phase 18 | Pending |
 | WCTAC-10..14 | Phase 19 | Pending |
 
