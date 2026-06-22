@@ -117,6 +117,17 @@ class WCMatchModel:
         # Current Elo already incorporates recent results. The old 2018/2022
         # xG modifier was stale and double-counted old tournament form.
         elo_adj = float(elo_diff)
+        tactical_elo = 0.0
+        tactical = game.get("tactical_comparison")
+        if tactical is not None:
+            home_multiplier = float(getattr(tactical, "home_attack_multiplier", 1.0))
+            away_multiplier = float(getattr(tactical, "away_attack_multiplier", 1.0))
+            if home_multiplier > 0 and away_multiplier > 0:
+                tactical_elo = max(
+                    -40.0,
+                    min(40.0, 400.0 * math.log10(home_multiplier / away_multiplier)),
+                )
+                elo_adj += tactical_elo
 
         # 3. 2-way Elo-logistic probability (Bradley-Terry)
         p_home_2way = 1.0 / (1.0 + 10.0 ** (-elo_adj / 400.0))
@@ -152,6 +163,7 @@ class WCMatchModel:
         game["elo_diff"] = round(elo_adj, 2)
         game["home_elo"] = elo_home
         game["away_elo"] = elo_away
+        game["tactical_elo_adjustment"] = round(tactical_elo, 2)
         return game
 
     def evaluate_bet(self, game: dict) -> dict | None:

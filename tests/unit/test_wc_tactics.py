@@ -1,7 +1,13 @@
 """Tests for World Cup tactical profile ingestion."""
 from __future__ import annotations
 
-from alpha.data.ingestion.wc_tactics import aggregate_tactical_profile, parse_tactical_match
+from datetime import date
+
+from alpha.data.ingestion.wc_tactics import (
+    WCTacticsClient,
+    aggregate_tactical_profile,
+    parse_tactical_match,
+)
 
 
 def _entry(team, possession, passes, shots, corners, clearances=10):
@@ -71,3 +77,16 @@ def test_aggregate_profile_is_recent_weighted_and_keeps_formation():
     assert profile.formation == "4-3-3"
     assert profile.matches == 3
 
+
+def test_team_resolution_merges_adjacent_display_dates(monkeypatch, tmp_path):
+    client = WCTacticsClient(tmp_path)
+
+    def fake_cached(key, url, ttl):
+        if "20260621" in url:
+            return {"events": [{"competitions": [{"competitors": [
+                {"team": {"displayName": "Egypt", "id": "2620"}}
+            ]}]}]}
+        return {"events": []}
+
+    monkeypatch.setattr(client, "_cached_json", fake_cached)
+    assert client.resolve_team_ids(date(2026, 6, 22))["Egypt"] == "2620"

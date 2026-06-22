@@ -4,6 +4,7 @@ from __future__ import annotations
 import inspect
 
 import pytest
+from types import SimpleNamespace
 
 from alpha.engines.sports.wc_model import KNOCKOUT_STAGES, WCMatchModel, _draw_prob
 
@@ -209,6 +210,18 @@ def test_recent_elo_overrides_static_file_rating(model):
     assert result["home_elo"] == 2200
     assert result["away_elo"] == 1700
     assert result["elo_diff"] == 500
+
+
+def test_tactical_comparison_adjusts_outcome_but_is_capped(model):
+    baseline = model.predict({"home_team": "Brazil", "away_team": "Germany", "league": "wc"})
+    adjusted = model.predict({
+        "home_team": "Brazil", "away_team": "Germany", "league": "wc",
+        "tactical_comparison": SimpleNamespace(
+            home_attack_multiplier=1.10, away_attack_multiplier=0.90
+        ),
+    })
+    assert adjusted["win_prob"] > baseline["win_prob"]
+    assert 0 < adjusted["tactical_elo_adjustment"] <= 40
 
 
 # ---------------------------------------------------------------------------

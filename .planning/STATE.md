@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: World Cup Tactical Matchups
-status: planning
+status: complete
+phase: 19
+phase_name: Probability and Scanner Integration
+plan: 01
 last_updated: "2026-06-22T00:07:40.872Z"
 last_activity: 2026-06-22
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 3
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -20,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Milestone v1.5 complete and verified.
+**Current focus:** Milestone v1.6 complete and verified.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-06-22 — Milestone v1.6 started
+Phase: 19 of 19 - Probability and Scanner Integration
+Plan: 01
+Status: Complete
+Last activity: 2026-06-21 - v1.6 audit passed; 777 tests passing
 
 ## Performance Metrics
 

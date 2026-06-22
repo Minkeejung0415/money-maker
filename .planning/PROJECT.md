@@ -15,7 +15,7 @@ A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UC
 - Scanner display of baseline versus tactics-adjusted probabilities
 - Fail-closed data quality and full regression coverage
 
-**Current state:** Milestone defined; Phase 17 tactical data ingestion is next.
+**Current state:** Complete and verified with 777 passing tests and a live four-game tactical audit.
 
 ## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
 
@@ -91,12 +91,12 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Normalized 1X2, total-goals, and BTTS market prices
 - [x] Stage-safe scanner mode with complete test coverage
 
-### Active (v1.6)
+### Validated (v1.6)
 
-- [ ] Recent tactical data ingestion and caching
-- [ ] Explainable team-style comparison
-- [ ] Bounded scoreline-model integration
-- [ ] Scanner tactical comparison output and validation
+- [x] Recent tactical data ingestion and caching
+- [x] Explainable team-style comparison
+- [x] Bounded scoreline-model integration
+- [x] Scanner tactical comparison output and validation
 
 ### Out of Scope
 

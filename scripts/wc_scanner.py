@@ -29,7 +29,7 @@ import argparse
 import io
 import logging
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,8 +123,11 @@ def main() -> None:
     from alpha.data.ingestion.football_data_client import FootballDataClient
     from alpha.data.ingestion.wc_market_odds import load_wc_market_odds
     from alpha.data.ingestion.wc_recent_form import WCRecentFormClient
+    from alpha.data.ingestion.wc_tactics import WCTacticsClient
     from alpha.engines.sports.wc_model import WCMatchModel
+    from alpha.engines.sports.wc_goal_markets import WCScorelineModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
+    from alpha.engines.sports.wc_tactical_matchup import compare_tactics
 
     # ── Step 1: Fetch WC fixtures ────────────────────────────────────────
     print(f"[1/4] Fetching WC fixtures ({args.date_from} to {args.date_to})...")
@@ -175,6 +178,7 @@ def main() -> None:
               f"Stats: {len(wc_model._wc_stats)} teams")
 
     recent_client = WCRecentFormClient() if args.mode == "sgp" else None
+    tactics_client = WCTacticsClient() if args.mode == "sgp" else None
     if recent_client:
         print("  Loading recent last-10 international form and Elo for every team...")
 
@@ -198,7 +202,42 @@ def main() -> None:
                     game["home_elo_override"] = home["elo_rating"]
                 if away.get("elo_rating") is not None:
                     game["away_elo_override"] = away["elo_rating"]
+                kickoff = datetime.fromisoformat(
+                    str(game.get("commence_time", "")).replace("Z", "+00:00")
+                )
+                team_ids = tactics_client.resolve_team_ids(kickoff.date())
+                home_profile = tactics_client.fetch_profile(
+                    game["home_team"], team_ids.get(game["home_team"], ""), kickoff
+                )
+                away_profile = tactics_client.fetch_profile(
+                    game["away_team"], team_ids.get(game["away_team"], ""), kickoff
+                )
+                if home_profile is None or away_profile is None:
+                    print(f"  Skipping {game.get('home_team')} vs {game.get('away_team')}: "
+                          "fewer than 3 stat-complete tactical matches available")
+                    continue
+                baseline_game = wc_model.predict(dict(game))
+                comparison = compare_tactics(home_profile, away_profile)
+                game["tactical_profiles"] = {
+                    game["home_team"]: home_profile,
+                    game["away_team"]: away_profile,
+                }
+                game["tactical_comparison"] = comparison
             game = wc_model.predict(game)
+            if recent_client:
+                baseline_distribution = WCScorelineModel().build(baseline_game)
+                adjusted_distribution = WCScorelineModel().build(game)
+                game["tactical_baseline"] = {
+                    "win_prob": baseline_game["win_prob"],
+                    "draw_prob": baseline_game["draw_prob"],
+                    "loss_prob": baseline_game["loss_prob"],
+                    "over_2_5": baseline_distribution.probability("over_2_5"),
+                    "btts_yes": baseline_distribution.probability("btts_yes"),
+                }
+                game["tactical_adjusted"] = {
+                    "over_2_5": adjusted_distribution.probability("over_2_5"),
+                    "btts_yes": adjusted_distribution.probability("btts_yes"),
+                }
             enriched.append(game)
         except Exception as exc:
             logger.warning(
@@ -235,6 +274,30 @@ def main() -> None:
 
     if args.mode == "sgp" and results:
         print(f"\nFull probability set: {len(results)} nonzero compatible combinations.")
+        print("\nTACTICAL MATCHUPS")
+        for game in enriched:
+            comparison = game["tactical_comparison"]
+            profiles = game["tactical_profiles"]
+            home_profile = profiles[game["home_team"]]
+            away_profile = profiles[game["away_team"]]
+            baseline = game["tactical_baseline"]
+            adjusted = game["tactical_adjusted"]
+            print(f"  {game['home_team']} [{home_profile.formation}] vs "
+                  f"{game['away_team']} [{away_profile.formation}]")
+            print(f"    Attack multipliers: {game['home_team']} "
+                  f"{comparison.home_attack_multiplier:.3f}x | {game['away_team']} "
+                  f"{comparison.away_attack_multiplier:.3f}x | tactical Elo "
+                  f"{game.get('tactical_elo_adjustment', 0.0):+.1f}")
+            print(f"    1X2 H/D/A: {baseline['win_prob']:.1%}/{baseline['draw_prob']:.1%}/"
+                  f"{baseline['loss_prob']:.1%} -> {game['win_prob']:.1%}/"
+                  f"{game['draw_prob']:.1%}/{game['loss_prob']:.1%}")
+            print(f"    Over 2.5: {baseline['over_2_5']:.1%} -> "
+                  f"{adjusted['over_2_5']:.1%} | BTTS Yes: "
+                  f"{baseline['btts_yes']:.1%} -> {adjusted['btts_yes']:.1%}")
+            for explanation in comparison.home_explanations:
+                print(f"    {game['home_team']}: {explanation}")
+            for explanation in comparison.away_explanations:
+                print(f"    {game['away_team']}: {explanation}")
 
     if not results:
         print(f"\nNo combinations found with >={args.min_edge:.1%} edge in this date range.")

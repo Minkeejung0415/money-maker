@@ -21,11 +21,11 @@
 
 ## Model Integration
 
-- [ ] **WCTAC-10**: Tactical multipliers adjust scoreline goal rates before market probabilities are calculated.
-- [ ] **WCTAC-11**: Tactical adjustments are capped so they cannot overwhelm recent form or Elo.
-- [ ] **WCTAC-12**: Scanner output shows each team’s profile, tactical edges, and probability change from the no-tactics baseline.
-- [ ] **WCTAC-13**: Probability coherence, stage rules, and all existing SGP options remain valid.
-- [ ] **WCTAC-14**: Focused tests and the complete regression suite pass, followed by a live multi-game audit.
+- [x] **WCTAC-10**: Tactical multipliers adjust scoreline goal rates before market probabilities are calculated.
+- [x] **WCTAC-11**: Tactical adjustments are capped so they cannot overwhelm recent form or Elo.
+- [x] **WCTAC-12**: Scanner output shows each team’s profile, tactical edges, and probability change from the no-tactics baseline.
+- [x] **WCTAC-13**: Probability coherence, stage rules, and all existing SGP options remain valid.
+- [x] **WCTAC-14**: Focused tests and the complete regression suite pass, followed by a live multi-game audit.
 
 ## Out of Scope
 
@@ -40,7 +40,7 @@
 |-------------|-------|--------|
 | WCTAC-01..05 | Phase 17 | Complete |
 | WCTAC-06..09 | Phase 18 | Complete |
-| WCTAC-10..14 | Phase 19 | Pending |
+| WCTAC-10..14 | Phase 19 | Complete |
 
 ---
 *Last updated: 2026-06-21 after milestone definition*

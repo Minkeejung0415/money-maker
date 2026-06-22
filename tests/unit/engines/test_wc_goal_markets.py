@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from types import SimpleNamespace
 
 from alpha.engines.sports.wc_goal_markets import WCScorelineModel
 
@@ -46,6 +47,17 @@ def test_current_elo_mismatch_suppresses_underdog_goal_rate():
     mismatch = WCScorelineModel(TEAM_STATS).build(_game(elo_diff=500.0))
     assert mismatch.home_lambda > even.home_lambda
     assert mismatch.away_lambda < even.away_lambda
+
+
+def test_tactical_multipliers_adjust_both_goal_rates():
+    baseline = WCScorelineModel(TEAM_STATS).build(_game())
+    adjusted = WCScorelineModel(TEAM_STATS).build(_game(
+        tactical_comparison=SimpleNamespace(
+            home_attack_multiplier=1.08, away_attack_multiplier=0.93
+        )
+    ))
+    assert adjusted.home_lambda > baseline.home_lambda
+    assert adjusted.away_lambda < baseline.away_lambda
 
 
 def test_missing_stats_use_neutral_bounded_fallback():

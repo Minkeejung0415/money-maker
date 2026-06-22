@@ -111,9 +111,16 @@ class WCScorelineModel:
         home_defense = self._bounded_rate(home.get("defense_score"))
         away_defense = self._bounded_rate(away.get("defense_score"))
         matchup_factor = math.sqrt(10.0 ** (max(-800.0, min(800.0, elo_diff)) / 1600.0))
+        tactical = None
+        # Kept outside the team profile contract so tactics never masquerade
+        # as historical strength.
+        if isinstance(team_stats, Mapping):
+            tactical = team_stats.get("__tactical_comparison__")
+        home_tactical = float(getattr(tactical, "home_attack_multiplier", 1.0))
+        away_tactical = float(getattr(tactical, "away_attack_multiplier", 1.0))
         return (
-            self._bounded_rate(((home_attack + away_defense) / 2.0) * matchup_factor),
-            self._bounded_rate(((away_attack + home_defense) / 2.0) / matchup_factor),
+            self._bounded_rate(((home_attack + away_defense) / 2.0) * matchup_factor * home_tactical),
+            self._bounded_rate(((away_attack + home_defense) / 2.0) / matchup_factor * away_tactical),
         )
 
     @staticmethod
@@ -148,7 +155,9 @@ class WCScorelineModel:
 
     def build(self, game: Mapping[str, object]) -> WCScorelineDistribution:
         recent_stats = game.get("recent_team_stats")
-        team_stats = recent_stats if isinstance(recent_stats, Mapping) else self._team_stats
+        team_stats = dict(recent_stats) if isinstance(recent_stats, Mapping) else dict(self._team_stats)
+        if game.get("tactical_comparison") is not None:
+            team_stats["__tactical_comparison__"] = game["tactical_comparison"]
         home_lambda, away_lambda = self._goal_rates(
             str(game.get("home_team", "")),
             str(game.get("away_team", "")),

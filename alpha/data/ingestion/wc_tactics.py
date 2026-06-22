@@ -153,18 +153,22 @@ class WCTacticsClient:
         return data
 
     def resolve_team_ids(self, game_date: date) -> dict[str, str]:
-        date_key = game_date.strftime("%Y%m%d")
-        data = self._cached_json(
-            f"scoreboard_{date_key}",
-            f"{_BASE}/fifa.world/scoreboard?dates={date_key}",
-            timedelta(hours=1),
-        )
         result = {}
-        for event in data.get("events", []):
-            for competitor in event.get("competitions", [{}])[0].get("competitors", []):
-                team = competitor.get("team", {})
-                if team.get("displayName") and team.get("id"):
-                    result[str(team["displayName"])] = str(team["id"])
+        # ESPN groups events by North American display date while the fixture
+        # source uses UTC. Merge adjacent dates so evening Pacific fixtures
+        # crossing midnight UTC still resolve.
+        for offset in (-1, 0, 1):
+            date_key = (game_date + timedelta(days=offset)).strftime("%Y%m%d")
+            data = self._cached_json(
+                f"scoreboard_{date_key}",
+                f"{_BASE}/fifa.world/scoreboard?dates={date_key}",
+                timedelta(hours=1),
+            )
+            for event in data.get("events", []):
+                for competitor in event.get("competitions", [{}])[0].get("competitors", []):
+                    team = competitor.get("team", {})
+                    if team.get("displayName") and team.get("id"):
+                        result[str(team["displayName"])] = str(team["id"])
         return result
 
     def fetch_profile(self, team_name: str, team_id: str, as_of: datetime, n: int = 5) -> WCTacticalProfile | None:

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from alpha.data.ingestion.wc_market_odds import WCMarketOdds
+from alpha.data.ingestion.wc_tactics import WCTacticalProfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -164,6 +165,8 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
          patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={"Brazil|Germany": odds}), \
          patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value={"avg_goals": 1.2, "defense_score": 0.8}), \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.resolve_team_ids", return_value={"Brazil": "1", "Germany": "2"}), \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.fetch_profile", side_effect=lambda team, *_: _make_tactical_profile(team)), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
@@ -173,6 +176,8 @@ def test_main_sgp_prints_same_game_market_legs(capsys):
     assert "Joint win probability" in output
     assert "Probability only" in output
     assert "Full probability set" in output
+    assert "TACTICAL MATCHUPS" in output
+    assert "1X2 H/D/A" in output
     assert "EV:" not in output
 
 
@@ -184,6 +189,8 @@ def test_main_sgp_creates_probabilities_without_market_prices(capsys):
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
          patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={}), \
          patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value={"avg_goals": 1.2, "defense_score": 0.8}), \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.resolve_team_ids", return_value={"Brazil": "1", "Germany": "2"}), \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.fetch_profile", side_effect=lambda team, *_: _make_tactical_profile(team)), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
@@ -204,6 +211,8 @@ def test_main_sgp_fetches_recent_form_for_every_team(capsys):
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=games), \
          patch("alpha.data.ingestion.wc_market_odds.load_wc_market_odds", return_value={}), \
          patch("alpha.data.ingestion.wc_recent_form.WCRecentFormClient.fetch", return_value=recent) as fetch, \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.resolve_team_ids", return_value={"Brazil": "1", "Germany": "2", "France": "3", "Argentina": "4"}), \
+         patch("alpha.data.ingestion.wc_tactics.WCTacticsClient.fetch_profile", side_effect=lambda team, *_: _make_tactical_profile(team)), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda item: item):
         main()
@@ -211,3 +220,13 @@ def test_main_sgp_fetches_recent_form_for_every_team(capsys):
     assert {call.args[0] for call in fetch.call_args_list} == {
         "Brazil", "Germany", "France", "Argentina"
     }
+
+
+def _make_tactical_profile(team: str) -> WCTacticalProfile:
+    return WCTacticalProfile(
+        team=team, matches=5, latest_match="2026-06-15", formation="4-3-3",
+        possession=0.52, pass_completion=0.82, long_ball_rate=0.10,
+        cross_rate=0.04, shots_for=13.0, shots_allowed=11.0,
+        shot_on_target_rate=0.34, corners_for=5.0, corners_allowed=4.0,
+        pressing_proxy=3.8, clearances=14.0,
+    )
