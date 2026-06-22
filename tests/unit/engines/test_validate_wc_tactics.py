@@ -1,4 +1,8 @@
-from scripts.validate_wc_tactics import _binary_metrics, _brier, _log_loss
+from dataclasses import replace
+from datetime import datetime, timezone
+
+from scripts.validate_wc_tactics import _binary_metrics, _brier, _log_loss, coverage_status
+from tests.unit.data.test_wc_tactical_history import _row
 
 
 def test_multiclass_metrics_reward_correct_confidence():
@@ -12,3 +16,11 @@ def test_binary_metrics_use_half_probability_threshold():
     assert brier == (0.7 - 1.0) ** 2
     assert logloss > 0
 
+
+def test_coverage_status_fails_closed_for_ineligible_rows():
+    status = coverage_status(
+        [replace(_row(), card_status_known=False)],
+        datetime(2026, 6, 21, tzinfo=timezone.utc),
+    )
+    assert status["ready"] is False
+    assert status["eligible"] == 0

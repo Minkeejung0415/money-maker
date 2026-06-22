@@ -17,6 +17,7 @@ load_dotenv(ROOT / ".env")
 
 from alpha.data.ingestion.wc_recent_form import WCRecentFormClient
 from alpha.data.ingestion.wc_tactics import WCTacticsClient
+from alpha.data.ingestion.wc_tactical_history import TacticalHistoryRow, audit_rows
 from alpha.engines.sports.wc_goal_markets import WCScorelineModel
 from alpha.engines.sports.wc_model import WCMatchModel
 from alpha.engines.sports.wc_tactical_matchup import compare_tactics
@@ -48,6 +49,11 @@ def _fetch_finished(date_from: str, date_to: str) -> list[dict]:
 
 def _mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else float("nan")
+
+
+def coverage_status(rows: list[TacticalHistoryRow], audit_cutoff: datetime) -> dict:
+    """Return the canonical fail-closed historical coverage gate."""
+    return audit_rows(rows, audit_cutoff=audit_cutoff).to_dict()
 
 
 def validate(date_from: str, date_to: str) -> dict:
@@ -146,4 +152,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
