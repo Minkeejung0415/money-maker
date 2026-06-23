@@ -1,0 +1,53 @@
+WARNING alpha.data.ingestion.wc_elo: No Elo rating for 'Curaçao' — using fallback 1500
+[1/4] Fetching WC fixtures (2026-06-22 to 2026-06-29)...
+  Found 28 WC fixture(s)
+  Odds override applied to 0/28 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Enriched 28 game(s) with Elo predictions
+[3/4] Building WC parlay combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: PARLAY  |  2026-06-22 to 2026-06-29  |  Min edge: 4.0%
+=================================================================
+
+#1  EV: 418.3%  |  Edge: 31.5%  |  Odds: 13.28x  |  Stake: $500.00
+    Model Prob: 39.0%  vs  Market Implied: 7.5%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Netherlands WIN  (1.91x)  model: 74.9%  [Elo: 1944]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 75.9%  [Elo: 2055]  *ELO EDGE*
+      * Argentina WIN  (1.91x)  model: 82.3%  [Elo: 2128]  *ELO EDGE*
+
+#2  EV: 415.6%  |  Edge: 31.3%  |  Odds: 13.28x  |  Stake: $500.00
+    Model Prob: 38.8%  vs  Market Implied: 7.5%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Mexico WIN  (1.91x)  model: 74.5%  [Elo: 1881]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 75.9%  [Elo: 2055]  *ELO EDGE*
+      * Argentina WIN  (1.91x)  model: 82.3%  [Elo: 2128]  *ELO EDGE*
+
+#3  EV: 409.0%  |  Edge: 30.8%  |  Odds: 13.28x  |  Stake: $500.00
+    Model Prob: 38.3%  vs  Market Implied: 7.5%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Mexico WIN  (1.91x)  model: 74.5%  [Elo: 1881]  *ELO EDGE*
+      * Netherlands WIN  (1.91x)  model: 74.9%  [Elo: 1944]  *ELO EDGE*
+      * Argentina WIN  (1.91x)  model: 82.3%  [Elo: 2128]  *ELO EDGE*
+
+#4  EV: 398.8%  |  Edge: 30.0%  |  Odds: 13.28x  |  Stake: $500.00
+    Model Prob: 37.6%  vs  Market Implied: 7.5%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Colombia WIN  (1.91x)  model: 72.1%  [Elo: 1998]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 75.9%  [Elo: 2055]  *ELO EDGE*
+      * Argentina WIN  (1.91x)  model: 82.3%  [Elo: 2128]  *ELO EDGE*
+
+#5  EV: 398.8%  |  Edge: 30.0%  |  Odds: 13.28x  |  Stake: $500.00
+    Model Prob: 37.6%  vs  Market Implied: 7.5%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 75.9%  [Elo: 2055]  *ELO EDGE*
+      * Croatia WIN  (1.91x)  model: 72.1%  [Elo: 1881]  *ELO EDGE*
+      * Argentina WIN  (1.91x)  model: 82.3%  [Elo: 2128]  *ELO EDGE*
+

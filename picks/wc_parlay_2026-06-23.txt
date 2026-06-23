@@ -1,0 +1,37 @@
+[1/4] Fetching WC fixtures (2026-06-23 to 2026-06-23)...
+  Found 3 WC fixture(s)
+  Odds override applied to 0/3 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Enriched 3 game(s) with Elo predictions
+[3/4] Building WC parlay combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: PARLAY  |  2026-06-23 to 2026-06-23  |  Min edge: 4.0%
+=================================================================
+
+#1  EV: 131.4%  |  Edge: 18.9%  |  Odds: 6.96x  |  Stake: $500.00
+    Model Prob: 33.3%  vs  Market Implied: 14.4%
+    Legs:
+      * Portugal WIN  (1.91x)  model: 67.1%  [Elo: 1967]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Croatia WIN  (1.91x)  model: 59.5%  [Elo: 1881]  *ELO EDGE*
+
+#2  EV: 103.9%  |  Edge: 28.5%  |  Odds: 3.64x  |  Stake: $500.00
+    Model Prob: 55.9%  vs  Market Implied: 27.4%
+    Legs:
+      * Portugal WIN  (1.91x)  model: 67.1%  [Elo: 1967]  *ELO EDGE*
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+
+#3  EV: 80.8%  |  Edge: 22.2%  |  Odds: 3.64x  |  Stake: $500.00
+    Model Prob: 49.6%  vs  Market Implied: 27.4%
+    Legs:
+      * England WIN  (1.91x)  model: 83.4%  [Elo: 2055]  *ELO EDGE*
+      * Croatia WIN  (1.91x)  model: 59.5%  [Elo: 1881]  *ELO EDGE*
+
+#4  EV: 45.3%  |  Edge: 12.4%  |  Odds: 3.64x  |  Stake: $428.22
+    Model Prob: 39.9%  vs  Market Implied: 27.4%
+    Legs:
+      * Portugal WIN  (1.91x)  model: 67.1%  [Elo: 1967]  *ELO EDGE*
+      * Croatia WIN  (1.91x)  model: 59.5%  [Elo: 1881]  *ELO EDGE*
+

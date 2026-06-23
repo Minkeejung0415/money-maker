@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 _WC_PRIORS_PATH = Path("data/wc_priors.json")
 _ELO_FALLBACK: int = 1500
 
-# football-data.org name -> wc_priors.json key (for teams with divergent naming)
-_TEAM_NAME_ALIASES: dict[str, str] = {
-    "South Korea": "Korea Republic",  # football-data.org uses "South Korea"
-}
+# football-data.org name -> wc_priors.json key (for divergent naming).
+# wc_priors.json now uses football-data.org names directly, so this is
+# empty — kept as extension point for future mismatches.
+_TEAM_NAME_ALIASES: dict[str, str] = {}
 
 
 def load_wc_elo_ratings() -> dict[str, int]:

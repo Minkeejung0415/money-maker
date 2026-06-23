@@ -1,0 +1,41 @@
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator _BinMapper from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator HistGradientBoostingClassifier from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegression from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+[1/6] Fetching today's MLB games (MLB Stats API)...
+    Found 13 game(s)
+
+    Today's win probabilities:
+      New York Yankees 52.3% at Detroit Tigers 47.7% | fair odds 1.91 / 2.10
+      Kansas City Royals 42.1% at Tampa Bay Rays 57.9% | fair odds 2.37 / 1.73
+      Texas Rangers 47.7% at Miami Marlins 52.3% | fair odds 2.10 / 1.91
+      Philadelphia Phillies 55.0% at Washington Nationals 45.0% | fair odds 1.82 / 2.22
+      Houston Astros 47.4% at Toronto Blue Jays 52.6% | fair odds 2.11 / 1.90
+      Chicago Cubs 48.9% at New York Mets 51.1% | fair odds 2.04 / 1.96
+      Milwaukee Brewers 55.6% at Cincinnati Reds 44.4% | fair odds 1.80 / 2.25
+      Los Angeles Dodgers 57.3% at Minnesota Twins 42.7% | fair odds 1.74 / 2.34
+      Cleveland Guardians 48.5% at Chicago White Sox 51.5% | fair odds 2.06 / 1.94
+      Arizona Diamondbacks 51.1% at St. Louis Cardinals 48.9% | fair odds 1.96 / 2.04
+      Boston Red Sox 46.3% at Colorado Rockies 53.7% | fair odds 2.16 / 1.86
+      Baltimore Orioles 49.6% at Los Angeles Angels 50.4% | fair odds 2.02 / 1.98
+      Atlanta Braves 49.1% at San Diego Padres 50.8% | fair odds 2.03 / 1.97
+[2/6] Skipping prop lines (classic parlay mode)
+[3/6] Skipping prop model (no prop lines or classic parlay mode)
+[4/6] Skipping correlation adjustment
+[5/6] Skipping validation  (run with --validate to check model source)
+[6/6] Building MLB SGP combinations...
+
+=================================================================
+MLB SCANNER — Mode: PARLAY  |  Min edge: 5.0%
+=================================================================
+
+No combinations found with >=5.0% edge today.
+  No real market odds supplied; edge/parlay output intentionally disabled.

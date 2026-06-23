@@ -1,0 +1,607 @@
+[1/4] Fetching WC fixtures (2026-06-23 to 2026-06-23)...
+  Found 3 WC fixture(s)
+  Odds override applied to 3/3 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Loading recent last-10 international form and Elo for every team...
+  Tactical calibration: fallback (artifact missing)
+  Enriched 3 game(s) with Elo predictions
+  Recent form ready for 3 game(s)
+[3/4] Building WC sgp combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: SGP  |  2026-06-23 to 2026-06-23
+=================================================================
+
+Full probability set: 75 nonzero compatible combinations.
+
+TACTICAL MATCHUPS
+  Portugal [4-2-3-1] vs Uzbekistan [3-4-2-1]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 67.1%/18.7%/14.2% -> 67.1%/18.7%/14.2%
+    Over 2.5: 51.8% -> 51.8% | BTTS Yes: 46.4% -> 46.4%
+    Portugal: possession control: edge (+0.96)
+    Portugal: width vs block: disadvantage (-0.46)
+    Portugal: directness vs block: disadvantage (-0.41)
+    Uzbekistan: possession control: disadvantage (-0.96)
+    Uzbekistan: directness vs block: edge (+0.64)
+    Uzbekistan: press resistance: disadvantage (-0.57)
+  England [4-2-3-1] vs Ghana [4-4-2]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 83.4%/11.8%/4.8% -> 83.4%/11.8%/4.8%
+    Over 2.5: 56.3% -> 56.3% | BTTS Yes: 31.6% -> 31.6%
+    England: possession control: edge (+1.00)
+    England: directness vs block: disadvantage (-1.00)
+    England: chance creation: edge (+0.84)
+    Ghana: possession control: disadvantage (-1.00)
+    Ghana: press resistance: disadvantage (-1.00)
+    Ghana: set-piece pressure: disadvantage (-0.72)
+  Panama [5-4-1] vs Croatia [5-4-1]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 19.0%/21.5%/59.5% -> 19.0%/21.5%/59.5%
+    Over 2.5: 64.9% -> 64.9% | BTTS Yes: 62.1% -> 62.1%
+    Panama: press resistance: disadvantage (-1.00)
+    Panama: possession control: disadvantage (-0.95)
+    Panama: width vs block: disadvantage (-0.65)
+    Croatia: possession control: edge (+0.95)
+    Croatia: press resistance: edge (+0.67)
+    Croatia: set-piece pressure: disadvantage (-0.64)
+
+#1  England vs Ghana
+    Joint win probability: 60.5%  |  Model fair odds: 1.65x
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#2  England vs Ghana
+    Joint win probability: 52.9%  |  Model fair odds: 1.89x
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Over 2.5 goals  |  individual model: 56.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#3  Panama vs Croatia
+    Joint win probability: 52.5%  |  Model fair odds: 1.90x
+    Legs:
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#4  Panama vs Croatia
+    Joint win probability: 43.8%  |  Model fair odds: 2.28x
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Over 2.5 goals  |  individual model: 64.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#5  Portugal vs Uzbekistan
+    Joint win probability: 40.6%  |  Model fair odds: 2.47x
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Over 2.5 goals  |  individual model: 51.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#6  Portugal vs Uzbekistan
+    Joint win probability: 40.1%  |  Model fair odds: 2.49x
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#7  Portugal vs Uzbekistan
+    Joint win probability: 39.3%  |  Model fair odds: 2.54x
+    Legs:
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#8  England vs Ghana
+    Joint win probability: 38.4%  |  Model fair odds: 2.61x
+    Legs:
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#9  Portugal vs Uzbekistan
+    Joint win probability: 37.5%  |  Model fair odds: 2.66x
+    Legs:
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#10  Panama vs Croatia
+    Joint win probability: 32.7%  |  Model fair odds: 3.06x
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#11  Panama vs Croatia
+    Joint win probability: 32.7%  |  Model fair odds: 3.06x  |  REDUNDANT LEG
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#12  England vs Ghana
+    Joint win probability: 30.5%  |  Model fair odds: 3.28x
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Under 2.5 goals  |  individual model: 43.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#13  England vs Ghana
+    Joint win probability: 30.5%  |  Model fair odds: 3.28x  |  REDUNDANT LEG
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#14  England vs Ghana
+    Joint win probability: 30.0%  |  Model fair odds: 3.33x
+    Legs:
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#15  England vs Ghana
+    Joint win probability: 29.9%  |  Model fair odds: 3.34x
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#16  Portugal vs Uzbekistan
+    Joint win probability: 27.0%  |  Model fair odds: 3.71x
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#17  Portugal vs Uzbekistan
+    Joint win probability: 27.0%  |  Model fair odds: 3.71x  |  REDUNDANT LEG
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#18  Panama vs Croatia
+    Joint win probability: 26.7%  |  Model fair odds: 3.74x
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#19  Portugal vs Uzbekistan
+    Joint win probability: 26.5%  |  Model fair odds: 3.77x
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Under 2.5 goals  |  individual model: 48.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#20  Portugal vs Uzbekistan
+    Joint win probability: 26.5%  |  Model fair odds: 3.77x  |  REDUNDANT LEG
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#21  England vs Ghana
+    Joint win probability: 26.3%  |  Model fair odds: 3.80x
+    Legs:
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#22  Panama vs Croatia
+    Joint win probability: 25.5%  |  Model fair odds: 3.92x
+    Legs:
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#23  England vs Ghana
+    Joint win probability: 23.0%  |  Model fair odds: 4.35x
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#24  England vs Ghana
+    Joint win probability: 23.0%  |  Model fair odds: 4.35x  |  REDUNDANT LEG
+    Legs:
+      * England win (90 min)  |  individual model: 83.4%
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#25  Panama vs Croatia
+    Joint win probability: 17.9%  |  Model fair odds: 5.60x
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#26  Panama vs Croatia
+    Joint win probability: 15.6%  |  Model fair odds: 6.39x
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Under 2.5 goals  |  individual model: 35.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#27  Panama vs Croatia
+    Joint win probability: 15.6%  |  Model fair odds: 6.39x  |  REDUNDANT LEG
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#28  Portugal vs Uzbekistan
+    Joint win probability: 14.6%  |  Model fair odds: 6.83x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Under 2.5 goals  |  individual model: 48.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#29  Portugal vs Uzbekistan
+    Joint win probability: 14.3%  |  Model fair odds: 7.00x
+    Legs:
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#30  Portugal vs Uzbekistan
+    Joint win probability: 13.6%  |  Model fair odds: 7.36x
+    Legs:
+      * Portugal win (90 min)  |  individual model: 67.1%
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#31  Panama vs Croatia
+    Joint win probability: 13.2%  |  Model fair odds: 7.55x
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Under 2.5 goals  |  individual model: 35.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#32  Portugal vs Uzbekistan
+    Joint win probability: 12.9%  |  Model fair odds: 7.74x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#33  Panama vs Croatia
+    Joint win probability: 12.8%  |  Model fair odds: 7.80x
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Over 2.5 goals  |  individual model: 64.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#34  Panama vs Croatia
+    Joint win probability: 12.4%  |  Model fair odds: 8.07x
+    Legs:
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#35  Panama vs Croatia
+    Joint win probability: 11.5%  |  Model fair odds: 8.68x
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#36  Panama vs Croatia
+    Joint win probability: 11.5%  |  Model fair odds: 8.68x  |  REDUNDANT LEG
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#37  Panama vs Croatia
+    Joint win probability: 11.1%  |  Model fair odds: 9.01x
+    Legs:
+      * Croatia win (90 min)  |  individual model: 59.4%
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#38  England vs Ghana
+    Joint win probability: 10.2%  |  Model fair odds: 9.77x
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Under 2.5 goals  |  individual model: 43.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#39  Panama vs Croatia
+    Joint win probability: 9.6%  |  Model fair odds: 10.47x
+    Legs:
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#40  Panama vs Croatia
+    Joint win probability: 9.6%  |  Model fair odds: 10.47x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#41  Portugal vs Uzbekistan
+    Joint win probability: 8.9%  |  Model fair odds: 11.27x
+    Legs:
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#42  Portugal vs Uzbekistan
+    Joint win probability: 8.9%  |  Model fair odds: 11.27x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#43  Panama vs Croatia
+    Joint win probability: 8.3%  |  Model fair odds: 12.05x
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Over 2.5 goals  |  individual model: 64.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#44  Panama vs Croatia
+    Joint win probability: 8.3%  |  Model fair odds: 12.05x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - Yes  |  individual model: 62.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#45  Portugal vs Uzbekistan
+    Joint win probability: 7.7%  |  Model fair odds: 12.93x
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#46  Panama vs Croatia
+    Joint win probability: 7.5%  |  Model fair odds: 13.35x
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#47  Portugal vs Uzbekistan
+    Joint win probability: 7.2%  |  Model fair odds: 13.85x
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Over 2.5 goals  |  individual model: 51.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#48  Portugal vs Uzbekistan
+    Joint win probability: 7.0%  |  Model fair odds: 14.23x
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Under 2.5 goals  |  individual model: 48.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#49  Portugal vs Uzbekistan
+    Joint win probability: 7.0%  |  Model fair odds: 14.23x  |  REDUNDANT LEG
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#50  England vs Ghana
+    Joint win probability: 6.9%  |  Model fair odds: 14.57x
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#51  Portugal vs Uzbekistan
+    Joint win probability: 6.5%  |  Model fair odds: 15.34x
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#52  Portugal vs Uzbekistan
+    Joint win probability: 6.5%  |  Model fair odds: 15.34x  |  REDUNDANT LEG
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#53  Panama vs Croatia
+    Joint win probability: 6.2%  |  Model fair odds: 16.12x
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Under 2.5 goals  |  individual model: 35.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#54  Panama vs Croatia
+    Joint win probability: 6.2%  |  Model fair odds: 16.12x  |  REDUNDANT LEG
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#55  Portugal vs Uzbekistan
+    Joint win probability: 5.8%  |  Model fair odds: 17.34x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#56  Portugal vs Uzbekistan
+    Joint win probability: 5.8%  |  Model fair odds: 17.34x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Under 2.5 goals  |  individual model: 48.2%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#57  England vs Ghana
+    Joint win probability: 5.3%  |  Model fair odds: 18.94x
+    Legs:
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#58  England vs Ghana
+    Joint win probability: 5.3%  |  Model fair odds: 18.94x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#59  England vs Ghana
+    Joint win probability: 5.0%  |  Model fair odds: 20.17x
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#60  England vs Ghana
+    Joint win probability: 5.0%  |  Model fair odds: 20.17x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#61  Portugal vs Uzbekistan
+    Joint win probability: 4.1%  |  Model fair odds: 24.68x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Over 2.5 goals  |  individual model: 51.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#62  Portugal vs Uzbekistan
+    Joint win probability: 4.1%  |  Model fair odds: 24.68x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.7%
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - Yes  |  individual model: 46.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#63  Panama vs Croatia
+    Joint win probability: 3.7%  |  Model fair odds: 27.14x
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#64  Panama vs Croatia
+    Joint win probability: 3.7%  |  Model fair odds: 27.14x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 21.5%
+      * Under 2.5 goals  |  individual model: 35.1%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#65  England vs Ghana
+    Joint win probability: 3.0%  |  Model fair odds: 33.41x
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#66  England vs Ghana
+    Joint win probability: 2.9%  |  Model fair odds: 34.35x
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Under 2.5 goals  |  individual model: 43.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#67  England vs Ghana
+    Joint win probability: 2.9%  |  Model fair odds: 34.35x  |  REDUNDANT LEG
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Under 2.5 goals  |  individual model: 43.7%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#68  England vs Ghana
+    Joint win probability: 1.8%  |  Model fair odds: 54.39x
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Over 2.5 goals  |  individual model: 56.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#69  England vs Ghana
+    Joint win probability: 1.8%  |  Model fair odds: 56.91x
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#70  England vs Ghana
+    Joint win probability: 1.8%  |  Model fair odds: 56.91x  |  REDUNDANT LEG
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#71  England vs Ghana
+    Joint win probability: 1.6%  |  Model fair odds: 63.15x
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Over 2.5 goals  |  individual model: 56.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#72  England vs Ghana
+    Joint win probability: 1.6%  |  Model fair odds: 63.15x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 11.8%
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - Yes  |  individual model: 31.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#73  Panama vs Croatia
+    Joint win probability: 1.3%  |  Model fair odds: 77.55x
+    Legs:
+      * Panama win (90 min)  |  individual model: 19.0%
+      * Over 2.5 goals  |  individual model: 64.9%
+      * Both teams to score - No  |  individual model: 37.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#74  Portugal vs Uzbekistan
+    Joint win probability: 0.7%  |  Model fair odds: 142.03x
+    Legs:
+      * Uzbekistan win (90 min)  |  individual model: 14.2%
+      * Over 2.5 goals  |  individual model: 51.8%
+      * Both teams to score - No  |  individual model: 53.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#75  England vs Ghana
+    Joint win probability: 0.1%  |  Model fair odds: 1227.51x
+    Legs:
+      * Ghana win (90 min)  |  individual model: 4.8%
+      * Over 2.5 goals  |  individual model: 56.3%
+      * Both teams to score - No  |  individual model: 68.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+

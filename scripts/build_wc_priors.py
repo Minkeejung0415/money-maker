@@ -44,21 +44,31 @@ ELO_SLEEP = 0.1
 
 # eloratings.net uses different slugs for some teams than football-data.org names
 _ELO_SLUG_OVERRIDES: dict[str, str] = {
-    "Korea Republic": "South_Korea",
-    "Trinidad and Tobago": "Trinidad_&_Tobago",
+    # football-data.org name -> eloratings.net URL slug (only where different)
+    "South Korea":        "South_Korea",
+    "Ivory Coast":        "Ivory_Coast",
+    "Bosnia-Herzegovina": "Bosnia_and_Herzegovina",
+    "Curaçao":            "Curacao",
+    "Cape Verde Islands": "Cape_Verde",
+    "Congo DR":           "DR_Congo",
+    "Saudi Arabia":       "Saudi_Arabia",
+    "New Zealand":        "New_Zealand",
+    "South Africa":       "South_Africa",
+    "United States":      "United_States",
 }
 
-# 48 WC 2026 qualified nations (as team names on eloratings.net slug format)
+# 48 actual WC 2026 qualified nations (football-data.org team names)
 WC_2026_TEAMS = [
-    "Argentina", "Australia", "Belgium", "Brazil", "Cameroon", "Canada",
-    "Chile", "Colombia", "Costa Rica", "Croatia", "Ecuador", "Egypt",
-    "England", "France", "Germany", "Ghana", "Honduras", "Iran",
-    "Italy", "Japan", "Jamaica", "Kenya", "Korea Republic", "Mali",
-    "Mexico", "Morocco", "Netherlands", "New Zealand", "Nigeria",
-    "Panama", "Paraguay", "Peru", "Poland", "Portugal", "Saudi Arabia",
-    "Senegal", "Serbia", "Slovenia", "South Africa", "Spain",
-    "Switzerland", "Trinidad and Tobago", "Tunisia", "Turkey", "Ukraine",
-    "United States", "Uruguay", "Venezuela",
+    "Algeria", "Argentina", "Australia", "Austria", "Belgium",
+    "Bosnia-Herzegovina", "Brazil", "Canada", "Cape Verde Islands",
+    "Colombia", "Congo DR", "Croatia", "Curaçao", "Czechia",
+    "Ecuador", "Egypt", "England", "France", "Germany", "Ghana",
+    "Haiti", "Iran", "Iraq", "Ivory Coast", "Japan", "Jordan",
+    "Mexico", "Morocco", "Netherlands", "New Zealand", "Norway",
+    "Panama", "Paraguay", "Portugal", "Qatar", "Saudi Arabia",
+    "Scotland", "Senegal", "South Africa", "South Korea", "Spain",
+    "Sweden", "Switzerland", "Tunisia", "Turkey", "United States",
+    "Uruguay", "Uzbekistan",
 ]
 
 
@@ -69,23 +79,40 @@ WC_2026_TEAMS = [
 def _fetch_team_elo(team_name: str) -> int:
     """Fetch most recent Elo rating for one team from eloratings.net TSV.
 
+    TSV rows have two team ISO codes in col[3] and col[4], with corresponding
+    Elo ratings in col[10] and col[11].  The team whose file this is appears
+    in EVERY row (either col[3] or col[4]).  We identify it by frequency —
+    it is the most-common ISO code across all rows — then read col[10] or
+    col[11] accordingly from the last row.
+
     Returns ELO_FALLBACK on any failure.
     """
+    from collections import Counter
     slug = _ELO_SLUG_OVERRIDES.get(team_name) or team_name.replace(" ", "_").replace("'", "")
     url = f"{ELO_BASE}/{slug}.tsv"
     try:
         resp = requests.get(url, headers={"User-Agent": "alpha-terminal/1.1"}, timeout=10)
         resp.raise_for_status()
         rows = [r.split("\t") for r in resp.text.strip().splitlines() if r.strip()]
+        rows = [r for r in rows if len(r) >= 12]
         if not rows:
             logger.warning("Empty TSV for %s — using fallback", team_name)
             return ELO_FALLBACK
+
+        # Find team's own ISO code: appears in col[3] or col[4] of every row
+        code_freq: Counter = Counter()
+        for row in rows:
+            code_freq[row[3]] += 1
+            code_freq[row[4]] += 1
+        team_iso = code_freq.most_common(1)[0][0]
+
         last_row = rows[-1]
-        if len(last_row) <= 10:
-            logger.warning("TSV column count too low for %s (got %d) — using fallback", team_name, len(last_row))
-            return ELO_FALLBACK
-        elo = int(float(last_row[10]))
-        if not (1000 <= elo <= 2200):
+        if last_row[3] == team_iso:
+            elo = int(float(last_row[10]))
+        else:
+            elo = int(float(last_row[11]))
+
+        if not (1000 <= elo <= 2400):
             logger.warning("Elo %d out of range for %s — using fallback", elo, team_name)
             return ELO_FALLBACK
         return elo
