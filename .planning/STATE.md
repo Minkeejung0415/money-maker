@@ -4,8 +4,8 @@ milestone: v1.8
 milestone_name: Player-Aware MLB Moneyline Model
 status: executing
 stopped_at: Completed 20-03-PLAN.md
-last_updated: "2026-06-24T06:57:06.299Z"
-last_activity: 2026-06-24 -- Phase 21 planning complete
+last_updated: "2026-06-24T06:58:07.997Z"
+last_activity: 2026-06-24 -- Phase 21 execution started
 progress:
   total_phases: 4
   completed_phases: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Planning v1.8 Player-Aware MLB Moneyline Model; Phase 21 is the next phase.
+**Current focus:** Phase 21 — MLB Player Data Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-24 -- Phase 21 planning complete
+Phase: 21 (MLB Player Data Foundation) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 21
+Last activity: 2026-06-24 -- Phase 21 execution started
 
 ## Performance Metrics
 
