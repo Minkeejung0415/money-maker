@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Player-Aware MLB Moneyline Model
-status: executing
-stopped_at: Completed 20-03-PLAN.md
-last_updated: "2026-06-24T07:13:18.471Z"
+status: ready_to_plan
+stopped_at: Phase 22 complete (1/1) — ready to discuss Phase 23
+last_updated: 2026-06-24T07:13:34.205Z
 last_activity: 2026-06-24 -- Phase 22 execution started
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 2
-  completed_plans: 2
+  completed_plans: 18
   percent: 50
 ---
 
@@ -21,20 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Phase 22 — Player-Aware Feature Builder
+**Current focus:** Phase 23 — walk forward modeling and ablations
 
 ## Current Position
 
-Phase: 22 (Player-Aware Feature Builder) — EXECUTING
-Plan: 1 of 1
-Status: Executing Phase 22
-Last activity: 2026-06-24 -- Phase 22 execution started
+Phase: 23
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-24
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 8 (v1.2)
+- Total plans completed: 9 (v1.2)
 - Average duration: - min
 - Total execution time: 0 hours
 

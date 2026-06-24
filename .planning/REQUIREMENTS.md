@@ -14,11 +14,11 @@
 
 ### Player Features
 
-- [ ] **MLBFEAT-01**: User can generate shifted starting-pitcher quality and rest features from only information available before first pitch.
-- [ ] **MLBFEAT-02**: User can generate lineup strength and platoon-matchup aggregates from projected or confirmed hitters, including missing-player counts and source-confidence flags.
-- [ ] **MLBFEAT-03**: User can generate bullpen freshness and relief-depth features from recent appearances without allowing target-game usage.
-- [ ] **MLBFEAT-04**: User can represent injury and absence deltas as structured player-availability features instead of crude team batting-average penalties.
-- [ ] **MLBFEAT-05**: User can run automated leakage checks proving rolling player and team features exclude the target game.
+- [x] **MLBFEAT-01**: User can generate shifted starting-pitcher quality and rest features from only information available before first pitch.
+- [x] **MLBFEAT-02**: User can generate lineup strength and platoon-matchup aggregates from projected or confirmed hitters, including missing-player counts and source-confidence flags.
+- [x] **MLBFEAT-03**: User can generate bullpen freshness and relief-depth features from recent appearances without allowing target-game usage.
+- [x] **MLBFEAT-04**: User can represent injury and absence deltas as structured player-availability features instead of crude team batting-average penalties.
+- [x] **MLBFEAT-05**: User can run automated leakage checks proving rolling player and team features exclude the target game.
 
 ### Modeling and Validation
 
@@ -63,11 +63,11 @@
 | MLBDATA-02 | Phase 21 | Complete |
 | MLBDATA-03 | Phase 21 | Complete |
 | MLBDATA-04 | Phase 21 | Complete |
-| MLBFEAT-01 | Phase 22 | Pending |
-| MLBFEAT-02 | Phase 22 | Pending |
-| MLBFEAT-03 | Phase 22 | Pending |
-| MLBFEAT-04 | Phase 22 | Pending |
-| MLBFEAT-05 | Phase 22 | Pending |
+| MLBFEAT-01 | Phase 22 | Complete |
+| MLBFEAT-02 | Phase 22 | Complete |
+| MLBFEAT-03 | Phase 22 | Complete |
+| MLBFEAT-04 | Phase 22 | Complete |
+| MLBFEAT-05 | Phase 22 | Complete |
 | MLBMODEL-01 | Phase 23 | Pending |
 | MLBMODEL-02 | Phase 23 | Pending |
 | MLBMODEL-03 | Phase 23 | Pending |
