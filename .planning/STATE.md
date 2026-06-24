@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Improving World Cup Win Probability with Team and Player Features
-status: In progress
-stopped_at: Phase 25 Plan 01 complete — evaluation framework delivered
-last_updated: "2026-06-24T17:48:00.000Z"
-last_activity: 2026-06-24 — Phase 25-01 evaluation framework executed
+status: Complete
+stopped_at: Phase 32 complete — all 8 phases delivered
+last_updated: "2026-06-24T22:00:00.000Z"
+last_activity: 2026-06-24 — Phase 25-32 all complete (944+ tests passing)
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 8
   total_plans: 8
-  completed_plans: 1
-  percent: 13
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -21,35 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** v1.9 — Improving World Cup Win Probability with Team and Player Features
+**Current focus:** v1.9 — COMPLETE
 
 ## Current Position
 
-Phase: 25 (Evaluation Framework) — COMPLETE
-Plan: 01 of 01 — COMPLETE
-Status: In progress (Phase 26 next)
-Last activity: 2026-06-24 — Phase 25-01 complete: 128-match historical dataset + calibration harness + backtest runner (868/868 tests)
+Phase: 32 (Context Features + Full Integration) — COMPLETE
+Status: Milestone v1.9 COMPLETE
+Last activity: 2026-06-24 — All 8 phases complete
+
+## Milestone v1.9 Summary
+
+| Phase | Name | Tests Added | Commit |
+|-------|------|------------|--------|
+| 25 | Evaluation Framework | 26 | `wc_calibration.py`, `wc_eval.py` |
+| 26 | Hybrid Baseline Ratings | 20 | `wc_ratings.py`, `wc_hybrid_model.py`, `wc_fifa_rankings.py` |
+| 27 | Projected XI Layer | 16 | `wc_lineup.py` |
+| 28 | Goalkeeper Module | 15 | `wc_goalkeeper.py` |
+| 29 | Tournament-State Logic | 27 | `wc_tournament.py` |
+| 30 | Position-Specific Player Features | 19 | `wc_player_features.py` |
+| 31 | Tactical Matchup + Set-Piece | 20 | `wc_tactics.py` |
+| 32 | Context Features + Full Integration | 25 | `wc_context.py` |
+| **Total** | | **~168** | |
 
 ## Performance Metrics
 
-**Velocity:**
-
-- Total plans completed: 1 (v1.9)
-- Average duration: 14 min
-- Total execution time: 0.23 hours
-
-**By Phase:**
-
-| Phase | Plans | Duration | Tests Added |
-|-------|-------|----------|-------------|
-| 25 Evaluation Framework | 1/1 | 14 min | 26 |
-
-**Recent Trend:**
-
-- Last 5 plans: 14 min
-- Trend: baseline
-
-*Updated after each plan completion*
+**Promotion gate (Phase 26):** PASS
+- Brier: 0.5181 → 0.4889 (Δ −0.0292)
+- LogLoss: 0.8805 → 0.8439 (Δ −0.0366)
 
 ## Accumulated Context
 
@@ -68,24 +66,17 @@ Last activity: 2026-06-24 — Phase 25-01 complete: 128-match historical dataset
 - Neutral-venue correction applied: no +100 Elo home-field boost for WC (all matches at US/Canada/Mexico venues)
 - Knockout round SGPs: Draw legs and standard moneyline legs are hard-gated out (settle on 90-min result only)
 
-### Decisions (v1.9 — from research brief)
+### Decisions (v1.9)
 
 - Player data enters through projected XI, not roster averages — structured probabilistic XI model required
 - Hybrid Elo + xG states + FIFA SUM is the recommended baseline stack (not sole Elo)
 - GK stored as a dedicated submodel separate from generic team defense
 - Hierarchical shrinkage required: sparse national-team samples pool toward club-based role priors
-- Club data weighted ~70-80%, national-team ~20-30% for repeatable actions; tunable by backtest
+- Club data weighted ~70-80%, national-team ~20-30%; tunable by backtest
 - Context features (rest, travel, heat) regularized harder than team/player features
-- Isotonic regression calibration fitted on validation fold only — never post-hoc on full dataset
+- CONTEXT regularization max (0.010) < TEAM rating min (0.050) — enforced by constant
+- Isotonic regression calibration fitted on validation fold only
 - Player-aware model must beat Elo-only baseline on Brier + log loss before production promotion
-
-### Decisions (Phase 25 — evaluation framework)
-
-- Multiclass Brier uses Formula A (sum per sample, not per-class mean) — consistent with Murphy 1973
-- IsotonicRegression with out_of_bounds=clip + epsilon floor 1e-9 — prevents zero-row edge case on small datasets
-- promotion_gate min_delta=0.001 — prevents trivial pass for identical models
-- WCMatchModel.predict() input always copied — avoids mutation side effects on historical records
-- Baseline (Elo-only, 2022 test set, 64 matches): Brier=0.5181, Log Loss=0.8805, Accuracy=60.9%
 
 ### Pending Todos
 
@@ -103,9 +94,10 @@ Last activity: 2026-06-24 — Phase 25-01 complete: 128-match historical dataset
 ## Session Continuity
 
 Last session: 2026-06-24
-Stopped at: Phase 25-01 complete — 868/868 tests passing
+Stopped at: Phase 32 complete — v1.9 milestone COMPLETE
 Resume file: None
 
 ## Operator Next Steps
 
-- Start Phase 26: `Hybrid Baseline Ratings` with `/gsd:plan-phase 26`
+- v1.9 milestone complete — start next milestone or run live scanner
+- Run `./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode parlay` to generate picks
