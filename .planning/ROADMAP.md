@@ -462,7 +462,7 @@ Plans:
 - [x] **Phase 21: MLB Player Data Foundation** - Build canonical game, player-slot, and ID-mapping tables for player-aware moneyline features. (completed 2026-06-24)
 - [x] **Phase 22: Player-Aware Feature Builder** - Generate leakage-safe starter, lineup, bullpen, and injury/absence feature blocks. (completed 2026-06-24)
 - [x] **Phase 23: Walk-Forward Modeling and Ablations** - Train, calibrate, and compare baseline, starter-only, lineup, bullpen, and full player-aware models. (completed 2026-06-24)
-- [ ] **Phase 24: Runtime Gating and MLB Scanner Reporting** - Deploy only validated artifacts, surface uncertainty flags, and report selective win-rate metrics.
+- [x] **Phase 24: Runtime Gating and MLB Scanner Reporting** - Deploy only validated artifacts, surface uncertainty flags, and report selective win-rate metrics. (completed 2026-06-24)
 
 ## Phase Details (v1.8)
 
@@ -532,4 +532,4 @@ Plans:
 | 21. MLB Player Data Foundation | 1/1 | Complete    | 2026-06-24 |
 | 22. Player-Aware Feature Builder | 1/1 | Complete    | 2026-06-24 |
 | 23. Walk-Forward Modeling and Ablations | 1/1 | Complete    | 2026-06-24 |
-| 24. Runtime Gating and MLB Scanner Reporting | 0/0 | Pending | - |
+| 24. Runtime Gating and MLB Scanner Reporting | 1/1 | Complete    | 2026-06-24 |
