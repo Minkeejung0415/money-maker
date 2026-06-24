@@ -242,6 +242,19 @@ def main() -> int:
         print("  NOTE: Hybrid model did not beat Elo-only on both metrics by >0.001.")
         print("  Phase 26 adds infrastructure; further improvements in Phases 27-31.")
 
+    # ── Lineup Projector Demo (Phase 27) ──────────────────────────────────
+    print("\n## Lineup Projector Demo (Phase 27)")
+    from alpha.engines.sports.wc_lineup import LineupProjector, build_mock_squad
+    projector = LineupProjector()
+    squad = build_mock_squad(team_strength=80.0)
+    lf = projector.project(squad)
+    print(f"  Expected starters : {lf.expected_starters:.1f}")
+    print(f"  Line scores       : GK={lf.gk_score:.1f}  Back={lf.back_score:.1f}"
+          f"  Mid={lf.midfield_score:.1f}  Front={lf.front_score:.1f}")
+    print(f"  Total score       : {lf.total_score:.1f}")
+    print(f"  Uncertainty band  : {lf.uncertainty_band:.3f} ({lf.lineup_confidence})")
+    print(f"  Continuity mod    : {lf.continuity_modifier:.2f}")
+
     print(f"\nwc_eval.py complete. Exit 0.")
     return 0
 
