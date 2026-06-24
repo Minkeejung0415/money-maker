@@ -171,18 +171,43 @@ def main() -> None:
         pred = mlb_model.predict(game)
         game["home_model_prob"] = pred["home_win_prob"]
         game["away_model_prob"] = pred["away_win_prob"]
+        game["mlb_model_label"] = pred.get("model_label", pred.get("source", "unknown"))
+        game["mlb_fallback_reason"] = pred.get("fallback_reason")
+        game["mlb_uncertainty_flags"] = pred.get("uncertainty_flags", [])
+        game["mlb_confidence"] = pred.get("confidence", "LOW")
+        game["mlb_pick_eligible"] = pred.get("pick_eligible", False)
+        game["mlb_feature_context"] = pred.get("feature_context", {})
 
     src = "validated trained model" if mlb_model._model_bundle else ("legacy model" if mlb_model._xgb_models_loaded else "UNAVAILABLE — train with scripts/train_mlb_moneyline.py")
+    report = mlb_model.runtime_report()
+    src = report["source"]
     if args.validate:
         print(f"    Model source: {src}")
+        selective = report.get("selective_report", {})
+        if any(value is not None for value in selective.values()):
+            print(
+                "    Validation: "
+                f"coverage={selective.get('coverage', 'n/a')} "
+                f"selective_win_rate={selective.get('selective_win_rate', 'n/a')} "
+                f"accuracy={selective.get('all_games_accuracy', 'n/a')} "
+                f"brier={selective.get('brier_score', 'n/a')} "
+                f"log_loss={selective.get('log_loss', 'n/a')}"
+            )
 
     print("\n    Today's win probabilities:")
     for game in games:
-        if mlb_model._model_bundle:
-            hp, ap = game["home_model_prob"], game["away_model_prob"]
-            print(f"      {game['away_team']} {ap:.1%} at {game['home_team']} {hp:.1%} | fair odds {1/ap:.2f} / {1/hp:.2f}")
+        hp, ap = game["home_model_prob"], game["away_model_prob"]
+        label = game["mlb_model_label"]
+        flags = game["mlb_uncertainty_flags"]
+        if game["mlb_pick_eligible"]:
+            print(f"      {game['away_team']} {ap:.1%} at {game['home_team']} {hp:.1%} | {label} | fair odds {1/ap:.2f} / {1/hp:.2f}")
         else:
-            print(f"      {game['away_team']} at {game['home_team']}: model unavailable")
+            reason = ", ".join(flags) or game.get("mlb_fallback_reason") or "not pick eligible"
+            print(f"      {game['away_team']} {ap:.1%} at {game['home_team']} {hp:.1%} | {label} | suppressed: {reason}")
+        context = game.get("mlb_feature_context") or {}
+        if game.get("mlb_confidence") == "HIGH" and context:
+            pieces = ", ".join(f"{key}={value}" for key, value in context.items())
+            print(f"        context: {pieces}")
 
     # ── Step 2: Fetch props ──────────────────────────────────────────────
     prop_legs_raw: list[dict] = []
@@ -251,7 +276,7 @@ def main() -> None:
         min_edge=args.min_edge,
         max_legs=args.max_legs,
     )
-    market_games = [g for g in games if g.get("has_market_odds")]
+    market_games = [g for g in games if g.get("has_market_odds") and g.get("mlb_pick_eligible", False)]
     results = builder.build(
         prop_legs=scored_legs,
         ml_games=market_games,
