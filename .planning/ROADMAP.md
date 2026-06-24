@@ -1,535 +1,211 @@
-# Roadmap: Alpha Terminal — Multi-Milestone
+# Roadmap: v1.9 — Improving World Cup Win Probability with Team and Player Features
 
-## Previous Milestone: v1.0 — NBA Prop Model Algorithm Upgrade (Complete)
-
-## Phases (v1.0 — Complete)
-
-- [x] **Phase 1: Data Hygiene** - Delete stale cache, verify season, record baseline
-- [x] **Phase 2: Projection Algorithm** - Exponential decay, home/away split, Poisson/NB distribution, rest factor
-- [x] **Phase 3: Opponent Adjustments** - Fix rebound direction, position-level stats, pace adjustment, tighten cap
-- [x] **Phase 4: Confidence Tuning** - Blowout gate, low-line skepticism, 60% floor, final validation
-
-## Phase Details (v1.0 — Complete)
-
-### Phase 1: Data Hygiene
-
-**Goal**: The model runs on verified current-season data with a clean baseline recorded
-**Depends on**: Nothing (first phase)
-**Requirements**: DATA-01, DATA-02, DATA-03, VAL-03
-**Success Criteria** (what must be TRUE):
-
-  1. validate_picks.py runs and produces per-stat hit rates without errors
-  2. No `.pkl` cache files exist in `data/.prop_cache/` at start of run
-  3. PropModel and NBAStatsCache both default to "2025-26" season (verified by log output)
-  4. Baseline numbers recorded: pts=49.3%, reb=34.2%, ast=49.3%, 3pm=41.1%, overall=43.5%
-
-**Plans**: TBD
-
-### Phase 2: Projection Algorithm
-
-**Goal**: The rolling average, distribution model, home/away context, and rest factor are all improved
-**Depends on**: Phase 1
-**Requirements**: ALGO-01, ALGO-02, ALGO-03, ALGO-04, VAL-01, VAL-02
-**Success Criteria** (what must be TRUE):
-
-  1. validate_picks.py per-stat output shows pts and ast hit rates move closer to or above 50%
-  2. Home games and away games produce different projections for the same player
-  3. B2B game props show a 0.94x multiplier applied to projection (visible in debug output)
-  4. Poisson CDF is used for ast/blk/stl/3pm markets and Negative Binomial for pts/reb (verified by code path)
-  5. validate_picks.py is run before and after each change with per-stat comparison recorded
-
-**Plans**: TBD
-
-### Phase 3: Opponent Adjustments
-
-**Goal**: Rebound projections use correct opponent defensive data, position-level context, and pace
-**Depends on**: Phase 2
-**Requirements**: OPP-01, OPP-02, OPP-03, OPP-04
-**Success Criteria** (what must be TRUE):
-
-  1. Rebound opponent adjustment uses opponent DREB_pg instead of total reb_pg (verified by code inspection)
-  2. A center and a guard facing the same opponent receive different rebound adjustments based on position-allowed stats
-  3. Slow-paced matchup reduces rebound projection proportionally (pace ratio applied)
-  4. Rebound adjustment cap is ±10% (tightened from ±15%)
-  5. validate_picks.py shows reb hit rate above 40% (up from 34.2%)
-
-**Plans**: TBD
-
-### Phase 4: Confidence Tuning
-
-**Goal**: Scanner outputs only well-calibrated picks and the overall hit rate target is confirmed
-**Depends on**: Phase 3
-**Requirements**: CONF-01, CONF-02, CONF-03, VAL-04
-**Success Criteria** (what must be TRUE):
-
-  1. Props for players on teams with ML win probability <30% are downgraded HIGH→MEDIUM in scanner output
-  2. Props where model_prob >85% and line is >1.5 stdev below projection are capped at MEDIUM
-  3. SGP output contains no legs below 60% confidence
-  4. validate_picks.py final run shows all stats above 50% and overall above 55% (against real lines or bias-corrected baseline)
-
-**Plans**: TBD
+**Milestone:** v1.9
+**Phases:** 8 (Phase 25 → Phase 32)
+**Requirements:** 39 total | All mapped ✓
+**Phase numbering:** Continues from v1.8 (last phase: 24)
 
 ---
 
-## Previous Milestone: v1.1 — World Cup Soccer Mode (Complete)
+## Phase Summary
 
-## Phases (v1.1 — Complete)
-
-- [x] **Phase 5: Data Foundation** - WC fixture ingestion, Elo ratings, and StatsBomb historical data layer (completed 2026-06-19)
-- [x] **Phase 6: Match Model** - Elo-logistic W/D/L model with neutral-venue correction, stage metadata, knockout gate, and market divergence flag (completed 2026-06-19)
-- [x] **Phase 7: SGP Builder + Scanner Integration** - WC SGP builder with stage-aware correlation, scanner routing, and full test coverage (completed 2026-06-19)
-
-## Phase Details (v1.1 — Complete)
-
-### Phase 5: Data Foundation
-
-**Goal**: WC 2026 fixtures, national team Elo ratings, and StatsBomb historical event data are all accessible to downstream model and builder code
-**Depends on**: Nothing (first phase of v1.1 milestone)
-**Requirements**: INGEST-01, INGEST-02, INGEST-03
-**Success Criteria** (what must be TRUE):
-
-  1. Calling `fetch_wc_games(date_from, date_to, stage)` returns a list of WC fixtures including `stage` and `group` fields for both group stage and knockout round games
-  2. Elo ratings for all 48 WC 2026 nations load from `data/wc_priors.json` without a network call (cached from Kaggle CSV)
-  3. StatsBomb 2018 + 2022 WC event data is accessible via `wc_stats.py` returning national-team attack/defense rates and player career per-90 stats, cached to `data/.wc_cache/`
-  4. All three data sources are isolated from the EPL/UCL pipeline — no shared cache namespace, no calls to `soccer_stats.py` or `get_team_rolling_stats_all()`
-
-**Plans**: 3 plans
-Plans:
-
-- [x] 05-01-PLAN.md — FootballDataClient WC extension: _COMP_MAP update, _get_with_retry(), fetch_wc_games() with stage/group fields, tests
-- [x] 05-02-PLAN.md — WC reader modules: wc_elo.py (Elo JSON loader) + wc_stats.py (StatsBomb pkl loader), tests
-- [x] 05-03-PLAN.md — build_wc_priors.py one-time script: eloratings.net Elo download + StatsBomb 2018/2022 event aggregation, produces wc_priors.json + wc_stats.pkl
-
-### Phase 6: Match Model
-
-**Goal**: WC match predictions output calibrated Win/Draw/Loss probabilities (or Win-to-Advance in knockouts) using Elo-logistic logic, with stage-aware behavior and a market divergence flag — and are never routed through SoccerModel
-**Depends on**: Phase 5
-**Requirements**: MODEL-01, MODEL-02, MODEL-03, MODEL-04
-**Success Criteria** (what must be TRUE):
-
-  1. `wc_model.py` produces W/D/L probabilities for a group stage match using the Elo-logistic formula with neutral-venue correction applied (no +100 home-field boost)
-  2. For a knockout round game, `wc_model.py` outputs Win-to-Advance probability only — Draw probability is suppressed entirely
-  3. Each game dict returned by the WC pipeline contains a `stage` field with one of `GROUP_STAGE`, `LAST_16`, `QUARTER_FINALS`, `SEMI_FINALS`, or `FINAL` extracted from football-data.org fixture response
-  4. Picks where the Elo model win probability diverges from sportsbook implied odds by more than 5 percentage points carry `"elo_edge": true` in the output dict
-  5. Passing a WC game dict to `SoccerModel` raises an error or is explicitly blocked — WC games never silently enter the EPL/UCL code path
-
-**Plans**: 1 plan
-Plans:
-
-- [x] 06-01-PLAN.md — WCMatchModel: Elo-logistic predict(), knockout gate, elo_edge flag, evaluate_bet(), full TDD test suite
-
-### Phase 7: SGP Builder + Scanner Integration
-
-**Goal**: Users can run `python scripts/wc_scanner.py --mode parlay` and receive ranked WC match picks with Elo confidence, EV vs. market odds, divergence flag annotation, and valid multi-leg SGP combos — with all new components covered by tests and zero regressions against existing suite
-**Depends on**: Phase 6
-**Requirements**: SGP-01, SGP-02, SCAN-01, SCAN-02, TEST-01
-**Success Criteria** (what must be TRUE):
-
-  1. `wc_scanner.py --mode parlay --stage group` outputs ranked WC match picks showing Elo confidence, implied EV vs. market odds, and `*ELO EDGE*` annotation where model diverges from market by more than 5 percentage points
-  2. `wc_scanner.py --mode parlay --stage knockout` produces SGP combos that contain zero Draw legs and zero standard moneyline legs for elimination-round games
-  3. `wc_scanner.py --league wc` routes exclusively through the WC data pipeline, WC match model, and WC SGP builder — no EPL/UCL code paths are invoked
-  4. All new WC components (`wc_model.py`, `wc_sgp_builder.py`, `wc_stats.py`, WC routes in `soccer_scanner.py` or `wc_scanner.py`) have unit tests, and the total test count meets or exceeds 535 with zero regressions
-
-**Plans**: 2 plans
-Plans:
-
-- [x] 07-01-PLAN.md — WCSGPBuilder: stage-aware correlation gate, SGP combo assembly, scanner routing
-- [x] 07-02-PLAN.md — wc_scanner.py entry point, full test suite, regression validation
-
-**UI hint**: no
+| # | Phase | Goal | Requirements | Success Criteria |
+|---|-------|------|--------------|-----------------|
+| 25 | Evaluation Framework | Chronological backtest infrastructure with Brier/log-loss/A-grade metrics and calibration | EVAL-01, EVAL-02, EVAL-03, EVAL-04 | 4 |
+| 26 | Hybrid Baseline Ratings | Elo-like + xG attack/defense EWMA + FIFA SUM replaces pure Elo-logistic backbone | BASELINE-01, BASELINE-02, BASELINE-03, BASELINE-04, BASELINE-05 | 4 |
+| 27 | Projected XI Layer | Starter probability estimation, line-score aggregation (sum not mean), absence impact | LINEUP-01, LINEUP-02, LINEUP-03, LINEUP-04, LINEUP-05 | 4 |
+| 28 | Goalkeeper Module | Dedicated GK submodel: xGOT prevention, cross claims, sweeper, continuity modifier | GK-01, GK-02, GK-03, GK-04 | 4 |
+| 29 | Tournament-State Logic | Qualification pressure, rotation risk, yellow-card accumulation, 2026 best-third | TOURNEY-01, TOURNEY-02, TOURNEY-03, TOURNEY-04, TOURNEY-05 | 4 |
+| 30 | Position-Specific Player Features | Role features per position (CB/DM/CM/Winger/Striker) with hierarchical shrinkage | PLAYER-01, PLAYER-02, PLAYER-03, PLAYER-04, PLAYER-05, PLAYER-06, PLAYER-07 | 5 |
+| 31 | Tactical Matchup + Set-Piece | PPDA/possession style, counterattack, style matchup interactions, corner xG states | TACTICAL-01, TACTICAL-02, TACTICAL-03, TACTICAL-04, TACTICAL-05 | 4 |
+| 32 | Context Features + Integration | Days rest, travel, venue/heat, kick-off time; full integration and final calibration | CONTEXT-01, CONTEXT-02, CONTEXT-03, CONTEXT-04 | 4 |
 
 ---
 
-## Current Milestone: v1.2 — Draw Algorithm
-
-## Phases (v1.2)
-
-- [x] **Phase 8: Dynamic Draw Algorithm** - Replace flat draw constant with Elo-calibrated draw probability function in wc_model.py, with full test coverage (completed 2026-06-19)
-
-## Phase Details (v1.2)
-
-### Phase 8: Dynamic Draw Algorithm
-
-**Goal**: Group-stage draw probability in wc_model.py reflects actual match balance — evenly-matched teams draw more often than mismatches — calibrated to historical WC data, with knockout behavior unchanged and full parameterized test coverage
-**Depends on**: Phase 7
-**Requirements**: DRAW-01, DRAW-02, DRAW-03, TEST-01
-**Success Criteria** (what must be TRUE):
-
-  1. Calling `wc_model.predict()` on a group-stage match with Elo difference near 0 returns a draw probability at or near 30%
-  2. Calling `wc_model.predict()` on a group-stage match with Elo difference near 500 returns a draw probability at or near 8%
-  3. Calling `wc_model.predict()` on any knockout round match returns draw probability exactly 0.0 regardless of Elo difference
-  4. Parameterized tests pass at Elo difference values of 0, 100, 300, 500, and 750 — all 619 existing tests continue to pass with zero regressions
-
-**Plans**: 1 plan
-Plans:
-
-- [x] 08-01-PLAN.md — _draw_prob() exponential decay function: replace flat constant, update tests
-
-## Progress (v1.0)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Data Hygiene | 3/3 | Complete | 2026-03-12 |
-| 2. Projection Algorithm | 4/4 | Complete | 2026-03-12 |
-| 3. Opponent Adjustments | 4/4 | Complete | 2026-03-12 |
-| 4. Confidence Tuning | 3/3 | Complete | 2026-03-12 |
-
-## Progress (v1.1)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 5. Data Foundation | 3/3 | Complete   | 2026-06-19 |
-| 6. Match Model | 1/1 | Complete    | 2026-06-19 |
-| 7. SGP Builder + Scanner Integration | 2/2 | Complete    | 2026-06-19 |
-
-## Progress (v1.2)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 8. Dynamic Draw Algorithm | 1/1 | Complete | 2026-06-19 |
-
-## v1.0 Final Results
-
-| Stat    | Baseline | Final  | Delta   |
-|---------|----------|--------|---------|
-| pts     | 49.3%    | 52.1%  | +2.8%   |
-| reb     | 34.2%    | 45.2%  | +11.0%  |
-| ast     | 49.3%    | 50.7%  | +1.4%   |
-| 3pm     | 41.1%    | 46.6%  | +5.5%   |
-| overall | 43.5%    | 48.6%  | +5.1%   |
-
-Tests: 493/493 passing.
----
-
-## Previous Milestone: v1.3 — MLB Win Probability Model (Complete)
-
-## Phases (v1.3)
-
-- [x] **Phase 9: Historical Data and Feature Contract** - Build leakage-safe historical game rows and one shared pregame feature schema
-- [x] **Phase 10: Training, Calibration, and Validation** - Train candidates, calibrate probabilities, benchmark chronologically, and persist validated artifacts
-- [x] **Phase 11: Runtime and Scanner Integration** - Load validated artifacts and show daily percentages, fair odds, and optional manual market comparison
-
-## Phase Details (v1.3)
-
-### Phase 9: Historical Data and Feature Contract
-
-**Goal**: Historical completed games can be transformed into deterministic pregame feature rows without future information.
-**Requirements**: MLBD-01, MLBD-02, MLBD-03, MLBV-01
-**Success Criteria**:
-
-1. Dataset rows contain canonical teams, date, binary home-win target, and only shifted/rolling pregame features.
-2. Chronology tests prove target-game results cannot influence features.
-3. Trainer and runtime call the same feature schema helper.
-
-**Plans**: 1 plan
-
-### Phase 10: Training, Calibration, and Validation
-
-**Goal**: A calibrated model is selected on untouched future games and saved with auditable metadata.
-**Requirements**: MLBM-01, MLBM-02, MLBM-03, MLBM-04, MLBV-01
-**Success Criteria**:
-
-1. Logistic and boosted candidates are evaluated with chronological train/calibration/test windows.
-2. Report includes Brier score, log loss, accuracy, reliability buckets, and baseline comparisons.
-3. Saved artifact includes exact feature schema and validation metadata.
-
-**Plans**: 1 plan
-
-### Phase 11: Runtime and Scanner Integration
-
-**Goal**: Today's MLB slate displays validated independent win percentages and fair odds, never misleading fallback output.
-**Requirements**: MLBR-01, MLBR-02, MLBR-03, MLBR-04, MLBV-01, MLBV-02
-**Success Criteria**:
-
-1. MLBModel rejects incompatible or unvalidated artifacts.
-2. Scanner prints every game's home/away probabilities, fair odds, and source.
-3. Manual odds enable no-vig edge comparison; absent odds are labeled unavailable.
-4. Full test suite passes.
-
-**Plans**: 1 plan
-
-## Progress (v1.3)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 9. Historical Data and Feature Contract | 1/1 | Complete | 2026-06-19 |
-| 10. Training, Calibration, and Validation | 1/1 | Complete | 2026-06-19 |
-| 11. Runtime and Scanner Integration | 1/1 | Complete | 2026-06-19 |
+## Phase Details
 
 ---
 
-## Current Milestone: v1.4 — Soccer Mode Upgrade
+### Phase 25: Evaluation Framework
 
-## Phases (v1.4)
+**Goal:** Set up the chronological backtest infrastructure — expanding-window splits, Brier/log-loss/accuracy/A-grade metrics, isotonic calibration on validation fold — so every subsequent phase can be measured against the Elo-only baseline.
 
-- [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
-- [x] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel) (completed 2026-06-20)
-- [x] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage
- (completed 2026-06-21)
+**Requirements:**
+- EVAL-01: Chronological expanding-window backtest with features frozen at pre-kickoff timestamp
+- EVAL-02: Metrics per model version: accuracy, multiclass Brier, log loss, calibration curves, A-grade hit rate (top-class >= 0.65)
+- EVAL-03: Isotonic regression calibration fitted on validation fold only
+- EVAL-04: Promotion gate: player-aware model must beat Elo-only baseline on Brier + log loss
 
-## Phase Details (v1.4)
-
-### Phase 12: Soccer Feature Data Pipeline
-
-**Goal**: Form, H2H, days-rest, FBref set piece stats, and Club Elo ratings are all accessible to downstream EPL/UCL model code
-**Depends on**: Nothing (first phase of v1.4)
-**Requirements**: SDATA-01, SDATA-02, SDATA-03, SDATA-04
-**Success Criteria** (what must be TRUE):
-
-  1. `fetch_team_form(team_id, n=5)` returns last-5-game W/D/L record + goals scored/conceded from football-data.org
-  2. `fetch_h2h(home_id, away_id, n=5)` returns last 5 meetings between the two teams
-  3. `fetch_days_rest(team_id, match_date)` returns integer days since last game (for fatigue multiplier)
-  4. FBref set piece stats (corners/game, aerial duels %, PPDA) accessible via soccerdata for EPL teams
-  5. Club Elo ratings for UCL teams load from clubelo.com (daily cache in `data/.soccer_cache/club_elo.csv`)
-  6. All new ingestion modules are isolated from the WC pipeline (separate cache namespace)
-
-**Plans**: 2 plans
-Plans:
-
-- [x] 12-01-PLAN.md — FootballDataClient extension (fetch_team_matches + team IDs) + soccer_form.py (form/H2H/rest) + tests
-- [x] 12-02-PLAN.md — club_elo.py (Club Elo CSV loader) + soccer_fbref.py (FBref set pieces) + tests
-
-### Phase 13: Soccer Model Upgrade
-
-**Goal**: EPL uses a retrained XGBoost model with 5 expanded features; UCL uses a Club Elo-logistic model instead of market-implied fallback
-**Depends on**: Phase 12
-**Requirements**: SMODEL-01, SMODEL-02, SMODEL-03
-**Success Criteria** (what must be TRUE):
-
-  1. EPL XGBoost retrained on 3 seasons of historical data (~1,140 games) with form + H2H + days-rest + set pieces + xG features
-  2. EPL model calibrated (Platt scaling preferred) and benchmarked on chronological test set — Brier score vs. market-implied baseline recorded
-  3. `UCLEloModel` produces W/D/L probabilities using Club Elo-logistic formula with +40 Elo home advantage (half of standard 80pt — UCL elite clubs)
-  4. `soccer_scanner.py` routes EPL games to XGBoost, UCL games to UCLEloModel — no cross-routing (Phase 14)
-  5. Existing fallback chain preserved: EPL = XGBoost → market_implied; UCL = UCLEloModel → market_implied
-
-**Plans**: 2 plans
-Plans:
-
-- [x] 13-01-PLAN.md — EPL training pipeline: epl_training.py (14-feature schema + leakage-safe row builder) + train_epl_moneyline.py + tests
-- [x] 13-02-PLAN.md — UCLEloModel (ucl_model.py, +40 home advantage, Club Elo) + SoccerModel EPL artifact gate + tests
-
-### Phase 14: Draw Betting + Scanner Integration
-
-**Goal**: Users see draw legs in parlay output (annotated `*DRAW RISK*`) when model EV > 5%, scanner shows independent model probabilities for both EPL and UCL
-**Depends on**: Phase 13
-**Requirements**: SDRAW-01, SDRAW-02, SSCAN-01, STEST-01
-**Success Criteria** (what must be TRUE):
-
-  1. Draw legs appear in SGP combos when model-estimated draw probability produces EV > 5% vs. market draw odds
-  2. Draw legs are annotated `*DRAW RISK*` in scanner output — user can identify them at a glance
-  3. Draw legs from market-implied fallback are never included (model gate enforced)
-  4. `soccer_scanner.py --mode parlay --league epl` shows EPL XGBoost probabilities; `--league ucl` shows UCL Elo probabilities
-  5. All new components have unit tests; total test count ≥ 636 with zero regressions
-
-**Plans**: 2 plans
-Plans:
-
-- [x] 14-01-PLAN.md — SoccerSGPBuilder draw leg gate: _build_draw_legs() with EV > 5% guard (D-11), is_draw annotation, same-game combo exclusion
-- [x] 14-02-PLAN.md — Soccer scanner UCL routing (D-13) + *DRAW RISK* annotation (D-12) + D% probability column + 8 unit tests
-
-## Progress (v1.4)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 12. Soccer Feature Data Pipeline | 2/2 | Complete    | 2026-06-19 |
-| 13. Soccer Model Upgrade | 2/2 | Complete   | 2026-06-20 |
-| 14. Draw Betting + Scanner Integration | 2/2 | Complete    | 2026-06-21 |
+**Success criteria:**
+1. `wc_eval.py` runs a chronological expanding-window backtest on historical WC matches and prints Brier score, log loss, accuracy, and A-grade hit rate for the current Elo-only model
+2. Isotonic regression calibration is fitted on the validation split and applied to held-out test split; calibration curve is plotted or logged
+3. Promotion gate function returns PASS/FAIL when given two model result dicts; returns FAIL for identical models (guard against trivial pass)
+4. All existing tests pass; wc_scanner.py output is unchanged
 
 ---
 
-## Current Milestone: v1.5 - World Cup True SGP
+### Phase 26: Hybrid Baseline Ratings
 
-## Phases (v1.5)
+**Goal:** Replace the pure Elo-logistic backbone with a hybrid baseline that combines an Elo-like long-run rating, xG attack/defense EWMA states, FIFA SUM feature, host-country distinction, and confederation interaction.
 
-- [x] **Phase 15: Scoreline Goal-Market Model** - Calibrate a scoreline distribution to WC Elo 1X2 marginals and expose totals, BTTS, and exact joint probabilities. (completed 2026-06-21)
-- [x] **Phase 16: True SGP Builder and Scanner** - Normalize market prices, build stage-safe same-match combinations, and add `--mode sgp` output. (completed 2026-06-21)
+**Requirements:**
+- BASELINE-01: Hybrid Elo-like long-run rating updated match-by-match on all competitive internationals
+- BASELINE-02: xG attack state and xG defense state as EWMA of non-penalty xG for/against, with configurable half-life
+- BASELINE-03: FIFA SUM rating as a feature alongside Elo and xG states
+- BASELINE-04: Host-country advantage as distinct feature; all other 2026 venues neutral-site
+- BASELINE-05: Confederation interaction feature for cross-confederation neutral-site matchups
 
-## Phase Details (v1.5)
-
-### Phase 15: Scoreline Goal-Market Model
-
-**Goal**: Each World Cup match has one coherent scoreline distribution supporting correlated market probabilities.
-**Depends on**: Existing WC Elo outcome model and cached WC team statistics
-**Requirements**: WCSGP-01, WCSGP-02, WCSGP-03, WCSGP-04, WCSGP-05, WCSGP-12
-**Success Criteria**:
-
-1. Goal rates use bounded World Cup attack/defense priors with neutral fallbacks.
-2. Scoreline weights reproduce WC Elo home/draw/away marginals within numerical tolerance.
-3. Totals and BTTS binary markets each sum to one.
-4. Multi-leg probability is evaluated directly against scorelines and rejects contradictions.
-5. Focused and full regression tests pass.
-
-**Plans**: 1 plan
-
-### Phase 16: True SGP Builder and Scanner
-
-**Goal**: Users can request ranked, real-price, same-match World Cup combinations without changing classic parlay behavior.
-**Depends on**: Phase 15
-**Requirements**: WCSGP-06, WCSGP-07, WCSGP-08, WCSGP-09, WCSGP-10, WCSGP-11, WCSGP-12
-**Success Criteria**:
-
-1. Normalized odds accept 1X2, over/under 2.5, and BTTS prices.
-2. Missing odds are explicit and never replaced with assumptions.
-3. Builder emits only compatible 2-3 leg selections from one match and ranks by EV.
-4. Knockout matches exclude standard 90-minute 1X2 while permitting compatible goal combinations.
-5. `--mode sgp` is tested and `--mode parlay` remains unchanged.
-
-**Plans**: 1 plan
-
-## Progress (v1.5)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 15. Scoreline Goal-Market Model | 1/1 | Complete | 2026-06-21 |
-| 16. True SGP Builder and Scanner | 1/1 | Complete | 2026-06-21 |
+**Success criteria:**
+1. `WCTeamRatings` class exposes `elo`, `xg_attack`, `xg_defense`, `fifa_sum`, `host_flag`, and `confederation_interaction` for any team/date pair
+2. Elo updates are sequential (match-by-match) and verifiably leakage-free (no future match data influences past ratings)
+3. xG EWMA half-life is configurable; default produces sensible decay on 2022/2018 WC historical data
+4. Hybrid baseline beats or ties Elo-only on Phase 25 evaluation framework Brier score on WC held-out matches
 
 ---
 
-## Current Milestone: v1.6 - World Cup Tactical Matchups
+### Phase 27: Projected XI Layer
 
-## Phases (v1.6)
+**Goal:** Estimate starter probabilities per player and aggregate position-specific player features into line scores using sum (not mean), with replacement-adjusted absence impact and lineup uncertainty bands.
 
-- [x] **Phase 17: Recent Tactical Data Pipeline** - Fetch, cache, normalize, and quality-gate recent ESPN tactical match summaries. (completed 2026-06-21)
-- [x] **Phase 18: Tactical Style Comparison** - Build symmetric team profiles and explainable bounded matchup scoring. (completed 2026-06-21)
-- [x] **Phase 19: Probability and Scanner Integration** - Apply tactical multipliers to scorelines, show baseline deltas, and validate live output. (completed 2026-06-21)
+**Requirements:**
+- LINEUP-01: Starter probability per player per match from national-team history, injury/suspension, fitness
+- LINEUP-02: Player features aggregated by line (GK/Back/Midfield/Front) using sum not mean
+- LINEUP-03: Replacement-adjusted absence impact = player_value_in_role − replacement_value_in_same_role
+- LINEUP-04: Lineup uncertainty variance term widens WDL confidence when starter probs are low
+- LINEUP-05: Back-line and midfield-triangle continuity modifiers on line scores
 
-## Phase Details (v1.6)
-
-### Phase 17: Recent Tactical Data Pipeline
-
-**Goal**: Every scheduled WC team can receive a leakage-safe recent tactical profile from measurable match statistics.
-**Requirements**: WCTAC-01, WCTAC-02, WCTAC-03, WCTAC-04, WCTAC-05
-**Plans**: 1 plan
-
-### Phase 18: Tactical Style Comparison
-
-**Goal**: Two profiles produce symmetric, bounded matchup multipliers and human-readable tactical edges.
-**Depends on**: Phase 17
-**Requirements**: WCTAC-06, WCTAC-07, WCTAC-08, WCTAC-09
-**Plans**: 1 plan
-
-### Phase 19: Probability and Scanner Integration
-
-**Goal**: Tactical comparisons safely adjust WC scorelines and appear transparently in complete SGP output.
-**Depends on**: Phase 18
-**Requirements**: WCTAC-10, WCTAC-11, WCTAC-12, WCTAC-13, WCTAC-14
-**Plans**: 1 plan
-
-## Progress (v1.6)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 17. Recent Tactical Data Pipeline | 1/1 | Complete | 2026-06-21 |
-| 18. Tactical Style Comparison | 1/1 | Complete | 2026-06-21 |
-| 19. Probability and Scanner Integration | 1/1 | Complete | 2026-06-21 |
+**Success criteria:**
+1. `LineupProjector` produces a start probability for each squad member; probabilities sum to ~11 per role group
+2. Line scores computed by summing position scores; a team with 10 players in a line scores lower than 11 (verifiable by removing one player)
+3. Absence impact correctly computes negative delta when a key player is replaced by a lower-rated substitute
+4. A match with high starter uncertainty (many players at p_start ~0.5) produces a wider WDL confidence interval than a match with confirmed lineups
 
 ---
 
-## Current Milestone: v1.7 - Tactical Calibration and Validation
+### Phase 28: Goalkeeper Module
 
-## Phases (v1.7)
+**Goal:** Build a dedicated goalkeeper submodel with goals prevented vs xGOT, save subtype distribution, cross claims, sweeper actions, and GK-CB continuity modifier — stored separately from generic team defense.
 
-- [x] **Phase 20: Tactical Calibration and Deployment Gate** - Learn leakage-safe tactical residuals, validate them chronologically, and enable only markets that improve probability quality. (completed 2026-06-22)
+**Requirements:**
+- GK-01: GK strength score includes goals prevented vs xGOT and save subtype distribution
+- GK-02: Cross claims, crosses-not-claimed, and sweeper action counts as distinct GK features
+- GK-03: GK-CB continuity modifier applied when starting GK-CB pairing differs from last match
+- GK-04: GK stored and evaluated as dedicated submodel, separate from generic team defense rating
 
-## Phase Details (v1.7)
+**Success criteria:**
+1. `GoalkeeperModule` returns a feature dict separate from `xg_defense` state; they can be added or removed independently from the model
+2. A GK with positive goals-prevented (saves above xGOT) produces a higher GK score than one with neutral performance on the same xG
+3. GK-CB continuity modifier fires correctly: no modifier when last-match pairing matches, negative modifier when GK or CB1/CB2 is different
+4. Removing GK module from feature set and rerunning Phase 25 eval shows measurable Brier degradation (GK adds information)
 
-### Phase 20: Tactical Calibration and Deployment Gate
-
-**Goal**: Replace hand-set tactical influence with validated, regularized residual adjustments while preserving the no-tactics baseline whenever evidence is insufficient.
-**Depends on**: Phase 19 and the v1.6 chronological tactical backtest
-**Requirements**: WCCAL-01, WCCAL-02, WCCAL-03, WCCAL-04, WCCAL-05, WCCAL-06, WCCAL-07, WCCAL-08, WCCAL-09, WCCAL-10, WCCAL-11, WCCAL-12, WCCAL-13, WCCAL-14
-**Success Criteria**:
-
-1. A source audit proves coverage before modeling; the dataset then contains at least 200 development matches, 50 later chronological validation matches, and a sealed external audit of at least 30 completed 2026 World Cup matches, or deployment is blocked.
-2. Expanding-window validation reports Brier score, log loss, calibration, accuracy, and uncertainty against no-tactics and fixed-weight baselines.
-3. Tactical effects are conditional residuals with shrinkage and retain existing Elo and goal-rate caps.
-4. Single markets are promoted independently only when numeric probability-quality gates pass, while every SGP uses one coherent approved distribution or falls back entirely.
-5. Invalid or unvalidated artifacts fail closed to the no-tactics baseline and the full regression suite passes.
-
-**Plans**: 3 plans
-
-## Progress (v1.7)
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 20. Tactical Calibration and Deployment Gate | 3/3 | Complete    | 2026-06-22 |
 ---
 
-## Current Milestone: v1.8 - Player-Aware MLB Moneyline Model
+### Phase 29: Tournament-State Logic
 
-## Phases (v1.8)
+**Goal:** Compute qualification pressure state, rotation risk flag, yellow-card accumulation/suspension risk, and 2026 best-third-place ranking scenarios as deterministic features from match context.
 
-- [x] **Phase 21: MLB Player Data Foundation** - Build canonical game, player-slot, and ID-mapping tables for player-aware moneyline features. (completed 2026-06-24)
-- [x] **Phase 22: Player-Aware Feature Builder** - Generate leakage-safe starter, lineup, bullpen, and injury/absence feature blocks. (completed 2026-06-24)
-- [x] **Phase 23: Walk-Forward Modeling and Ablations** - Train, calibrate, and compare baseline, starter-only, lineup, bullpen, and full player-aware models. (completed 2026-06-24)
-- [x] **Phase 24: Runtime Gating and MLB Scanner Reporting** - Deploy only validated artifacts, surface uncertainty flags, and report selective win-rate metrics. (completed 2026-06-24)
+**Requirements:**
+- TOURNEY-01: Qualification pressure state per team: must-win / draw-enough / likely-through / already-through / already-out
+- TOURNEY-02: Rotation risk flag when team's group qualification is already secured
+- TOURNEY-03: Yellow-card accumulation per player; suspension risk flag for 1-caution players; cards wiped post-group-stage and post-QF
+- TOURNEY-04: Best-third-place ranking scenarios for 2026 12-group format in final group matches
+- TOURNEY-05: Fair-play score and FIFA ranking as tiebreak features for borderline group-stage matches
 
-## Phase Details (v1.8)
+**Success criteria:**
+1. `TournamentState` correctly classifies each team's pressure state for a given group standings input; verified with 3 test cases (must-win, draw-enough, already-through)
+2. Rotation risk flag is True for all already-through teams in simulated final group match data
+3. Yellow-card suspension logic correctly flags a player on 1 caution; correctly clears all cards at the group stage / QF boundary
+4. Best-third-place ranking calculator correctly identifies which third-placed teams would qualify under 2026 regulations given a sample group standings input
 
-### Phase 21: MLB Player Data Foundation
+---
 
-**Goal**: Historical and day-of MLB data can be represented as canonical game and player-slot tables suitable for leak-proof player-aware modeling.
-**Depends on**: v1.3 MLB win-probability model and existing MLB ingestion modules
-**Requirements**: MLBDATA-01, MLBDATA-02, MLBDATA-03, MLBDATA-04
-**Success Criteria**:
+### Phase 30: Position-Specific Player Features
 
-1. `games` rows include game IDs, dates, canonical teams, venue, status, doubleheader context, target, and starter IDs.
-2. `game_player_slots` rows include team side, player ID, player name, batting order, position, starter role, and source-confidence status.
-3. ID mapping joins MLBAM, Retrosheet, and internal references with an explicit unmatched-player report.
-4. Day-of refresh can fetch starters, lineups, rosters, and injuries from free/official sources or fail with visible missing-source flags.
+**Goal:** Build per-position role features for CB, DM, CM, Winger, and Striker using club and national-team data, with hierarchical shrinkage pooling sparse national-team samples toward club-based role priors.
 
-**Plans**: TBD
+**Requirements:**
+- PLAYER-01: CB features: aerial duel win rate, interceptions/90, errors-to-shot/90
+- PLAYER-02: DM features: ball recoveries/90, interceptions/90, press resistance proxy, foul/card rate
+- PLAYER-03: CM features: possession value added, progressive pass/carry counts, chances created/90
+- PLAYER-04: Winger features: np-xG/90, xA/90, key passes, box entries, cutbacks
+- PLAYER-05: Striker features: np-xG/90, shot volume/locations, finishing delta shrunk toward positional mean
+- PLAYER-06: Hierarchical shrinkage: sparse national-team samples pool toward club-based role priors; finishing and shot-stopping shrunk toward positional averages
+- PLAYER-07: Club data ~70-80%, national-team ~20-30%; weighting configurable and tunable by backtest
 
-### Phase 22: Player-Aware Feature Builder
+**Success criteria:**
+1. `PlayerFeatureStore` returns a complete feature dict for any player-role pair from available FBref/Understat/StatsBomb free data
+2. A player with 0 national-team caps produces a feature vector identical to the club-weighted positional prior (full shrinkage)
+3. A player with 50 national-team caps produces a feature vector closer to their observed stats than to the prior (partial shrinkage)
+4. Finishing delta for a striker is visibly shrunk: a striker with xGOT-xG delta of +0.3 over 5 games gets a shrunk estimate closer to 0.05 than to 0.3
+5. Phase 25 eval framework shows measurable Brier improvement over Phase 26 baseline after adding player features
 
-**Goal**: Moneyline rows include shifted player-level starter, lineup, bullpen, and absence signals without target-game leakage.
-**Depends on**: Phase 21
-**Requirements**: MLBFEAT-01, MLBFEAT-02, MLBFEAT-03, MLBFEAT-04, MLBFEAT-05
-**Success Criteria**:
+---
 
-1. Starting-pitcher features include shifted quality and rest measures available before first pitch.
-2. Lineup features summarize projected or confirmed hitters, platoon matchups, missing feature counts, and source confidence.
-3. Bullpen features summarize recent relief workload and available quality without same-game contamination.
-4. Injury and absence features use structured player availability rather than average/HR-only team penalties.
-5. Automated tests prove every rolling feature uses shifted history and same-day doubleheader handling is explicit.
+### Phase 31: Tactical Matchup + Set-Piece
 
-**Plans**: TBD
+**Goal:** Compute PPDA/possession style per team, counterattack frequency, style matchup interactions between teams, and separate set-piece attack/defense EWMA states including corner xG.
 
-### Phase 23: Walk-Forward Modeling and Ablations
+**Requirements:**
+- TACTICAL-01: PPDA proxy and possession style index from rolling match data per team
+- TACTICAL-02: Counterattack frequency and rest-defense stability as team style features
+- TACTICAL-03: Style matchup interactions: press-vs-build, width-vs-centrality, possession-vs-transition
+- TACTICAL-04: Set-piece attack/defense EWMA states, separate from open-play xG states
+- TACTICAL-05: Corner xG for/against and aerial duel edge as set-piece features
 
-**Goal**: Candidate MLB moneyline models are trained and calibrated through date-based walk-forward validation with clear ablation lift over the v1.3 baseline.
-**Depends on**: Phase 22
-**Requirements**: MLBMODEL-01, MLBMODEL-02, MLBMODEL-03, MLBMODEL-04, MLBMODEL-05
-**Success Criteria**:
+**Success criteria:**
+1. `TacticalProfile` returns PPDA, possession index, counterattack frequency, rest-defense, and set-piece attack/defense for each team from historical match summaries
+2. Style matchup interaction features are computed as team_A_feature × opponent_B_vulnerability (symmetric interactions)
+3. Set-piece xG states are updated separately from open-play xG states; removing open-play xG does not affect set-piece features
+4. Phase 25 eval with tactical features shows measurable change (positive or negative) vs Phase 26 baseline — used to decide regularization strength
 
-1. The v1.3 eight-feature model can be reproduced as the baseline scorecard.
-2. Starter-only, starter-plus-lineup, starter-plus-lineup-plus-bullpen, and full player-aware ablations are reported side by side.
-3. Each fold uses a train block, a later calibration block, and a later test block, with Brier score, log loss, accuracy, and calibration buckets.
-4. Logistic regression, HistGradientBoosting, and LightGBM are compared where dependencies are available.
-5. Any promoted artifact includes schema version, feature names, split dates, source fingerprints, metrics, and promotion gates.
+---
 
-**Plans**: TBD
+### Phase 32: Context Features + Full Integration
 
-### Phase 24: Runtime Gating and MLB Scanner Reporting
+**Goal:** Add regularized context features (days rest, travel, venue altitude/heat, kick-off time), integrate all layers into the stacked WC model, run final calibration, and confirm the player-aware model passes the Elo-only baseline promotion gate.
 
-**Goal**: The MLB scanner uses the player-aware artifact only when validated and sufficiently certain, otherwise falling back visibly to the v1.3 baseline.
-**Depends on**: Phase 23
-**Requirements**: MLBRUN-01, MLBRUN-02, MLBRUN-03, MLBRUN-04, MLBRUN-05
-**Success Criteria**:
+**Requirements:**
+- CONTEXT-01: Days rest and expected-starter minutes in prior 7 and 14 days as regularized context features
+- CONTEXT-02: Intercontinental travel distance, time zones, east/west direction as context features
+- CONTEXT-03: Venue context: host city altitude, roof/open-air, kick-off local time for 2026 venues
+- CONTEXT-04: Context features regularized more heavily than team/player features
 
-1. Scanner output labels each game as v1.8 player-aware, v1.3 baseline fallback, or unavailable with a reason.
-2. Picks are suppressed or downgraded when starter, lineup, injury, or feature uncertainty exceeds configured thresholds.
-3. Reports include selective win rate, coverage, all-games accuracy, Brier score, and log loss for confidence-gated picks.
-4. High-confidence pick output includes inspectable starter, lineup, bullpen, and absence contribution context.
-5. Moneyline runtime paths reject synthetic MLB prop values and legacy crude injury penalties.
+**Success criteria:**
+1. `MatchContext` computes days rest, travel distance, and venue features from match schedule and host city data; all 2026 host cities supported
+2. Context feature coefficients in the final model are visibly smaller than team-rating coefficients (regularization confirmed)
+3. Full stacked model (BASELINE + LINEUP + GK + PLAYER + TOURNEY + TACTICAL + CONTEXT) runs end-to-end via `wc_scanner.py --mode parlay` without errors
+4. Phase 25 promotion gate returns PASS: stacked model beats Elo-only baseline on both Brier score and log loss on chronological holdout
 
-**Plans**: TBD
+---
 
-## Progress (v1.8)
+## Coverage Audit
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 21. MLB Player Data Foundation | 1/1 | Complete    | 2026-06-24 |
-| 22. Player-Aware Feature Builder | 1/1 | Complete    | 2026-06-24 |
-| 23. Walk-Forward Modeling and Ablations | 1/1 | Complete    | 2026-06-24 |
-| 24. Runtime Gating and MLB Scanner Reporting | 1/1 | Complete    | 2026-06-24 |
+| Category | Requirements | Phase |
+|----------|-------------|-------|
+| BASELINE | BASELINE-01 through BASELINE-05 (5) | Phase 26 |
+| LINEUP | LINEUP-01 through LINEUP-05 (5) | Phase 27 |
+| GK | GK-01 through GK-04 (4) | Phase 28 |
+| PLAYER | PLAYER-01 through PLAYER-07 (7) | Phase 30 |
+| TOURNEY | TOURNEY-01 through TOURNEY-05 (5) | Phase 29 |
+| TACTICAL | TACTICAL-01 through TACTICAL-05 (5) | Phase 31 |
+| CONTEXT | CONTEXT-01 through CONTEXT-04 (4) | Phase 32 |
+| EVAL | EVAL-01 through EVAL-04 (4) | Phase 25 |
+
+**Total: 39 / 39 requirements mapped ✓**
+
+---
+
+## Risk Register
+
+| Risk | Mitigation |
+|------|-----------|
+| Free data sources (FBref, Understat) lack WC player coverage | Fall back to club-season data only; use positional priors for players with no data |
+| xG data not available for pre-2018 WC matches | Long-run Elo backbone requires goals only; xG states built from available data (2018+) |
+| Starter probabilities are noisy pre-tournament | Uncertainty band (LINEUP-04) widens WDL intervals appropriately; model stays calibrated |
+| Context features hurt calibration if over-weighted | CONTEXT-04 mandates stronger regularization; Phase 25 eval catches any degradation |
+| wc_scanner.py regression during incremental builds | Each phase success criterion requires scanner to run cleanly before completion |
+
+---
+
+*Roadmap created: 2026-06-24*
+*Milestone: v1.9 | Phases 25–32 | 39 requirements | 8 phases*

@@ -98,50 +98,50 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BASELINE-01 | — | Pending |
-| BASELINE-02 | — | Pending |
-| BASELINE-03 | — | Pending |
-| BASELINE-04 | — | Pending |
-| BASELINE-05 | — | Pending |
-| LINEUP-01 | — | Pending |
-| LINEUP-02 | — | Pending |
-| LINEUP-03 | — | Pending |
-| LINEUP-04 | — | Pending |
-| LINEUP-05 | — | Pending |
-| GK-01 | — | Pending |
-| GK-02 | — | Pending |
-| GK-03 | — | Pending |
-| GK-04 | — | Pending |
-| PLAYER-01 | — | Pending |
-| PLAYER-02 | — | Pending |
-| PLAYER-03 | — | Pending |
-| PLAYER-04 | — | Pending |
-| PLAYER-05 | — | Pending |
-| PLAYER-06 | — | Pending |
-| PLAYER-07 | — | Pending |
-| TOURNEY-01 | — | Pending |
-| TOURNEY-02 | — | Pending |
-| TOURNEY-03 | — | Pending |
-| TOURNEY-04 | — | Pending |
-| TOURNEY-05 | — | Pending |
-| TACTICAL-01 | — | Pending |
-| TACTICAL-02 | — | Pending |
-| TACTICAL-03 | — | Pending |
-| TACTICAL-04 | — | Pending |
-| TACTICAL-05 | — | Pending |
-| CONTEXT-01 | — | Pending |
-| CONTEXT-02 | — | Pending |
-| CONTEXT-03 | — | Pending |
-| CONTEXT-04 | — | Pending |
-| EVAL-01 | — | Pending |
-| EVAL-02 | — | Pending |
-| EVAL-03 | — | Pending |
-| EVAL-04 | — | Pending |
+| BASELINE-01 | Phase 26 | Pending |
+| BASELINE-02 | Phase 26 | Pending |
+| BASELINE-03 | Phase 26 | Pending |
+| BASELINE-04 | Phase 26 | Pending |
+| BASELINE-05 | Phase 26 | Pending |
+| LINEUP-01 | Phase 27 | Pending |
+| LINEUP-02 | Phase 27 | Pending |
+| LINEUP-03 | Phase 27 | Pending |
+| LINEUP-04 | Phase 27 | Pending |
+| LINEUP-05 | Phase 27 | Pending |
+| GK-01 | Phase 28 | Pending |
+| GK-02 | Phase 28 | Pending |
+| GK-03 | Phase 28 | Pending |
+| GK-04 | Phase 28 | Pending |
+| PLAYER-01 | Phase 30 | Pending |
+| PLAYER-02 | Phase 30 | Pending |
+| PLAYER-03 | Phase 30 | Pending |
+| PLAYER-04 | Phase 30 | Pending |
+| PLAYER-05 | Phase 30 | Pending |
+| PLAYER-06 | Phase 30 | Pending |
+| PLAYER-07 | Phase 30 | Pending |
+| TOURNEY-01 | Phase 29 | Pending |
+| TOURNEY-02 | Phase 29 | Pending |
+| TOURNEY-03 | Phase 29 | Pending |
+| TOURNEY-04 | Phase 29 | Pending |
+| TOURNEY-05 | Phase 29 | Pending |
+| TACTICAL-01 | Phase 31 | Pending |
+| TACTICAL-02 | Phase 31 | Pending |
+| TACTICAL-03 | Phase 31 | Pending |
+| TACTICAL-04 | Phase 31 | Pending |
+| TACTICAL-05 | Phase 31 | Pending |
+| CONTEXT-01 | Phase 32 | Pending |
+| CONTEXT-02 | Phase 32 | Pending |
+| CONTEXT-03 | Phase 32 | Pending |
+| CONTEXT-04 | Phase 32 | Pending |
+| EVAL-01 | Phase 25 | Pending |
+| EVAL-02 | Phase 25 | Pending |
+| EVAL-03 | Phase 25 | Pending |
+| EVAL-04 | Phase 25 | Pending |
 
 **Coverage:**
 - v1.9 requirements: 39 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 39
+- Mapped to phases: 39
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-24*

@@ -7,7 +7,7 @@ stopped_at: v1.9 started — defining requirements and roadmap
 last_updated: 2026-06-24T00:00:00.000Z
 last_activity: 2026-06-24 -- Milestone v1.9 started
 progress:
-  total_phases: 0
+  total_phases: 8
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -98,4 +98,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Roadmap pending — roadmapper being spawned
+- Start Phase 25 with `/gsd:discuss-phase 25` or `/gsd:plan-phase 25`
