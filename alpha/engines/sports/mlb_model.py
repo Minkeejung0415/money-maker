@@ -368,6 +368,29 @@ class MLBModel:
         if not bundle:
             return None
         feature_names = list(bundle.get("feature_names") or [])
+
+        # If the bundle carries a team_state, auto-compute baseline (Elo/win-pct/run-diff)
+        # features and merge them into the game's player_features dict so the caller does
+        # not need to pre-populate them.
+        if bundle.get("team_state"):
+            try:
+                from alpha.engines.sports.mlb_training import live_feature_vector  # noqa: PLC0415
+
+                game_date = str(game.get("commence_time", ""))[:10]
+                if not game_date:
+                    game_date = date.today().isoformat()
+                baseline = live_feature_vector(
+                    game.get("home_team", ""),
+                    game.get("away_team", ""),
+                    game_date,
+                    bundle["team_state"],
+                )
+                # Merge: player_features take precedence over baseline
+                merged = {**baseline, **(game.get("player_features") or {})}
+                game = {**game, "player_features": merged}
+            except Exception as exc:
+                logger.debug("Baseline feature auto-compute failed: %s", exc)
+
         values, missing = self._player_feature_values(game, feature_names)
         if missing:
             self._last_fallback_reason = "missing_player_features:" + ",".join(missing[:5])

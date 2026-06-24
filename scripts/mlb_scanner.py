@@ -165,8 +165,33 @@ def main() -> None:
                 game["away_odds"] = odds["away_american"]
                 game["has_market_odds"] = True
 
-    # Enrich with MLBModel win probabilities
+    # Load the model first so we can use its team_state as quality fallback
     mlb_model = MLBModel()
+
+    # Enrich games with live player features so v1.8 bundle activates when present.
+    # Pass team_state-derived quality as fallback when pybaseball is unavailable.
+    try:
+        from alpha.data.ingestion.mlb_live_player_features import (
+            build_live_player_features,
+            build_quality_from_team_state,
+        )
+        _team_quality_override = None
+        if mlb_model._player_bundle and mlb_model._player_bundle.get("team_state"):
+            _team_quality_override = build_quality_from_team_state(
+                mlb_model._player_bundle["team_state"]
+            )
+        player_features_map = build_live_player_features(
+            games,
+            team_quality_override=_team_quality_override,
+        )
+        for game in games:
+            eid = str(game.get("event_id", ""))
+            if eid in player_features_map:
+                game["player_features"] = player_features_map[eid]
+    except Exception as _pf_exc:
+        logger.debug("Live player features unavailable: %s", _pf_exc)
+
+    # Enrich with MLBModel win probabilities (mlb_model already loaded above)
     for game in games:
         pred = mlb_model.predict(game)
         game["home_model_prob"] = pred["home_win_prob"]

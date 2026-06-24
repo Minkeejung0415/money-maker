@@ -1,0 +1,3748 @@
+{
+  "kind": "mlb_player_moneyline_artifact",
+  "schema_version": "mlb-player-v1.8",
+  "model_version": "mlb-player-v1.8",
+  "candidate": {
+    "feature_set": "starter_only",
+    "model": "logistic"
+  },
+  "feature_names": [
+    "elo_diff",
+    "home_win_pct",
+    "away_win_pct",
+    "home_run_diff",
+    "away_run_diff",
+    "home_rest_days",
+    "away_rest_days",
+    "home_indicator",
+    "home_sp_quality",
+    "away_sp_quality",
+    "sp_quality_diff",
+    "home_sp_workload",
+    "away_sp_workload",
+    "sp_workload_diff",
+    "home_sp_rest_days",
+    "away_sp_rest_days",
+    "home_sp_missing",
+    "away_sp_missing"
+  ],
+  "split_dates": [
+    {
+      "fold": 1,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-03",
+      "calibration_start": "2023-04-03",
+      "calibration_end": "2023-04-05",
+      "test_start": "2023-04-05",
+      "test_end": "2023-04-07"
+    },
+    {
+      "fold": 2,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-05",
+      "calibration_start": "2023-04-05",
+      "calibration_end": "2023-04-07",
+      "test_start": "2023-04-07",
+      "test_end": "2023-04-08"
+    },
+    {
+      "fold": 3,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-07",
+      "calibration_start": "2023-04-07",
+      "calibration_end": "2023-04-08",
+      "test_start": "2023-04-08",
+      "test_end": "2023-04-09"
+    },
+    {
+      "fold": 4,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-08",
+      "calibration_start": "2023-04-08",
+      "calibration_end": "2023-04-09",
+      "test_start": "2023-04-09",
+      "test_end": "2023-04-11"
+    },
+    {
+      "fold": 5,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-09",
+      "calibration_start": "2023-04-09",
+      "calibration_end": "2023-04-11",
+      "test_start": "2023-04-11",
+      "test_end": "2023-04-12"
+    },
+    {
+      "fold": 6,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-11",
+      "calibration_start": "2023-04-11",
+      "calibration_end": "2023-04-12",
+      "test_start": "2023-04-12",
+      "test_end": "2023-04-14"
+    },
+    {
+      "fold": 7,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-12",
+      "calibration_start": "2023-04-12",
+      "calibration_end": "2023-04-14",
+      "test_start": "2023-04-14",
+      "test_end": "2023-04-15"
+    },
+    {
+      "fold": 8,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-14",
+      "calibration_start": "2023-04-14",
+      "calibration_end": "2023-04-15",
+      "test_start": "2023-04-15",
+      "test_end": "2023-04-17"
+    },
+    {
+      "fold": 9,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-15",
+      "calibration_start": "2023-04-15",
+      "calibration_end": "2023-04-17",
+      "test_start": "2023-04-17",
+      "test_end": "2023-04-18"
+    },
+    {
+      "fold": 10,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-17",
+      "calibration_start": "2023-04-17",
+      "calibration_end": "2023-04-18",
+      "test_start": "2023-04-18",
+      "test_end": "2023-04-20"
+    },
+    {
+      "fold": 11,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-18",
+      "calibration_start": "2023-04-18",
+      "calibration_end": "2023-04-20",
+      "test_start": "2023-04-20",
+      "test_end": "2023-04-21"
+    },
+    {
+      "fold": 12,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-20",
+      "calibration_start": "2023-04-20",
+      "calibration_end": "2023-04-21",
+      "test_start": "2023-04-22",
+      "test_end": "2023-04-23"
+    },
+    {
+      "fold": 13,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-21",
+      "calibration_start": "2023-04-22",
+      "calibration_end": "2023-04-23",
+      "test_start": "2023-04-23",
+      "test_end": "2023-04-24"
+    },
+    {
+      "fold": 14,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-23",
+      "calibration_start": "2023-04-23",
+      "calibration_end": "2023-04-24",
+      "test_start": "2023-04-24",
+      "test_end": "2023-04-26"
+    },
+    {
+      "fold": 15,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-24",
+      "calibration_start": "2023-04-24",
+      "calibration_end": "2023-04-26",
+      "test_start": "2023-04-26",
+      "test_end": "2023-04-27"
+    },
+    {
+      "fold": 16,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-26",
+      "calibration_start": "2023-04-26",
+      "calibration_end": "2023-04-27",
+      "test_start": "2023-04-27",
+      "test_end": "2023-04-29"
+    },
+    {
+      "fold": 17,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-27",
+      "calibration_start": "2023-04-27",
+      "calibration_end": "2023-04-29",
+      "test_start": "2023-04-29",
+      "test_end": "2023-04-30"
+    },
+    {
+      "fold": 18,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-29",
+      "calibration_start": "2023-04-29",
+      "calibration_end": "2023-04-30",
+      "test_start": "2023-04-30",
+      "test_end": "2023-05-02"
+    },
+    {
+      "fold": 19,
+      "train_start": "2023-03-30",
+      "train_end": "2023-04-30",
+      "calibration_start": "2023-04-30",
+      "calibration_end": "2023-05-02",
+      "test_start": "2023-05-02",
+      "test_end": "2023-05-03"
+    },
+    {
+      "fold": 20,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-02",
+      "calibration_start": "2023-05-02",
+      "calibration_end": "2023-05-03",
+      "test_start": "2023-05-03",
+      "test_end": "2023-05-05"
+    },
+    {
+      "fold": 21,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-03",
+      "calibration_start": "2023-05-03",
+      "calibration_end": "2023-05-05",
+      "test_start": "2023-05-05",
+      "test_end": "2023-05-06"
+    },
+    {
+      "fold": 22,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-05",
+      "calibration_start": "2023-05-05",
+      "calibration_end": "2023-05-06",
+      "test_start": "2023-05-06",
+      "test_end": "2023-05-08"
+    },
+    {
+      "fold": 23,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-06",
+      "calibration_start": "2023-05-06",
+      "calibration_end": "2023-05-08",
+      "test_start": "2023-05-08",
+      "test_end": "2023-05-09"
+    },
+    {
+      "fold": 24,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-08",
+      "calibration_start": "2023-05-08",
+      "calibration_end": "2023-05-09",
+      "test_start": "2023-05-09",
+      "test_end": "2023-05-11"
+    },
+    {
+      "fold": 25,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-09",
+      "calibration_start": "2023-05-09",
+      "calibration_end": "2023-05-11",
+      "test_start": "2023-05-11",
+      "test_end": "2023-05-13"
+    },
+    {
+      "fold": 26,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-11",
+      "calibration_start": "2023-05-11",
+      "calibration_end": "2023-05-13",
+      "test_start": "2023-05-13",
+      "test_end": "2023-05-14"
+    },
+    {
+      "fold": 27,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-13",
+      "calibration_start": "2023-05-13",
+      "calibration_end": "2023-05-14",
+      "test_start": "2023-05-14",
+      "test_end": "2023-05-15"
+    },
+    {
+      "fold": 28,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-14",
+      "calibration_start": "2023-05-14",
+      "calibration_end": "2023-05-15",
+      "test_start": "2023-05-15",
+      "test_end": "2023-05-17"
+    },
+    {
+      "fold": 29,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-15",
+      "calibration_start": "2023-05-15",
+      "calibration_end": "2023-05-17",
+      "test_start": "2023-05-17",
+      "test_end": "2023-05-19"
+    },
+    {
+      "fold": 30,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-17",
+      "calibration_start": "2023-05-17",
+      "calibration_end": "2023-05-19",
+      "test_start": "2023-05-19",
+      "test_end": "2023-05-20"
+    },
+    {
+      "fold": 31,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-19",
+      "calibration_start": "2023-05-19",
+      "calibration_end": "2023-05-20",
+      "test_start": "2023-05-20",
+      "test_end": "2023-05-21"
+    },
+    {
+      "fold": 32,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-20",
+      "calibration_start": "2023-05-20",
+      "calibration_end": "2023-05-21",
+      "test_start": "2023-05-21",
+      "test_end": "2023-05-23"
+    },
+    {
+      "fold": 33,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-21",
+      "calibration_start": "2023-05-21",
+      "calibration_end": "2023-05-23",
+      "test_start": "2023-05-23",
+      "test_end": "2023-05-24"
+    },
+    {
+      "fold": 34,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-23",
+      "calibration_start": "2023-05-23",
+      "calibration_end": "2023-05-24",
+      "test_start": "2023-05-24",
+      "test_end": "2023-05-26"
+    },
+    {
+      "fold": 35,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-24",
+      "calibration_start": "2023-05-24",
+      "calibration_end": "2023-05-26",
+      "test_start": "2023-05-26",
+      "test_end": "2023-05-27"
+    },
+    {
+      "fold": 36,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-26",
+      "calibration_start": "2023-05-26",
+      "calibration_end": "2023-05-27",
+      "test_start": "2023-05-27",
+      "test_end": "2023-05-29"
+    },
+    {
+      "fold": 37,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-27",
+      "calibration_start": "2023-05-27",
+      "calibration_end": "2023-05-29",
+      "test_start": "2023-05-29",
+      "test_end": "2023-05-30"
+    },
+    {
+      "fold": 38,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-29",
+      "calibration_start": "2023-05-29",
+      "calibration_end": "2023-05-30",
+      "test_start": "2023-05-30",
+      "test_end": "2023-06-01"
+    },
+    {
+      "fold": 39,
+      "train_start": "2023-03-30",
+      "train_end": "2023-05-30",
+      "calibration_start": "2023-05-30",
+      "calibration_end": "2023-06-01",
+      "test_start": "2023-06-01",
+      "test_end": "2023-06-02"
+    },
+    {
+      "fold": 40,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-01",
+      "calibration_start": "2023-06-01",
+      "calibration_end": "2023-06-02",
+      "test_start": "2023-06-03",
+      "test_end": "2023-06-04"
+    },
+    {
+      "fold": 41,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-02",
+      "calibration_start": "2023-06-03",
+      "calibration_end": "2023-06-04",
+      "test_start": "2023-06-04",
+      "test_end": "2023-06-06"
+    },
+    {
+      "fold": 42,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-04",
+      "calibration_start": "2023-06-04",
+      "calibration_end": "2023-06-06",
+      "test_start": "2023-06-06",
+      "test_end": "2023-06-07"
+    },
+    {
+      "fold": 43,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-06",
+      "calibration_start": "2023-06-06",
+      "calibration_end": "2023-06-07",
+      "test_start": "2023-06-07",
+      "test_end": "2023-06-09"
+    },
+    {
+      "fold": 44,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-07",
+      "calibration_start": "2023-06-07",
+      "calibration_end": "2023-06-09",
+      "test_start": "2023-06-09",
+      "test_end": "2023-06-10"
+    },
+    {
+      "fold": 45,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-09",
+      "calibration_start": "2023-06-09",
+      "calibration_end": "2023-06-10",
+      "test_start": "2023-06-10",
+      "test_end": "2023-06-11"
+    },
+    {
+      "fold": 46,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-10",
+      "calibration_start": "2023-06-10",
+      "calibration_end": "2023-06-11",
+      "test_start": "2023-06-11",
+      "test_end": "2023-06-13"
+    },
+    {
+      "fold": 47,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-11",
+      "calibration_start": "2023-06-11",
+      "calibration_end": "2023-06-13",
+      "test_start": "2023-06-13",
+      "test_end": "2023-06-14"
+    },
+    {
+      "fold": 48,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-13",
+      "calibration_start": "2023-06-13",
+      "calibration_end": "2023-06-14",
+      "test_start": "2023-06-14",
+      "test_end": "2023-06-16"
+    },
+    {
+      "fold": 49,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-14",
+      "calibration_start": "2023-06-14",
+      "calibration_end": "2023-06-16",
+      "test_start": "2023-06-16",
+      "test_end": "2023-06-17"
+    },
+    {
+      "fold": 50,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-16",
+      "calibration_start": "2023-06-16",
+      "calibration_end": "2023-06-17",
+      "test_start": "2023-06-18",
+      "test_end": "2023-06-19"
+    },
+    {
+      "fold": 51,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-17",
+      "calibration_start": "2023-06-18",
+      "calibration_end": "2023-06-19",
+      "test_start": "2023-06-19",
+      "test_end": "2023-06-20"
+    },
+    {
+      "fold": 52,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-19",
+      "calibration_start": "2023-06-19",
+      "calibration_end": "2023-06-20",
+      "test_start": "2023-06-20",
+      "test_end": "2023-06-22"
+    },
+    {
+      "fold": 53,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-20",
+      "calibration_start": "2023-06-20",
+      "calibration_end": "2023-06-22",
+      "test_start": "2023-06-22",
+      "test_end": "2023-06-24"
+    },
+    {
+      "fold": 54,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-22",
+      "calibration_start": "2023-06-22",
+      "calibration_end": "2023-06-24",
+      "test_start": "2023-06-24",
+      "test_end": "2023-06-25"
+    },
+    {
+      "fold": 55,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-24",
+      "calibration_start": "2023-06-24",
+      "calibration_end": "2023-06-25",
+      "test_start": "2023-06-25",
+      "test_end": "2023-06-27"
+    },
+    {
+      "fold": 56,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-25",
+      "calibration_start": "2023-06-25",
+      "calibration_end": "2023-06-27",
+      "test_start": "2023-06-27",
+      "test_end": "2023-06-28"
+    },
+    {
+      "fold": 57,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-27",
+      "calibration_start": "2023-06-27",
+      "calibration_end": "2023-06-28",
+      "test_start": "2023-06-28",
+      "test_end": "2023-06-30"
+    },
+    {
+      "fold": 58,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-28",
+      "calibration_start": "2023-06-28",
+      "calibration_end": "2023-06-30",
+      "test_start": "2023-06-30",
+      "test_end": "2023-07-01"
+    },
+    {
+      "fold": 59,
+      "train_start": "2023-03-30",
+      "train_end": "2023-06-30",
+      "calibration_start": "2023-06-30",
+      "calibration_end": "2023-07-01",
+      "test_start": "2023-07-01",
+      "test_end": "2023-07-02"
+    },
+    {
+      "fold": 60,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-01",
+      "calibration_start": "2023-07-01",
+      "calibration_end": "2023-07-02",
+      "test_start": "2023-07-03",
+      "test_end": "2023-07-04"
+    },
+    {
+      "fold": 61,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-02",
+      "calibration_start": "2023-07-03",
+      "calibration_end": "2023-07-04",
+      "test_start": "2023-07-04",
+      "test_end": "2023-07-06"
+    },
+    {
+      "fold": 62,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-04",
+      "calibration_start": "2023-07-04",
+      "calibration_end": "2023-07-06",
+      "test_start": "2023-07-06",
+      "test_end": "2023-07-07"
+    },
+    {
+      "fold": 63,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-06",
+      "calibration_start": "2023-07-06",
+      "calibration_end": "2023-07-07",
+      "test_start": "2023-07-07",
+      "test_end": "2023-07-08"
+    },
+    {
+      "fold": 64,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-07",
+      "calibration_start": "2023-07-07",
+      "calibration_end": "2023-07-08",
+      "test_start": "2023-07-08",
+      "test_end": "2023-07-14"
+    },
+    {
+      "fold": 65,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-08",
+      "calibration_start": "2023-07-08",
+      "calibration_end": "2023-07-14",
+      "test_start": "2023-07-14",
+      "test_end": "2023-07-15"
+    },
+    {
+      "fold": 66,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-14",
+      "calibration_start": "2023-07-14",
+      "calibration_end": "2023-07-15",
+      "test_start": "2023-07-15",
+      "test_end": "2023-07-16"
+    },
+    {
+      "fold": 67,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-15",
+      "calibration_start": "2023-07-15",
+      "calibration_end": "2023-07-16",
+      "test_start": "2023-07-16",
+      "test_end": "2023-07-18"
+    },
+    {
+      "fold": 68,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-16",
+      "calibration_start": "2023-07-16",
+      "calibration_end": "2023-07-18",
+      "test_start": "2023-07-18",
+      "test_end": "2023-07-19"
+    },
+    {
+      "fold": 69,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-18",
+      "calibration_start": "2023-07-18",
+      "calibration_end": "2023-07-19",
+      "test_start": "2023-07-19",
+      "test_end": "2023-07-21"
+    },
+    {
+      "fold": 70,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-19",
+      "calibration_start": "2023-07-19",
+      "calibration_end": "2023-07-21",
+      "test_start": "2023-07-21",
+      "test_end": "2023-07-22"
+    },
+    {
+      "fold": 71,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-21",
+      "calibration_start": "2023-07-21",
+      "calibration_end": "2023-07-22",
+      "test_start": "2023-07-22",
+      "test_end": "2023-07-24"
+    },
+    {
+      "fold": 72,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-22",
+      "calibration_start": "2023-07-22",
+      "calibration_end": "2023-07-24",
+      "test_start": "2023-07-24",
+      "test_end": "2023-07-25"
+    },
+    {
+      "fold": 73,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-24",
+      "calibration_start": "2023-07-24",
+      "calibration_end": "2023-07-25",
+      "test_start": "2023-07-25",
+      "test_end": "2023-07-27"
+    },
+    {
+      "fold": 74,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-25",
+      "calibration_start": "2023-07-25",
+      "calibration_end": "2023-07-27",
+      "test_start": "2023-07-27",
+      "test_end": "2023-07-29"
+    },
+    {
+      "fold": 75,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-27",
+      "calibration_start": "2023-07-27",
+      "calibration_end": "2023-07-29",
+      "test_start": "2023-07-29",
+      "test_end": "2023-07-30"
+    },
+    {
+      "fold": 76,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-29",
+      "calibration_start": "2023-07-29",
+      "calibration_end": "2023-07-30",
+      "test_start": "2023-07-30",
+      "test_end": "2023-08-01"
+    },
+    {
+      "fold": 77,
+      "train_start": "2023-03-30",
+      "train_end": "2023-07-30",
+      "calibration_start": "2023-07-30",
+      "calibration_end": "2023-08-01",
+      "test_start": "2023-08-01",
+      "test_end": "2023-08-02"
+    },
+    {
+      "fold": 78,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-01",
+      "calibration_start": "2023-08-01",
+      "calibration_end": "2023-08-02",
+      "test_start": "2023-08-02",
+      "test_end": "2023-08-04"
+    },
+    {
+      "fold": 79,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-02",
+      "calibration_start": "2023-08-02",
+      "calibration_end": "2023-08-04",
+      "test_start": "2023-08-04",
+      "test_end": "2023-08-05"
+    },
+    {
+      "fold": 80,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-04",
+      "calibration_start": "2023-08-04",
+      "calibration_end": "2023-08-05",
+      "test_start": "2023-08-05",
+      "test_end": "2023-08-06"
+    },
+    {
+      "fold": 81,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-05",
+      "calibration_start": "2023-08-05",
+      "calibration_end": "2023-08-06",
+      "test_start": "2023-08-06",
+      "test_end": "2023-08-08"
+    },
+    {
+      "fold": 82,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-06",
+      "calibration_start": "2023-08-06",
+      "calibration_end": "2023-08-08",
+      "test_start": "2023-08-08",
+      "test_end": "2023-08-09"
+    },
+    {
+      "fold": 83,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-08",
+      "calibration_start": "2023-08-08",
+      "calibration_end": "2023-08-09",
+      "test_start": "2023-08-09",
+      "test_end": "2023-08-11"
+    },
+    {
+      "fold": 84,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-09",
+      "calibration_start": "2023-08-09",
+      "calibration_end": "2023-08-11",
+      "test_start": "2023-08-11",
+      "test_end": "2023-08-12"
+    },
+    {
+      "fold": 85,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-11",
+      "calibration_start": "2023-08-11",
+      "calibration_end": "2023-08-12",
+      "test_start": "2023-08-12",
+      "test_end": "2023-08-14"
+    },
+    {
+      "fold": 86,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-12",
+      "calibration_start": "2023-08-12",
+      "calibration_end": "2023-08-14",
+      "test_start": "2023-08-14",
+      "test_end": "2023-08-15"
+    },
+    {
+      "fold": 87,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-14",
+      "calibration_start": "2023-08-14",
+      "calibration_end": "2023-08-15",
+      "test_start": "2023-08-16",
+      "test_end": "2023-08-17"
+    },
+    {
+      "fold": 88,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-15",
+      "calibration_start": "2023-08-16",
+      "calibration_end": "2023-08-17",
+      "test_start": "2023-08-18",
+      "test_end": "2023-08-19"
+    },
+    {
+      "fold": 89,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-17",
+      "calibration_start": "2023-08-18",
+      "calibration_end": "2023-08-19",
+      "test_start": "2023-08-19",
+      "test_end": "2023-08-20"
+    },
+    {
+      "fold": 90,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-19",
+      "calibration_start": "2023-08-19",
+      "calibration_end": "2023-08-20",
+      "test_start": "2023-08-20",
+      "test_end": "2023-08-22"
+    },
+    {
+      "fold": 91,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-20",
+      "calibration_start": "2023-08-20",
+      "calibration_end": "2023-08-22",
+      "test_start": "2023-08-22",
+      "test_end": "2023-08-23"
+    },
+    {
+      "fold": 92,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-22",
+      "calibration_start": "2023-08-22",
+      "calibration_end": "2023-08-23",
+      "test_start": "2023-08-23",
+      "test_end": "2023-08-25"
+    },
+    {
+      "fold": 93,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-23",
+      "calibration_start": "2023-08-23",
+      "calibration_end": "2023-08-25",
+      "test_start": "2023-08-25",
+      "test_end": "2023-08-26"
+    },
+    {
+      "fold": 94,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-25",
+      "calibration_start": "2023-08-25",
+      "calibration_end": "2023-08-26",
+      "test_start": "2023-08-26",
+      "test_end": "2023-08-28"
+    },
+    {
+      "fold": 95,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-26",
+      "calibration_start": "2023-08-26",
+      "calibration_end": "2023-08-28",
+      "test_start": "2023-08-28",
+      "test_end": "2023-08-29"
+    },
+    {
+      "fold": 96,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-28",
+      "calibration_start": "2023-08-28",
+      "calibration_end": "2023-08-29",
+      "test_start": "2023-08-29",
+      "test_end": "2023-08-30"
+    },
+    {
+      "fold": 97,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-29",
+      "calibration_start": "2023-08-29",
+      "calibration_end": "2023-08-30",
+      "test_start": "2023-08-30",
+      "test_end": "2023-09-01"
+    },
+    {
+      "fold": 98,
+      "train_start": "2023-03-30",
+      "train_end": "2023-08-30",
+      "calibration_start": "2023-08-30",
+      "calibration_end": "2023-09-01",
+      "test_start": "2023-09-01",
+      "test_end": "2023-09-03"
+    },
+    {
+      "fold": 99,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-01",
+      "calibration_start": "2023-09-01",
+      "calibration_end": "2023-09-03",
+      "test_start": "2023-09-03",
+      "test_end": "2023-09-04"
+    },
+    {
+      "fold": 100,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-03",
+      "calibration_start": "2023-09-03",
+      "calibration_end": "2023-09-04",
+      "test_start": "2023-09-04",
+      "test_end": "2023-09-06"
+    },
+    {
+      "fold": 101,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-04",
+      "calibration_start": "2023-09-04",
+      "calibration_end": "2023-09-06",
+      "test_start": "2023-09-06",
+      "test_end": "2023-09-07"
+    },
+    {
+      "fold": 102,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-06",
+      "calibration_start": "2023-09-06",
+      "calibration_end": "2023-09-07",
+      "test_start": "2023-09-08",
+      "test_end": "2023-09-09"
+    },
+    {
+      "fold": 103,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-07",
+      "calibration_start": "2023-09-08",
+      "calibration_end": "2023-09-09",
+      "test_start": "2023-09-09",
+      "test_end": "2023-09-10"
+    },
+    {
+      "fold": 104,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-09",
+      "calibration_start": "2023-09-09",
+      "calibration_end": "2023-09-10",
+      "test_start": "2023-09-10",
+      "test_end": "2023-09-12"
+    },
+    {
+      "fold": 105,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-10",
+      "calibration_start": "2023-09-10",
+      "calibration_end": "2023-09-12",
+      "test_start": "2023-09-12",
+      "test_end": "2023-09-13"
+    },
+    {
+      "fold": 106,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-12",
+      "calibration_start": "2023-09-12",
+      "calibration_end": "2023-09-13",
+      "test_start": "2023-09-13",
+      "test_end": "2023-09-15"
+    },
+    {
+      "fold": 107,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-13",
+      "calibration_start": "2023-09-13",
+      "calibration_end": "2023-09-15",
+      "test_start": "2023-09-15",
+      "test_end": "2023-09-16"
+    },
+    {
+      "fold": 108,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-15",
+      "calibration_start": "2023-09-15",
+      "calibration_end": "2023-09-16",
+      "test_start": "2023-09-16",
+      "test_end": "2023-09-17"
+    },
+    {
+      "fold": 109,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-16",
+      "calibration_start": "2023-09-16",
+      "calibration_end": "2023-09-17",
+      "test_start": "2023-09-17",
+      "test_end": "2023-09-19"
+    },
+    {
+      "fold": 110,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-17",
+      "calibration_start": "2023-09-17",
+      "calibration_end": "2023-09-19",
+      "test_start": "2023-09-19",
+      "test_end": "2023-09-20"
+    },
+    {
+      "fold": 111,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-19",
+      "calibration_start": "2023-09-19",
+      "calibration_end": "2023-09-20",
+      "test_start": "2023-09-20",
+      "test_end": "2023-09-22"
+    },
+    {
+      "fold": 112,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-20",
+      "calibration_start": "2023-09-20",
+      "calibration_end": "2023-09-22",
+      "test_start": "2023-09-22",
+      "test_end": "2023-09-23"
+    },
+    {
+      "fold": 113,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-22",
+      "calibration_start": "2023-09-22",
+      "calibration_end": "2023-09-23",
+      "test_start": "2023-09-23",
+      "test_end": "2023-09-25"
+    },
+    {
+      "fold": 114,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-23",
+      "calibration_start": "2023-09-23",
+      "calibration_end": "2023-09-25",
+      "test_start": "2023-09-25",
+      "test_end": "2023-09-27"
+    },
+    {
+      "fold": 115,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-25",
+      "calibration_start": "2023-09-25",
+      "calibration_end": "2023-09-27",
+      "test_start": "2023-09-27",
+      "test_end": "2023-09-28"
+    },
+    {
+      "fold": 116,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-27",
+      "calibration_start": "2023-09-27",
+      "calibration_end": "2023-09-28",
+      "test_start": "2023-09-28",
+      "test_end": "2023-09-30"
+    },
+    {
+      "fold": 117,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-28",
+      "calibration_start": "2023-09-28",
+      "calibration_end": "2023-09-30",
+      "test_start": "2023-09-30",
+      "test_end": "2023-10-01"
+    },
+    {
+      "fold": 118,
+      "train_start": "2023-03-30",
+      "train_end": "2023-09-30",
+      "calibration_start": "2023-09-30",
+      "calibration_end": "2023-10-01",
+      "test_start": "2023-10-01",
+      "test_end": "2023-10-08"
+    },
+    {
+      "fold": 119,
+      "train_start": "2023-03-30",
+      "train_end": "2023-10-01",
+      "calibration_start": "2023-10-01",
+      "calibration_end": "2023-10-08",
+      "test_start": "2023-10-08",
+      "test_end": "2023-10-22"
+    },
+    {
+      "fold": 120,
+      "train_start": "2023-03-30",
+      "train_end": "2023-10-08",
+      "calibration_start": "2023-10-08",
+      "calibration_end": "2023-10-22",
+      "test_start": "2023-10-23",
+      "test_end": "2024-03-28"
+    },
+    {
+      "fold": 121,
+      "train_start": "2023-03-30",
+      "train_end": "2023-10-22",
+      "calibration_start": "2023-10-23",
+      "calibration_end": "2024-03-28",
+      "test_start": "2024-03-28",
+      "test_end": "2024-03-30"
+    },
+    {
+      "fold": 122,
+      "train_start": "2023-03-30",
+      "train_end": "2024-03-28",
+      "calibration_start": "2024-03-28",
+      "calibration_end": "2024-03-30",
+      "test_start": "2024-03-30",
+      "test_end": "2024-03-31"
+    },
+    {
+      "fold": 123,
+      "train_start": "2023-03-30",
+      "train_end": "2024-03-30",
+      "calibration_start": "2024-03-30",
+      "calibration_end": "2024-03-31",
+      "test_start": "2024-03-31",
+      "test_end": "2024-04-02"
+    },
+    {
+      "fold": 124,
+      "train_start": "2023-03-30",
+      "train_end": "2024-03-31",
+      "calibration_start": "2024-03-31",
+      "calibration_end": "2024-04-02",
+      "test_start": "2024-04-02",
+      "test_end": "2024-04-03"
+    },
+    {
+      "fold": 125,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-02",
+      "calibration_start": "2024-04-02",
+      "calibration_end": "2024-04-03",
+      "test_start": "2024-04-03",
+      "test_end": "2024-04-05"
+    },
+    {
+      "fold": 126,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-03",
+      "calibration_start": "2024-04-03",
+      "calibration_end": "2024-04-05",
+      "test_start": "2024-04-05",
+      "test_end": "2024-04-07"
+    },
+    {
+      "fold": 127,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-05",
+      "calibration_start": "2024-04-05",
+      "calibration_end": "2024-04-07",
+      "test_start": "2024-04-07",
+      "test_end": "2024-04-08"
+    },
+    {
+      "fold": 128,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-07",
+      "calibration_start": "2024-04-07",
+      "calibration_end": "2024-04-08",
+      "test_start": "2024-04-08",
+      "test_end": "2024-04-10"
+    },
+    {
+      "fold": 129,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-08",
+      "calibration_start": "2024-04-08",
+      "calibration_end": "2024-04-10",
+      "test_start": "2024-04-10",
+      "test_end": "2024-04-12"
+    },
+    {
+      "fold": 130,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-10",
+      "calibration_start": "2024-04-10",
+      "calibration_end": "2024-04-12",
+      "test_start": "2024-04-12",
+      "test_end": "2024-04-13"
+    },
+    {
+      "fold": 131,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-12",
+      "calibration_start": "2024-04-12",
+      "calibration_end": "2024-04-13",
+      "test_start": "2024-04-13",
+      "test_end": "2024-04-14"
+    },
+    {
+      "fold": 132,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-13",
+      "calibration_start": "2024-04-13",
+      "calibration_end": "2024-04-14",
+      "test_start": "2024-04-14",
+      "test_end": "2024-04-16"
+    },
+    {
+      "fold": 133,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-14",
+      "calibration_start": "2024-04-14",
+      "calibration_end": "2024-04-16",
+      "test_start": "2024-04-16",
+      "test_end": "2024-04-17"
+    },
+    {
+      "fold": 134,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-16",
+      "calibration_start": "2024-04-16",
+      "calibration_end": "2024-04-17",
+      "test_start": "2024-04-17",
+      "test_end": "2024-04-19"
+    },
+    {
+      "fold": 135,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-17",
+      "calibration_start": "2024-04-17",
+      "calibration_end": "2024-04-19",
+      "test_start": "2024-04-19",
+      "test_end": "2024-04-20"
+    },
+    {
+      "fold": 136,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-19",
+      "calibration_start": "2024-04-19",
+      "calibration_end": "2024-04-20",
+      "test_start": "2024-04-20",
+      "test_end": "2024-04-22"
+    },
+    {
+      "fold": 137,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-20",
+      "calibration_start": "2024-04-20",
+      "calibration_end": "2024-04-22",
+      "test_start": "2024-04-22",
+      "test_end": "2024-04-23"
+    },
+    {
+      "fold": 138,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-22",
+      "calibration_start": "2024-04-22",
+      "calibration_end": "2024-04-23",
+      "test_start": "2024-04-23",
+      "test_end": "2024-04-25"
+    },
+    {
+      "fold": 139,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-23",
+      "calibration_start": "2024-04-23",
+      "calibration_end": "2024-04-25",
+      "test_start": "2024-04-25",
+      "test_end": "2024-04-26"
+    },
+    {
+      "fold": 140,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-25",
+      "calibration_start": "2024-04-25",
+      "calibration_end": "2024-04-26",
+      "test_start": "2024-04-26",
+      "test_end": "2024-04-28"
+    },
+    {
+      "fold": 141,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-26",
+      "calibration_start": "2024-04-26",
+      "calibration_end": "2024-04-28",
+      "test_start": "2024-04-28",
+      "test_end": "2024-04-29"
+    },
+    {
+      "fold": 142,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-28",
+      "calibration_start": "2024-04-28",
+      "calibration_end": "2024-04-29",
+      "test_start": "2024-04-29",
+      "test_end": "2024-05-01"
+    },
+    {
+      "fold": 143,
+      "train_start": "2023-03-30",
+      "train_end": "2024-04-29",
+      "calibration_start": "2024-04-29",
+      "calibration_end": "2024-05-01",
+      "test_start": "2024-05-01",
+      "test_end": "2024-05-03"
+    },
+    {
+      "fold": 144,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-01",
+      "calibration_start": "2024-05-01",
+      "calibration_end": "2024-05-03",
+      "test_start": "2024-05-03",
+      "test_end": "2024-05-04"
+    },
+    {
+      "fold": 145,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-03",
+      "calibration_start": "2024-05-03",
+      "calibration_end": "2024-05-04",
+      "test_start": "2024-05-04",
+      "test_end": "2024-05-05"
+    },
+    {
+      "fold": 146,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-04",
+      "calibration_start": "2024-05-04",
+      "calibration_end": "2024-05-05",
+      "test_start": "2024-05-05",
+      "test_end": "2024-05-07"
+    },
+    {
+      "fold": 147,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-05",
+      "calibration_start": "2024-05-05",
+      "calibration_end": "2024-05-07",
+      "test_start": "2024-05-07",
+      "test_end": "2024-05-08"
+    },
+    {
+      "fold": 148,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-07",
+      "calibration_start": "2024-05-07",
+      "calibration_end": "2024-05-08",
+      "test_start": "2024-05-08",
+      "test_end": "2024-05-10"
+    },
+    {
+      "fold": 149,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-08",
+      "calibration_start": "2024-05-08",
+      "calibration_end": "2024-05-10",
+      "test_start": "2024-05-10",
+      "test_end": "2024-05-11"
+    },
+    {
+      "fold": 150,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-10",
+      "calibration_start": "2024-05-10",
+      "calibration_end": "2024-05-11",
+      "test_start": "2024-05-12",
+      "test_end": "2024-05-13"
+    },
+    {
+      "fold": 151,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-11",
+      "calibration_start": "2024-05-12",
+      "calibration_end": "2024-05-13",
+      "test_start": "2024-05-13",
+      "test_end": "2024-05-14"
+    },
+    {
+      "fold": 152,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-13",
+      "calibration_start": "2024-05-13",
+      "calibration_end": "2024-05-14",
+      "test_start": "2024-05-14",
+      "test_end": "2024-05-16"
+    },
+    {
+      "fold": 153,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-14",
+      "calibration_start": "2024-05-14",
+      "calibration_end": "2024-05-16",
+      "test_start": "2024-05-16",
+      "test_end": "2024-05-18"
+    },
+    {
+      "fold": 154,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-16",
+      "calibration_start": "2024-05-16",
+      "calibration_end": "2024-05-18",
+      "test_start": "2024-05-18",
+      "test_end": "2024-05-19"
+    },
+    {
+      "fold": 155,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-18",
+      "calibration_start": "2024-05-18",
+      "calibration_end": "2024-05-19",
+      "test_start": "2024-05-19",
+      "test_end": "2024-05-20"
+    },
+    {
+      "fold": 156,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-19",
+      "calibration_start": "2024-05-19",
+      "calibration_end": "2024-05-20",
+      "test_start": "2024-05-21",
+      "test_end": "2024-05-22"
+    },
+    {
+      "fold": 157,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-20",
+      "calibration_start": "2024-05-21",
+      "calibration_end": "2024-05-22",
+      "test_start": "2024-05-22",
+      "test_end": "2024-05-24"
+    },
+    {
+      "fold": 158,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-22",
+      "calibration_start": "2024-05-22",
+      "calibration_end": "2024-05-24",
+      "test_start": "2024-05-24",
+      "test_end": "2024-05-25"
+    },
+    {
+      "fold": 159,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-24",
+      "calibration_start": "2024-05-24",
+      "calibration_end": "2024-05-25",
+      "test_start": "2024-05-25",
+      "test_end": "2024-05-26"
+    },
+    {
+      "fold": 160,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-25",
+      "calibration_start": "2024-05-25",
+      "calibration_end": "2024-05-26",
+      "test_start": "2024-05-26",
+      "test_end": "2024-05-28"
+    },
+    {
+      "fold": 161,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-26",
+      "calibration_start": "2024-05-26",
+      "calibration_end": "2024-05-28",
+      "test_start": "2024-05-28",
+      "test_end": "2024-05-29"
+    },
+    {
+      "fold": 162,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-28",
+      "calibration_start": "2024-05-28",
+      "calibration_end": "2024-05-29",
+      "test_start": "2024-05-29",
+      "test_end": "2024-05-31"
+    },
+    {
+      "fold": 163,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-29",
+      "calibration_start": "2024-05-29",
+      "calibration_end": "2024-05-31",
+      "test_start": "2024-05-31",
+      "test_end": "2024-06-01"
+    },
+    {
+      "fold": 164,
+      "train_start": "2023-03-30",
+      "train_end": "2024-05-31",
+      "calibration_start": "2024-05-31",
+      "calibration_end": "2024-06-01",
+      "test_start": "2024-06-01",
+      "test_end": "2024-06-03"
+    },
+    {
+      "fold": 165,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-01",
+      "calibration_start": "2024-06-01",
+      "calibration_end": "2024-06-03",
+      "test_start": "2024-06-03",
+      "test_end": "2024-06-05"
+    },
+    {
+      "fold": 166,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-03",
+      "calibration_start": "2024-06-03",
+      "calibration_end": "2024-06-05",
+      "test_start": "2024-06-05",
+      "test_end": "2024-06-06"
+    },
+    {
+      "fold": 167,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-05",
+      "calibration_start": "2024-06-05",
+      "calibration_end": "2024-06-06",
+      "test_start": "2024-06-06",
+      "test_end": "2024-06-08"
+    },
+    {
+      "fold": 168,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-06",
+      "calibration_start": "2024-06-06",
+      "calibration_end": "2024-06-08",
+      "test_start": "2024-06-08",
+      "test_end": "2024-06-09"
+    },
+    {
+      "fold": 169,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-08",
+      "calibration_start": "2024-06-08",
+      "calibration_end": "2024-06-09",
+      "test_start": "2024-06-09",
+      "test_end": "2024-06-11"
+    },
+    {
+      "fold": 170,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-09",
+      "calibration_start": "2024-06-09",
+      "calibration_end": "2024-06-11",
+      "test_start": "2024-06-11",
+      "test_end": "2024-06-12"
+    },
+    {
+      "fold": 171,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-11",
+      "calibration_start": "2024-06-11",
+      "calibration_end": "2024-06-12",
+      "test_start": "2024-06-12",
+      "test_end": "2024-06-14"
+    },
+    {
+      "fold": 172,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-12",
+      "calibration_start": "2024-06-12",
+      "calibration_end": "2024-06-14",
+      "test_start": "2024-06-14",
+      "test_end": "2024-06-15"
+    },
+    {
+      "fold": 173,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-14",
+      "calibration_start": "2024-06-14",
+      "calibration_end": "2024-06-15",
+      "test_start": "2024-06-15",
+      "test_end": "2024-06-16"
+    },
+    {
+      "fold": 174,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-15",
+      "calibration_start": "2024-06-15",
+      "calibration_end": "2024-06-16",
+      "test_start": "2024-06-17",
+      "test_end": "2024-06-18"
+    },
+    {
+      "fold": 175,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-16",
+      "calibration_start": "2024-06-17",
+      "calibration_end": "2024-06-18",
+      "test_start": "2024-06-18",
+      "test_end": "2024-06-20"
+    },
+    {
+      "fold": 176,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-18",
+      "calibration_start": "2024-06-18",
+      "calibration_end": "2024-06-20",
+      "test_start": "2024-06-20",
+      "test_end": "2024-06-21"
+    },
+    {
+      "fold": 177,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-20",
+      "calibration_start": "2024-06-20",
+      "calibration_end": "2024-06-21",
+      "test_start": "2024-06-21",
+      "test_end": "2024-06-23"
+    },
+    {
+      "fold": 178,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-21",
+      "calibration_start": "2024-06-21",
+      "calibration_end": "2024-06-23",
+      "test_start": "2024-06-23",
+      "test_end": "2024-06-24"
+    },
+    {
+      "fold": 179,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-23",
+      "calibration_start": "2024-06-23",
+      "calibration_end": "2024-06-24",
+      "test_start": "2024-06-24",
+      "test_end": "2024-06-26"
+    },
+    {
+      "fold": 180,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-24",
+      "calibration_start": "2024-06-24",
+      "calibration_end": "2024-06-26",
+      "test_start": "2024-06-26",
+      "test_end": "2024-06-27"
+    },
+    {
+      "fold": 181,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-26",
+      "calibration_start": "2024-06-26",
+      "calibration_end": "2024-06-27",
+      "test_start": "2024-06-27",
+      "test_end": "2024-06-29"
+    },
+    {
+      "fold": 182,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-27",
+      "calibration_start": "2024-06-27",
+      "calibration_end": "2024-06-29",
+      "test_start": "2024-06-29",
+      "test_end": "2024-06-30"
+    },
+    {
+      "fold": 183,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-29",
+      "calibration_start": "2024-06-29",
+      "calibration_end": "2024-06-30",
+      "test_start": "2024-06-30",
+      "test_end": "2024-07-02"
+    },
+    {
+      "fold": 184,
+      "train_start": "2023-03-30",
+      "train_end": "2024-06-30",
+      "calibration_start": "2024-06-30",
+      "calibration_end": "2024-07-02",
+      "test_start": "2024-07-02",
+      "test_end": "2024-07-03"
+    },
+    {
+      "fold": 185,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-02",
+      "calibration_start": "2024-07-02",
+      "calibration_end": "2024-07-03",
+      "test_start": "2024-07-04",
+      "test_end": "2024-07-05"
+    },
+    {
+      "fold": 186,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-03",
+      "calibration_start": "2024-07-04",
+      "calibration_end": "2024-07-05",
+      "test_start": "2024-07-05",
+      "test_end": "2024-07-06"
+    },
+    {
+      "fold": 187,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-05",
+      "calibration_start": "2024-07-05",
+      "calibration_end": "2024-07-06",
+      "test_start": "2024-07-06",
+      "test_end": "2024-07-08"
+    },
+    {
+      "fold": 188,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-06",
+      "calibration_start": "2024-07-06",
+      "calibration_end": "2024-07-08",
+      "test_start": "2024-07-08",
+      "test_end": "2024-07-10"
+    },
+    {
+      "fold": 189,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-08",
+      "calibration_start": "2024-07-08",
+      "calibration_end": "2024-07-10",
+      "test_start": "2024-07-10",
+      "test_end": "2024-07-11"
+    },
+    {
+      "fold": 190,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-10",
+      "calibration_start": "2024-07-10",
+      "calibration_end": "2024-07-11",
+      "test_start": "2024-07-11",
+      "test_end": "2024-07-12"
+    },
+    {
+      "fold": 191,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-11",
+      "calibration_start": "2024-07-11",
+      "calibration_end": "2024-07-12",
+      "test_start": "2024-07-12",
+      "test_end": "2024-07-14"
+    },
+    {
+      "fold": 192,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-12",
+      "calibration_start": "2024-07-12",
+      "calibration_end": "2024-07-14",
+      "test_start": "2024-07-14",
+      "test_end": "2024-07-19"
+    },
+    {
+      "fold": 193,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-14",
+      "calibration_start": "2024-07-14",
+      "calibration_end": "2024-07-19",
+      "test_start": "2024-07-19",
+      "test_end": "2024-07-20"
+    },
+    {
+      "fold": 194,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-19",
+      "calibration_start": "2024-07-19",
+      "calibration_end": "2024-07-20",
+      "test_start": "2024-07-20",
+      "test_end": "2024-07-22"
+    },
+    {
+      "fold": 195,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-20",
+      "calibration_start": "2024-07-20",
+      "calibration_end": "2024-07-22",
+      "test_start": "2024-07-22",
+      "test_end": "2024-07-23"
+    },
+    {
+      "fold": 196,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-22",
+      "calibration_start": "2024-07-22",
+      "calibration_end": "2024-07-23",
+      "test_start": "2024-07-23",
+      "test_end": "2024-07-24"
+    },
+    {
+      "fold": 197,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-23",
+      "calibration_start": "2024-07-23",
+      "calibration_end": "2024-07-24",
+      "test_start": "2024-07-25",
+      "test_end": "2024-07-26"
+    },
+    {
+      "fold": 198,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-24",
+      "calibration_start": "2024-07-25",
+      "calibration_end": "2024-07-26",
+      "test_start": "2024-07-26",
+      "test_end": "2024-07-28"
+    },
+    {
+      "fold": 199,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-26",
+      "calibration_start": "2024-07-26",
+      "calibration_end": "2024-07-28",
+      "test_start": "2024-07-28",
+      "test_end": "2024-07-29"
+    },
+    {
+      "fold": 200,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-28",
+      "calibration_start": "2024-07-28",
+      "calibration_end": "2024-07-29",
+      "test_start": "2024-07-29",
+      "test_end": "2024-07-30"
+    },
+    {
+      "fold": 201,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-29",
+      "calibration_start": "2024-07-29",
+      "calibration_end": "2024-07-30",
+      "test_start": "2024-07-30",
+      "test_end": "2024-08-01"
+    },
+    {
+      "fold": 202,
+      "train_start": "2023-03-30",
+      "train_end": "2024-07-30",
+      "calibration_start": "2024-07-30",
+      "calibration_end": "2024-08-01",
+      "test_start": "2024-08-02",
+      "test_end": "2024-08-03"
+    },
+    {
+      "fold": 203,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-01",
+      "calibration_start": "2024-08-02",
+      "calibration_end": "2024-08-03",
+      "test_start": "2024-08-03",
+      "test_end": "2024-08-04"
+    },
+    {
+      "fold": 204,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-03",
+      "calibration_start": "2024-08-03",
+      "calibration_end": "2024-08-04",
+      "test_start": "2024-08-04",
+      "test_end": "2024-08-06"
+    },
+    {
+      "fold": 205,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-04",
+      "calibration_start": "2024-08-04",
+      "calibration_end": "2024-08-06",
+      "test_start": "2024-08-06",
+      "test_end": "2024-08-07"
+    },
+    {
+      "fold": 206,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-06",
+      "calibration_start": "2024-08-06",
+      "calibration_end": "2024-08-07",
+      "test_start": "2024-08-07",
+      "test_end": "2024-08-09"
+    },
+    {
+      "fold": 207,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-07",
+      "calibration_start": "2024-08-07",
+      "calibration_end": "2024-08-09",
+      "test_start": "2024-08-09",
+      "test_end": "2024-08-10"
+    },
+    {
+      "fold": 208,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-09",
+      "calibration_start": "2024-08-09",
+      "calibration_end": "2024-08-10",
+      "test_start": "2024-08-10",
+      "test_end": "2024-08-12"
+    },
+    {
+      "fold": 209,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-10",
+      "calibration_start": "2024-08-10",
+      "calibration_end": "2024-08-12",
+      "test_start": "2024-08-12",
+      "test_end": "2024-08-13"
+    },
+    {
+      "fold": 210,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-12",
+      "calibration_start": "2024-08-12",
+      "calibration_end": "2024-08-13",
+      "test_start": "2024-08-13",
+      "test_end": "2024-08-15"
+    },
+    {
+      "fold": 211,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-13",
+      "calibration_start": "2024-08-13",
+      "calibration_end": "2024-08-15",
+      "test_start": "2024-08-15",
+      "test_end": "2024-08-16"
+    },
+    {
+      "fold": 212,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-15",
+      "calibration_start": "2024-08-15",
+      "calibration_end": "2024-08-16",
+      "test_start": "2024-08-17",
+      "test_end": "2024-08-18"
+    },
+    {
+      "fold": 213,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-16",
+      "calibration_start": "2024-08-17",
+      "calibration_end": "2024-08-18",
+      "test_start": "2024-08-18",
+      "test_end": "2024-08-19"
+    },
+    {
+      "fold": 214,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-18",
+      "calibration_start": "2024-08-18",
+      "calibration_end": "2024-08-19",
+      "test_start": "2024-08-20",
+      "test_end": "2024-08-21"
+    },
+    {
+      "fold": 215,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-19",
+      "calibration_start": "2024-08-20",
+      "calibration_end": "2024-08-21",
+      "test_start": "2024-08-21",
+      "test_end": "2024-08-22"
+    },
+    {
+      "fold": 216,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-21",
+      "calibration_start": "2024-08-21",
+      "calibration_end": "2024-08-22",
+      "test_start": "2024-08-23",
+      "test_end": "2024-08-24"
+    },
+    {
+      "fold": 217,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-22",
+      "calibration_start": "2024-08-23",
+      "calibration_end": "2024-08-24",
+      "test_start": "2024-08-24",
+      "test_end": "2024-08-25"
+    },
+    {
+      "fold": 218,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-24",
+      "calibration_start": "2024-08-24",
+      "calibration_end": "2024-08-25",
+      "test_start": "2024-08-25",
+      "test_end": "2024-08-27"
+    },
+    {
+      "fold": 219,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-25",
+      "calibration_start": "2024-08-25",
+      "calibration_end": "2024-08-27",
+      "test_start": "2024-08-27",
+      "test_end": "2024-08-28"
+    },
+    {
+      "fold": 220,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-27",
+      "calibration_start": "2024-08-27",
+      "calibration_end": "2024-08-28",
+      "test_start": "2024-08-28",
+      "test_end": "2024-08-30"
+    },
+    {
+      "fold": 221,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-28",
+      "calibration_start": "2024-08-28",
+      "calibration_end": "2024-08-30",
+      "test_start": "2024-08-30",
+      "test_end": "2024-08-31"
+    },
+    {
+      "fold": 222,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-30",
+      "calibration_start": "2024-08-30",
+      "calibration_end": "2024-08-31",
+      "test_start": "2024-08-31",
+      "test_end": "2024-09-01"
+    },
+    {
+      "fold": 223,
+      "train_start": "2023-03-30",
+      "train_end": "2024-08-31",
+      "calibration_start": "2024-08-31",
+      "calibration_end": "2024-09-01",
+      "test_start": "2024-09-01",
+      "test_end": "2024-09-03"
+    },
+    {
+      "fold": 224,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-01",
+      "calibration_start": "2024-09-01",
+      "calibration_end": "2024-09-03",
+      "test_start": "2024-09-03",
+      "test_end": "2024-09-04"
+    },
+    {
+      "fold": 225,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-03",
+      "calibration_start": "2024-09-03",
+      "calibration_end": "2024-09-04",
+      "test_start": "2024-09-04",
+      "test_end": "2024-09-06"
+    },
+    {
+      "fold": 226,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-04",
+      "calibration_start": "2024-09-04",
+      "calibration_end": "2024-09-06",
+      "test_start": "2024-09-06",
+      "test_end": "2024-09-07"
+    },
+    {
+      "fold": 227,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-06",
+      "calibration_start": "2024-09-06",
+      "calibration_end": "2024-09-07",
+      "test_start": "2024-09-07",
+      "test_end": "2024-09-09"
+    },
+    {
+      "fold": 228,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-07",
+      "calibration_start": "2024-09-07",
+      "calibration_end": "2024-09-09",
+      "test_start": "2024-09-09",
+      "test_end": "2024-09-10"
+    },
+    {
+      "fold": 229,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-09",
+      "calibration_start": "2024-09-09",
+      "calibration_end": "2024-09-10",
+      "test_start": "2024-09-11",
+      "test_end": "2024-09-12"
+    },
+    {
+      "fold": 230,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-10",
+      "calibration_start": "2024-09-11",
+      "calibration_end": "2024-09-12",
+      "test_start": "2024-09-12",
+      "test_end": "2024-09-14"
+    },
+    {
+      "fold": 231,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-12",
+      "calibration_start": "2024-09-12",
+      "calibration_end": "2024-09-14",
+      "test_start": "2024-09-14",
+      "test_end": "2024-09-15"
+    },
+    {
+      "fold": 232,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-14",
+      "calibration_start": "2024-09-14",
+      "calibration_end": "2024-09-15",
+      "test_start": "2024-09-15",
+      "test_end": "2024-09-17"
+    },
+    {
+      "fold": 233,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-15",
+      "calibration_start": "2024-09-15",
+      "calibration_end": "2024-09-17",
+      "test_start": "2024-09-17",
+      "test_end": "2024-09-18"
+    },
+    {
+      "fold": 234,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-17",
+      "calibration_start": "2024-09-17",
+      "calibration_end": "2024-09-18",
+      "test_start": "2024-09-18",
+      "test_end": "2024-09-19"
+    },
+    {
+      "fold": 235,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-18",
+      "calibration_start": "2024-09-18",
+      "calibration_end": "2024-09-19",
+      "test_start": "2024-09-20",
+      "test_end": "2024-09-21"
+    },
+    {
+      "fold": 236,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-19",
+      "calibration_start": "2024-09-20",
+      "calibration_end": "2024-09-21",
+      "test_start": "2024-09-21",
+      "test_end": "2024-09-22"
+    },
+    {
+      "fold": 237,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-21",
+      "calibration_start": "2024-09-21",
+      "calibration_end": "2024-09-22",
+      "test_start": "2024-09-22",
+      "test_end": "2024-09-24"
+    },
+    {
+      "fold": 238,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-22",
+      "calibration_start": "2024-09-22",
+      "calibration_end": "2024-09-24",
+      "test_start": "2024-09-24",
+      "test_end": "2024-09-26"
+    },
+    {
+      "fold": 239,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-24",
+      "calibration_start": "2024-09-24",
+      "calibration_end": "2024-09-26",
+      "test_start": "2024-09-26",
+      "test_end": "2024-09-27"
+    },
+    {
+      "fold": 240,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-26",
+      "calibration_start": "2024-09-26",
+      "calibration_end": "2024-09-27",
+      "test_start": "2024-09-27",
+      "test_end": "2024-09-29"
+    },
+    {
+      "fold": 241,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-27",
+      "calibration_start": "2024-09-27",
+      "calibration_end": "2024-09-29",
+      "test_start": "2024-09-29",
+      "test_end": "2024-10-02"
+    },
+    {
+      "fold": 242,
+      "train_start": "2023-03-30",
+      "train_end": "2024-09-29",
+      "calibration_start": "2024-09-29",
+      "calibration_end": "2024-10-02",
+      "test_start": "2024-10-02",
+      "test_end": "2024-10-12"
+    },
+    {
+      "fold": 243,
+      "train_start": "2023-03-30",
+      "train_end": "2024-10-02",
+      "calibration_start": "2024-10-02",
+      "calibration_end": "2024-10-12",
+      "test_start": "2024-10-13",
+      "test_end": "2025-03-27"
+    },
+    {
+      "fold": 244,
+      "train_start": "2023-03-30",
+      "train_end": "2024-10-12",
+      "calibration_start": "2024-10-13",
+      "calibration_end": "2025-03-27",
+      "test_start": "2025-03-27",
+      "test_end": "2025-03-28"
+    },
+    {
+      "fold": 245,
+      "train_start": "2023-03-30",
+      "train_end": "2025-03-27",
+      "calibration_start": "2025-03-27",
+      "calibration_end": "2025-03-28",
+      "test_start": "2025-03-28",
+      "test_end": "2025-03-30"
+    },
+    {
+      "fold": 246,
+      "train_start": "2023-03-30",
+      "train_end": "2025-03-28",
+      "calibration_start": "2025-03-28",
+      "calibration_end": "2025-03-30",
+      "test_start": "2025-03-30",
+      "test_end": "2025-03-31"
+    },
+    {
+      "fold": 247,
+      "train_start": "2023-03-30",
+      "train_end": "2025-03-30",
+      "calibration_start": "2025-03-30",
+      "calibration_end": "2025-03-31",
+      "test_start": "2025-03-31",
+      "test_end": "2025-04-02"
+    },
+    {
+      "fold": 248,
+      "train_start": "2023-03-30",
+      "train_end": "2025-03-31",
+      "calibration_start": "2025-03-31",
+      "calibration_end": "2025-04-02",
+      "test_start": "2025-04-02",
+      "test_end": "2025-04-04"
+    },
+    {
+      "fold": 249,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-02",
+      "calibration_start": "2025-04-02",
+      "calibration_end": "2025-04-04",
+      "test_start": "2025-04-04",
+      "test_end": "2025-04-05"
+    },
+    {
+      "fold": 250,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-04",
+      "calibration_start": "2025-04-04",
+      "calibration_end": "2025-04-05",
+      "test_start": "2025-04-05",
+      "test_end": "2025-04-07"
+    },
+    {
+      "fold": 251,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-05",
+      "calibration_start": "2025-04-05",
+      "calibration_end": "2025-04-07",
+      "test_start": "2025-04-07",
+      "test_end": "2025-04-08"
+    },
+    {
+      "fold": 252,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-07",
+      "calibration_start": "2025-04-07",
+      "calibration_end": "2025-04-08",
+      "test_start": "2025-04-08",
+      "test_end": "2025-04-09"
+    },
+    {
+      "fold": 253,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-08",
+      "calibration_start": "2025-04-08",
+      "calibration_end": "2025-04-09",
+      "test_start": "2025-04-10",
+      "test_end": "2025-04-12"
+    },
+    {
+      "fold": 254,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-09",
+      "calibration_start": "2025-04-10",
+      "calibration_end": "2025-04-12",
+      "test_start": "2025-04-12",
+      "test_end": "2025-04-13"
+    },
+    {
+      "fold": 255,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-12",
+      "calibration_start": "2025-04-12",
+      "calibration_end": "2025-04-13",
+      "test_start": "2025-04-13",
+      "test_end": "2025-04-15"
+    },
+    {
+      "fold": 256,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-13",
+      "calibration_start": "2025-04-13",
+      "calibration_end": "2025-04-15",
+      "test_start": "2025-04-15",
+      "test_end": "2025-04-16"
+    },
+    {
+      "fold": 257,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-15",
+      "calibration_start": "2025-04-15",
+      "calibration_end": "2025-04-16",
+      "test_start": "2025-04-16",
+      "test_end": "2025-04-18"
+    },
+    {
+      "fold": 258,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-16",
+      "calibration_start": "2025-04-16",
+      "calibration_end": "2025-04-18",
+      "test_start": "2025-04-18",
+      "test_end": "2025-04-19"
+    },
+    {
+      "fold": 259,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-18",
+      "calibration_start": "2025-04-18",
+      "calibration_end": "2025-04-19",
+      "test_start": "2025-04-19",
+      "test_end": "2025-04-20"
+    },
+    {
+      "fold": 260,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-19",
+      "calibration_start": "2025-04-19",
+      "calibration_end": "2025-04-20",
+      "test_start": "2025-04-20",
+      "test_end": "2025-04-22"
+    },
+    {
+      "fold": 261,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-20",
+      "calibration_start": "2025-04-20",
+      "calibration_end": "2025-04-22",
+      "test_start": "2025-04-22",
+      "test_end": "2025-04-23"
+    },
+    {
+      "fold": 262,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-22",
+      "calibration_start": "2025-04-22",
+      "calibration_end": "2025-04-23",
+      "test_start": "2025-04-23",
+      "test_end": "2025-04-25"
+    },
+    {
+      "fold": 263,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-23",
+      "calibration_start": "2025-04-23",
+      "calibration_end": "2025-04-25",
+      "test_start": "2025-04-25",
+      "test_end": "2025-04-27"
+    },
+    {
+      "fold": 264,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-25",
+      "calibration_start": "2025-04-25",
+      "calibration_end": "2025-04-27",
+      "test_start": "2025-04-27",
+      "test_end": "2025-04-28"
+    },
+    {
+      "fold": 265,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-27",
+      "calibration_start": "2025-04-27",
+      "calibration_end": "2025-04-28",
+      "test_start": "2025-04-28",
+      "test_end": "2025-04-30"
+    },
+    {
+      "fold": 266,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-28",
+      "calibration_start": "2025-04-28",
+      "calibration_end": "2025-04-30",
+      "test_start": "2025-04-30",
+      "test_end": "2025-05-01"
+    },
+    {
+      "fold": 267,
+      "train_start": "2023-03-30",
+      "train_end": "2025-04-30",
+      "calibration_start": "2025-04-30",
+      "calibration_end": "2025-05-01",
+      "test_start": "2025-05-01",
+      "test_end": "2025-05-03"
+    },
+    {
+      "fold": 268,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-01",
+      "calibration_start": "2025-05-01",
+      "calibration_end": "2025-05-03",
+      "test_start": "2025-05-03",
+      "test_end": "2025-05-04"
+    },
+    {
+      "fold": 269,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-03",
+      "calibration_start": "2025-05-03",
+      "calibration_end": "2025-05-04",
+      "test_start": "2025-05-04",
+      "test_end": "2025-05-06"
+    },
+    {
+      "fold": 270,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-04",
+      "calibration_start": "2025-05-04",
+      "calibration_end": "2025-05-06",
+      "test_start": "2025-05-06",
+      "test_end": "2025-05-07"
+    },
+    {
+      "fold": 271,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-06",
+      "calibration_start": "2025-05-06",
+      "calibration_end": "2025-05-07",
+      "test_start": "2025-05-07",
+      "test_end": "2025-05-09"
+    },
+    {
+      "fold": 272,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-07",
+      "calibration_start": "2025-05-07",
+      "calibration_end": "2025-05-09",
+      "test_start": "2025-05-09",
+      "test_end": "2025-05-10"
+    },
+    {
+      "fold": 273,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-09",
+      "calibration_start": "2025-05-09",
+      "calibration_end": "2025-05-10",
+      "test_start": "2025-05-10",
+      "test_end": "2025-05-11"
+    },
+    {
+      "fold": 274,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-10",
+      "calibration_start": "2025-05-10",
+      "calibration_end": "2025-05-11",
+      "test_start": "2025-05-12",
+      "test_end": "2025-05-13"
+    },
+    {
+      "fold": 275,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-11",
+      "calibration_start": "2025-05-12",
+      "calibration_end": "2025-05-13",
+      "test_start": "2025-05-13",
+      "test_end": "2025-05-14"
+    },
+    {
+      "fold": 276,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-13",
+      "calibration_start": "2025-05-13",
+      "calibration_end": "2025-05-14",
+      "test_start": "2025-05-14",
+      "test_end": "2025-05-16"
+    },
+    {
+      "fold": 277,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-14",
+      "calibration_start": "2025-05-14",
+      "calibration_end": "2025-05-16",
+      "test_start": "2025-05-16",
+      "test_end": "2025-05-18"
+    },
+    {
+      "fold": 278,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-16",
+      "calibration_start": "2025-05-16",
+      "calibration_end": "2025-05-18",
+      "test_start": "2025-05-18",
+      "test_end": "2025-05-19"
+    },
+    {
+      "fold": 279,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-18",
+      "calibration_start": "2025-05-18",
+      "calibration_end": "2025-05-19",
+      "test_start": "2025-05-19",
+      "test_end": "2025-05-21"
+    },
+    {
+      "fold": 280,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-19",
+      "calibration_start": "2025-05-19",
+      "calibration_end": "2025-05-21",
+      "test_start": "2025-05-21",
+      "test_end": "2025-05-22"
+    },
+    {
+      "fold": 281,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-21",
+      "calibration_start": "2025-05-21",
+      "calibration_end": "2025-05-22",
+      "test_start": "2025-05-23",
+      "test_end": "2025-05-24"
+    },
+    {
+      "fold": 282,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-22",
+      "calibration_start": "2025-05-23",
+      "calibration_end": "2025-05-24",
+      "test_start": "2025-05-24",
+      "test_end": "2025-05-25"
+    },
+    {
+      "fold": 283,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-24",
+      "calibration_start": "2025-05-24",
+      "calibration_end": "2025-05-25",
+      "test_start": "2025-05-25",
+      "test_end": "2025-05-27"
+    },
+    {
+      "fold": 284,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-25",
+      "calibration_start": "2025-05-25",
+      "calibration_end": "2025-05-27",
+      "test_start": "2025-05-27",
+      "test_end": "2025-05-28"
+    },
+    {
+      "fold": 285,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-27",
+      "calibration_start": "2025-05-27",
+      "calibration_end": "2025-05-28",
+      "test_start": "2025-05-28",
+      "test_end": "2025-05-30"
+    },
+    {
+      "fold": 286,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-28",
+      "calibration_start": "2025-05-28",
+      "calibration_end": "2025-05-30",
+      "test_start": "2025-05-30",
+      "test_end": "2025-05-31"
+    },
+    {
+      "fold": 287,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-30",
+      "calibration_start": "2025-05-30",
+      "calibration_end": "2025-05-31",
+      "test_start": "2025-05-31",
+      "test_end": "2025-06-02"
+    },
+    {
+      "fold": 288,
+      "train_start": "2023-03-30",
+      "train_end": "2025-05-31",
+      "calibration_start": "2025-05-31",
+      "calibration_end": "2025-06-02",
+      "test_start": "2025-06-02",
+      "test_end": "2025-06-04"
+    },
+    {
+      "fold": 289,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-02",
+      "calibration_start": "2025-06-02",
+      "calibration_end": "2025-06-04",
+      "test_start": "2025-06-04",
+      "test_end": "2025-06-05"
+    },
+    {
+      "fold": 290,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-04",
+      "calibration_start": "2025-06-04",
+      "calibration_end": "2025-06-05",
+      "test_start": "2025-06-05",
+      "test_end": "2025-06-06"
+    },
+    {
+      "fold": 291,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-05",
+      "calibration_start": "2025-06-05",
+      "calibration_end": "2025-06-06",
+      "test_start": "2025-06-06",
+      "test_end": "2025-06-08"
+    },
+    {
+      "fold": 292,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-06",
+      "calibration_start": "2025-06-06",
+      "calibration_end": "2025-06-08",
+      "test_start": "2025-06-08",
+      "test_end": "2025-06-09"
+    },
+    {
+      "fold": 293,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-08",
+      "calibration_start": "2025-06-08",
+      "calibration_end": "2025-06-09",
+      "test_start": "2025-06-10",
+      "test_end": "2025-06-11"
+    },
+    {
+      "fold": 294,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-09",
+      "calibration_start": "2025-06-10",
+      "calibration_end": "2025-06-11",
+      "test_start": "2025-06-11",
+      "test_end": "2025-06-13"
+    },
+    {
+      "fold": 295,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-11",
+      "calibration_start": "2025-06-11",
+      "calibration_end": "2025-06-13",
+      "test_start": "2025-06-13",
+      "test_end": "2025-06-14"
+    },
+    {
+      "fold": 296,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-13",
+      "calibration_start": "2025-06-13",
+      "calibration_end": "2025-06-14",
+      "test_start": "2025-06-14",
+      "test_end": "2025-06-15"
+    },
+    {
+      "fold": 297,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-14",
+      "calibration_start": "2025-06-14",
+      "calibration_end": "2025-06-15",
+      "test_start": "2025-06-15",
+      "test_end": "2025-06-17"
+    },
+    {
+      "fold": 298,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-15",
+      "calibration_start": "2025-06-15",
+      "calibration_end": "2025-06-17",
+      "test_start": "2025-06-17",
+      "test_end": "2025-06-19"
+    },
+    {
+      "fold": 299,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-17",
+      "calibration_start": "2025-06-17",
+      "calibration_end": "2025-06-19",
+      "test_start": "2025-06-19",
+      "test_end": "2025-06-20"
+    },
+    {
+      "fold": 300,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-19",
+      "calibration_start": "2025-06-19",
+      "calibration_end": "2025-06-20",
+      "test_start": "2025-06-20",
+      "test_end": "2025-06-21"
+    },
+    {
+      "fold": 301,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-20",
+      "calibration_start": "2025-06-20",
+      "calibration_end": "2025-06-21",
+      "test_start": "2025-06-21",
+      "test_end": "2025-06-23"
+    },
+    {
+      "fold": 302,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-21",
+      "calibration_start": "2025-06-21",
+      "calibration_end": "2025-06-23",
+      "test_start": "2025-06-23",
+      "test_end": "2025-06-24"
+    },
+    {
+      "fold": 303,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-23",
+      "calibration_start": "2025-06-23",
+      "calibration_end": "2025-06-24",
+      "test_start": "2025-06-24",
+      "test_end": "2025-06-26"
+    },
+    {
+      "fold": 304,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-24",
+      "calibration_start": "2025-06-24",
+      "calibration_end": "2025-06-26",
+      "test_start": "2025-06-26",
+      "test_end": "2025-06-27"
+    },
+    {
+      "fold": 305,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-26",
+      "calibration_start": "2025-06-26",
+      "calibration_end": "2025-06-27",
+      "test_start": "2025-06-28",
+      "test_end": "2025-06-29"
+    },
+    {
+      "fold": 306,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-27",
+      "calibration_start": "2025-06-28",
+      "calibration_end": "2025-06-29",
+      "test_start": "2025-06-29",
+      "test_end": "2025-07-01"
+    },
+    {
+      "fold": 307,
+      "train_start": "2023-03-30",
+      "train_end": "2025-06-29",
+      "calibration_start": "2025-06-29",
+      "calibration_end": "2025-07-01",
+      "test_start": "2025-07-01",
+      "test_end": "2025-07-02"
+    },
+    {
+      "fold": 308,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-01",
+      "calibration_start": "2025-07-01",
+      "calibration_end": "2025-07-02",
+      "test_start": "2025-07-02",
+      "test_end": "2025-07-04"
+    },
+    {
+      "fold": 309,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-02",
+      "calibration_start": "2025-07-02",
+      "calibration_end": "2025-07-04",
+      "test_start": "2025-07-04",
+      "test_end": "2025-07-05"
+    },
+    {
+      "fold": 310,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-04",
+      "calibration_start": "2025-07-04",
+      "calibration_end": "2025-07-05",
+      "test_start": "2025-07-05",
+      "test_end": "2025-07-06"
+    },
+    {
+      "fold": 311,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-05",
+      "calibration_start": "2025-07-05",
+      "calibration_end": "2025-07-06",
+      "test_start": "2025-07-06",
+      "test_end": "2025-07-08"
+    },
+    {
+      "fold": 312,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-06",
+      "calibration_start": "2025-07-06",
+      "calibration_end": "2025-07-08",
+      "test_start": "2025-07-08",
+      "test_end": "2025-07-09"
+    },
+    {
+      "fold": 313,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-08",
+      "calibration_start": "2025-07-08",
+      "calibration_end": "2025-07-09",
+      "test_start": "2025-07-09",
+      "test_end": "2025-07-11"
+    },
+    {
+      "fold": 314,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-09",
+      "calibration_start": "2025-07-09",
+      "calibration_end": "2025-07-11",
+      "test_start": "2025-07-11",
+      "test_end": "2025-07-12"
+    },
+    {
+      "fold": 315,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-11",
+      "calibration_start": "2025-07-11",
+      "calibration_end": "2025-07-12",
+      "test_start": "2025-07-12",
+      "test_end": "2025-07-18"
+    },
+    {
+      "fold": 316,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-12",
+      "calibration_start": "2025-07-12",
+      "calibration_end": "2025-07-18",
+      "test_start": "2025-07-18",
+      "test_end": "2025-07-19"
+    },
+    {
+      "fold": 317,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-18",
+      "calibration_start": "2025-07-18",
+      "calibration_end": "2025-07-19",
+      "test_start": "2025-07-19",
+      "test_end": "2025-07-20"
+    },
+    {
+      "fold": 318,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-19",
+      "calibration_start": "2025-07-19",
+      "calibration_end": "2025-07-20",
+      "test_start": "2025-07-20",
+      "test_end": "2025-07-22"
+    },
+    {
+      "fold": 319,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-20",
+      "calibration_start": "2025-07-20",
+      "calibration_end": "2025-07-22",
+      "test_start": "2025-07-22",
+      "test_end": "2025-07-23"
+    },
+    {
+      "fold": 320,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-22",
+      "calibration_start": "2025-07-22",
+      "calibration_end": "2025-07-23",
+      "test_start": "2025-07-23",
+      "test_end": "2025-07-25"
+    },
+    {
+      "fold": 321,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-23",
+      "calibration_start": "2025-07-23",
+      "calibration_end": "2025-07-25",
+      "test_start": "2025-07-25",
+      "test_end": "2025-07-26"
+    },
+    {
+      "fold": 322,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-25",
+      "calibration_start": "2025-07-25",
+      "calibration_end": "2025-07-26",
+      "test_start": "2025-07-26",
+      "test_end": "2025-07-28"
+    },
+    {
+      "fold": 323,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-26",
+      "calibration_start": "2025-07-26",
+      "calibration_end": "2025-07-28",
+      "test_start": "2025-07-28",
+      "test_end": "2025-07-29"
+    },
+    {
+      "fold": 324,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-28",
+      "calibration_start": "2025-07-28",
+      "calibration_end": "2025-07-29",
+      "test_start": "2025-07-29",
+      "test_end": "2025-07-30"
+    },
+    {
+      "fold": 325,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-29",
+      "calibration_start": "2025-07-29",
+      "calibration_end": "2025-07-30",
+      "test_start": "2025-07-30",
+      "test_end": "2025-08-01"
+    },
+    {
+      "fold": 326,
+      "train_start": "2023-03-30",
+      "train_end": "2025-07-30",
+      "calibration_start": "2025-07-30",
+      "calibration_end": "2025-08-01",
+      "test_start": "2025-08-01",
+      "test_end": "2025-08-03"
+    },
+    {
+      "fold": 327,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-01",
+      "calibration_start": "2025-08-01",
+      "calibration_end": "2025-08-03",
+      "test_start": "2025-08-03",
+      "test_end": "2025-08-04"
+    },
+    {
+      "fold": 328,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-03",
+      "calibration_start": "2025-08-03",
+      "calibration_end": "2025-08-04",
+      "test_start": "2025-08-04",
+      "test_end": "2025-08-06"
+    },
+    {
+      "fold": 329,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-04",
+      "calibration_start": "2025-08-04",
+      "calibration_end": "2025-08-06",
+      "test_start": "2025-08-06",
+      "test_end": "2025-08-08"
+    },
+    {
+      "fold": 330,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-06",
+      "calibration_start": "2025-08-06",
+      "calibration_end": "2025-08-08",
+      "test_start": "2025-08-08",
+      "test_end": "2025-08-09"
+    },
+    {
+      "fold": 331,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-08",
+      "calibration_start": "2025-08-08",
+      "calibration_end": "2025-08-09",
+      "test_start": "2025-08-09",
+      "test_end": "2025-08-10"
+    },
+    {
+      "fold": 332,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-09",
+      "calibration_start": "2025-08-09",
+      "calibration_end": "2025-08-10",
+      "test_start": "2025-08-10",
+      "test_end": "2025-08-12"
+    },
+    {
+      "fold": 333,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-10",
+      "calibration_start": "2025-08-10",
+      "calibration_end": "2025-08-12",
+      "test_start": "2025-08-12",
+      "test_end": "2025-08-13"
+    },
+    {
+      "fold": 334,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-12",
+      "calibration_start": "2025-08-12",
+      "calibration_end": "2025-08-13",
+      "test_start": "2025-08-13",
+      "test_end": "2025-08-15"
+    },
+    {
+      "fold": 335,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-13",
+      "calibration_start": "2025-08-13",
+      "calibration_end": "2025-08-15",
+      "test_start": "2025-08-15",
+      "test_end": "2025-08-16"
+    },
+    {
+      "fold": 336,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-15",
+      "calibration_start": "2025-08-15",
+      "calibration_end": "2025-08-16",
+      "test_start": "2025-08-16",
+      "test_end": "2025-08-18"
+    },
+    {
+      "fold": 337,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-16",
+      "calibration_start": "2025-08-16",
+      "calibration_end": "2025-08-18",
+      "test_start": "2025-08-18",
+      "test_end": "2025-08-19"
+    },
+    {
+      "fold": 338,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-18",
+      "calibration_start": "2025-08-18",
+      "calibration_end": "2025-08-19",
+      "test_start": "2025-08-19",
+      "test_end": "2025-08-21"
+    },
+    {
+      "fold": 339,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-19",
+      "calibration_start": "2025-08-19",
+      "calibration_end": "2025-08-21",
+      "test_start": "2025-08-21",
+      "test_end": "2025-08-22"
+    },
+    {
+      "fold": 340,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-21",
+      "calibration_start": "2025-08-21",
+      "calibration_end": "2025-08-22",
+      "test_start": "2025-08-22",
+      "test_end": "2025-08-24"
+    },
+    {
+      "fold": 341,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-22",
+      "calibration_start": "2025-08-22",
+      "calibration_end": "2025-08-24",
+      "test_start": "2025-08-24",
+      "test_end": "2025-08-25"
+    },
+    {
+      "fold": 342,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-24",
+      "calibration_start": "2025-08-24",
+      "calibration_end": "2025-08-25",
+      "test_start": "2025-08-25",
+      "test_end": "2025-08-27"
+    },
+    {
+      "fold": 343,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-25",
+      "calibration_start": "2025-08-25",
+      "calibration_end": "2025-08-27",
+      "test_start": "2025-08-27",
+      "test_end": "2025-08-28"
+    },
+    {
+      "fold": 344,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-27",
+      "calibration_start": "2025-08-27",
+      "calibration_end": "2025-08-28",
+      "test_start": "2025-08-28",
+      "test_end": "2025-08-30"
+    },
+    {
+      "fold": 345,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-28",
+      "calibration_start": "2025-08-28",
+      "calibration_end": "2025-08-30",
+      "test_start": "2025-08-30",
+      "test_end": "2025-08-31"
+    },
+    {
+      "fold": 346,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-30",
+      "calibration_start": "2025-08-30",
+      "calibration_end": "2025-08-31",
+      "test_start": "2025-08-31",
+      "test_end": "2025-09-01"
+    },
+    {
+      "fold": 347,
+      "train_start": "2023-03-30",
+      "train_end": "2025-08-31",
+      "calibration_start": "2025-08-31",
+      "calibration_end": "2025-09-01",
+      "test_start": "2025-09-02",
+      "test_end": "2025-09-03"
+    },
+    {
+      "fold": 348,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-01",
+      "calibration_start": "2025-09-02",
+      "calibration_end": "2025-09-03",
+      "test_start": "2025-09-03",
+      "test_end": "2025-09-05"
+    },
+    {
+      "fold": 349,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-03",
+      "calibration_start": "2025-09-03",
+      "calibration_end": "2025-09-05",
+      "test_start": "2025-09-05",
+      "test_end": "2025-09-06"
+    },
+    {
+      "fold": 350,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-05",
+      "calibration_start": "2025-09-05",
+      "calibration_end": "2025-09-06",
+      "test_start": "2025-09-06",
+      "test_end": "2025-09-07"
+    },
+    {
+      "fold": 351,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-06",
+      "calibration_start": "2025-09-06",
+      "calibration_end": "2025-09-07",
+      "test_start": "2025-09-08",
+      "test_end": "2025-09-09"
+    },
+    {
+      "fold": 352,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-07",
+      "calibration_start": "2025-09-08",
+      "calibration_end": "2025-09-09",
+      "test_start": "2025-09-09",
+      "test_end": "2025-09-10"
+    },
+    {
+      "fold": 353,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-09",
+      "calibration_start": "2025-09-09",
+      "calibration_end": "2025-09-10",
+      "test_start": "2025-09-10",
+      "test_end": "2025-09-12"
+    },
+    {
+      "fold": 354,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-10",
+      "calibration_start": "2025-09-10",
+      "calibration_end": "2025-09-12",
+      "test_start": "2025-09-12",
+      "test_end": "2025-09-13"
+    },
+    {
+      "fold": 355,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-12",
+      "calibration_start": "2025-09-12",
+      "calibration_end": "2025-09-13",
+      "test_start": "2025-09-14",
+      "test_end": "2025-09-15"
+    },
+    {
+      "fold": 356,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-13",
+      "calibration_start": "2025-09-14",
+      "calibration_end": "2025-09-15",
+      "test_start": "2025-09-15",
+      "test_end": "2025-09-16"
+    },
+    {
+      "fold": 357,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-15",
+      "calibration_start": "2025-09-15",
+      "calibration_end": "2025-09-16",
+      "test_start": "2025-09-17",
+      "test_end": "2025-09-18"
+    },
+    {
+      "fold": 358,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-16",
+      "calibration_start": "2025-09-17",
+      "calibration_end": "2025-09-18",
+      "test_start": "2025-09-18",
+      "test_end": "2025-09-19"
+    },
+    {
+      "fold": 359,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-18",
+      "calibration_start": "2025-09-18",
+      "calibration_end": "2025-09-19",
+      "test_start": "2025-09-20",
+      "test_end": "2025-09-21"
+    },
+    {
+      "fold": 360,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-19",
+      "calibration_start": "2025-09-20",
+      "calibration_end": "2025-09-21",
+      "test_start": "2025-09-21",
+      "test_end": "2025-09-23"
+    },
+    {
+      "fold": 361,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-21",
+      "calibration_start": "2025-09-21",
+      "calibration_end": "2025-09-23",
+      "test_start": "2025-09-23",
+      "test_end": "2025-09-24"
+    },
+    {
+      "fold": 362,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-23",
+      "calibration_start": "2025-09-23",
+      "calibration_end": "2025-09-24",
+      "test_start": "2025-09-24",
+      "test_end": "2025-09-26"
+    },
+    {
+      "fold": 363,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-24",
+      "calibration_start": "2025-09-24",
+      "calibration_end": "2025-09-26",
+      "test_start": "2025-09-26",
+      "test_end": "2025-09-27"
+    },
+    {
+      "fold": 364,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-26",
+      "calibration_start": "2025-09-26",
+      "calibration_end": "2025-09-27",
+      "test_start": "2025-09-27",
+      "test_end": "2025-09-28"
+    },
+    {
+      "fold": 365,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-27",
+      "calibration_start": "2025-09-27",
+      "calibration_end": "2025-09-28",
+      "test_start": "2025-09-28",
+      "test_end": "2025-10-06"
+    },
+    {
+      "fold": 366,
+      "train_start": "2023-03-30",
+      "train_end": "2025-09-28",
+      "calibration_start": "2025-09-28",
+      "calibration_end": "2025-10-06",
+      "test_start": "2025-10-07",
+      "test_end": "2025-10-19"
+    },
+    {
+      "fold": 367,
+      "train_start": "2023-03-30",
+      "train_end": "2025-10-06",
+      "calibration_start": "2025-10-07",
+      "calibration_end": "2025-10-19",
+      "test_start": "2025-10-20",
+      "test_end": "2026-03-26"
+    },
+    {
+      "fold": 368,
+      "train_start": "2023-03-30",
+      "train_end": "2025-10-19",
+      "calibration_start": "2025-10-20",
+      "calibration_end": "2026-03-26",
+      "test_start": "2026-03-27",
+      "test_end": "2026-03-28"
+    },
+    {
+      "fold": 369,
+      "train_start": "2023-03-30",
+      "train_end": "2026-03-26",
+      "calibration_start": "2026-03-27",
+      "calibration_end": "2026-03-28",
+      "test_start": "2026-03-28",
+      "test_end": "2026-03-30"
+    },
+    {
+      "fold": 370,
+      "train_start": "2023-03-30",
+      "train_end": "2026-03-28",
+      "calibration_start": "2026-03-28",
+      "calibration_end": "2026-03-30",
+      "test_start": "2026-03-30",
+      "test_end": "2026-03-31"
+    },
+    {
+      "fold": 371,
+      "train_start": "2023-03-30",
+      "train_end": "2026-03-30",
+      "calibration_start": "2026-03-30",
+      "calibration_end": "2026-03-31",
+      "test_start": "2026-03-31",
+      "test_end": "2026-04-02"
+    },
+    {
+      "fold": 372,
+      "train_start": "2023-03-30",
+      "train_end": "2026-03-31",
+      "calibration_start": "2026-03-31",
+      "calibration_end": "2026-04-02",
+      "test_start": "2026-04-02",
+      "test_end": "2026-04-04"
+    },
+    {
+      "fold": 373,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-02",
+      "calibration_start": "2026-04-02",
+      "calibration_end": "2026-04-04",
+      "test_start": "2026-04-04",
+      "test_end": "2026-04-05"
+    },
+    {
+      "fold": 374,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-04",
+      "calibration_start": "2026-04-04",
+      "calibration_end": "2026-04-05",
+      "test_start": "2026-04-05",
+      "test_end": "2026-04-07"
+    },
+    {
+      "fold": 375,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-05",
+      "calibration_start": "2026-04-05",
+      "calibration_end": "2026-04-07",
+      "test_start": "2026-04-07",
+      "test_end": "2026-04-08"
+    },
+    {
+      "fold": 376,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-07",
+      "calibration_start": "2026-04-07",
+      "calibration_end": "2026-04-08",
+      "test_start": "2026-04-08",
+      "test_end": "2026-04-10"
+    },
+    {
+      "fold": 377,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-08",
+      "calibration_start": "2026-04-08",
+      "calibration_end": "2026-04-10",
+      "test_start": "2026-04-10",
+      "test_end": "2026-04-11"
+    },
+    {
+      "fold": 378,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-10",
+      "calibration_start": "2026-04-10",
+      "calibration_end": "2026-04-11",
+      "test_start": "2026-04-11",
+      "test_end": "2026-04-12"
+    },
+    {
+      "fold": 379,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-11",
+      "calibration_start": "2026-04-11",
+      "calibration_end": "2026-04-12",
+      "test_start": "2026-04-13",
+      "test_end": "2026-04-14"
+    },
+    {
+      "fold": 380,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-12",
+      "calibration_start": "2026-04-13",
+      "calibration_end": "2026-04-14",
+      "test_start": "2026-04-14",
+      "test_end": "2026-04-15"
+    },
+    {
+      "fold": 381,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-14",
+      "calibration_start": "2026-04-14",
+      "calibration_end": "2026-04-15",
+      "test_start": "2026-04-16",
+      "test_end": "2026-04-17"
+    },
+    {
+      "fold": 382,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-15",
+      "calibration_start": "2026-04-16",
+      "calibration_end": "2026-04-17",
+      "test_start": "2026-04-17",
+      "test_end": "2026-04-18"
+    },
+    {
+      "fold": 383,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-17",
+      "calibration_start": "2026-04-17",
+      "calibration_end": "2026-04-18",
+      "test_start": "2026-04-19",
+      "test_end": "2026-04-20"
+    },
+    {
+      "fold": 384,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-18",
+      "calibration_start": "2026-04-19",
+      "calibration_end": "2026-04-20",
+      "test_start": "2026-04-20",
+      "test_end": "2026-04-21"
+    },
+    {
+      "fold": 385,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-20",
+      "calibration_start": "2026-04-20",
+      "calibration_end": "2026-04-21",
+      "test_start": "2026-04-22",
+      "test_end": "2026-04-23"
+    },
+    {
+      "fold": 386,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-21",
+      "calibration_start": "2026-04-22",
+      "calibration_end": "2026-04-23",
+      "test_start": "2026-04-23",
+      "test_end": "2026-04-25"
+    },
+    {
+      "fold": 387,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-23",
+      "calibration_start": "2026-04-23",
+      "calibration_end": "2026-04-25",
+      "test_start": "2026-04-25",
+      "test_end": "2026-04-26"
+    },
+    {
+      "fold": 388,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-25",
+      "calibration_start": "2026-04-25",
+      "calibration_end": "2026-04-26",
+      "test_start": "2026-04-26",
+      "test_end": "2026-04-28"
+    },
+    {
+      "fold": 389,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-26",
+      "calibration_start": "2026-04-26",
+      "calibration_end": "2026-04-28",
+      "test_start": "2026-04-28",
+      "test_end": "2026-04-29"
+    },
+    {
+      "fold": 390,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-28",
+      "calibration_start": "2026-04-28",
+      "calibration_end": "2026-04-29",
+      "test_start": "2026-04-29",
+      "test_end": "2026-05-01"
+    },
+    {
+      "fold": 391,
+      "train_start": "2023-03-30",
+      "train_end": "2026-04-29",
+      "calibration_start": "2026-04-29",
+      "calibration_end": "2026-05-01",
+      "test_start": "2026-05-01",
+      "test_end": "2026-05-02"
+    },
+    {
+      "fold": 392,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-01",
+      "calibration_start": "2026-05-01",
+      "calibration_end": "2026-05-02",
+      "test_start": "2026-05-02",
+      "test_end": "2026-05-03"
+    },
+    {
+      "fold": 393,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-02",
+      "calibration_start": "2026-05-02",
+      "calibration_end": "2026-05-03",
+      "test_start": "2026-05-04",
+      "test_end": "2026-05-05"
+    },
+    {
+      "fold": 394,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-03",
+      "calibration_start": "2026-05-04",
+      "calibration_end": "2026-05-05",
+      "test_start": "2026-05-05",
+      "test_end": "2026-05-06"
+    },
+    {
+      "fold": 395,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-05",
+      "calibration_start": "2026-05-05",
+      "calibration_end": "2026-05-06",
+      "test_start": "2026-05-07",
+      "test_end": "2026-05-08"
+    },
+    {
+      "fold": 396,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-06",
+      "calibration_start": "2026-05-07",
+      "calibration_end": "2026-05-08",
+      "test_start": "2026-05-08",
+      "test_end": "2026-05-10"
+    },
+    {
+      "fold": 397,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-08",
+      "calibration_start": "2026-05-08",
+      "calibration_end": "2026-05-10",
+      "test_start": "2026-05-10",
+      "test_end": "2026-05-11"
+    },
+    {
+      "fold": 398,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-10",
+      "calibration_start": "2026-05-10",
+      "calibration_end": "2026-05-11",
+      "test_start": "2026-05-12",
+      "test_end": "2026-05-13"
+    },
+    {
+      "fold": 399,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-11",
+      "calibration_start": "2026-05-12",
+      "calibration_end": "2026-05-13",
+      "test_start": "2026-05-13",
+      "test_end": "2026-05-14"
+    },
+    {
+      "fold": 400,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-13",
+      "calibration_start": "2026-05-13",
+      "calibration_end": "2026-05-14",
+      "test_start": "2026-05-14",
+      "test_end": "2026-05-16"
+    },
+    {
+      "fold": 401,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-14",
+      "calibration_start": "2026-05-14",
+      "calibration_end": "2026-05-16",
+      "test_start": "2026-05-16",
+      "test_end": "2026-05-17"
+    },
+    {
+      "fold": 402,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-16",
+      "calibration_start": "2026-05-16",
+      "calibration_end": "2026-05-17",
+      "test_start": "2026-05-17",
+      "test_end": "2026-05-18"
+    },
+    {
+      "fold": 403,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-17",
+      "calibration_start": "2026-05-17",
+      "calibration_end": "2026-05-18",
+      "test_start": "2026-05-19",
+      "test_end": "2026-05-20"
+    },
+    {
+      "fold": 404,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-18",
+      "calibration_start": "2026-05-19",
+      "calibration_end": "2026-05-20",
+      "test_start": "2026-05-20",
+      "test_end": "2026-05-22"
+    },
+    {
+      "fold": 405,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-20",
+      "calibration_start": "2026-05-20",
+      "calibration_end": "2026-05-22",
+      "test_start": "2026-05-22",
+      "test_end": "2026-05-23"
+    },
+    {
+      "fold": 406,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-22",
+      "calibration_start": "2026-05-22",
+      "calibration_end": "2026-05-23",
+      "test_start": "2026-05-23",
+      "test_end": "2026-05-24"
+    },
+    {
+      "fold": 407,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-23",
+      "calibration_start": "2026-05-23",
+      "calibration_end": "2026-05-24",
+      "test_start": "2026-05-25",
+      "test_end": "2026-05-26"
+    },
+    {
+      "fold": 408,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-24",
+      "calibration_start": "2026-05-25",
+      "calibration_end": "2026-05-26",
+      "test_start": "2026-05-26",
+      "test_end": "2026-05-27"
+    },
+    {
+      "fold": 409,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-26",
+      "calibration_start": "2026-05-26",
+      "calibration_end": "2026-05-27",
+      "test_start": "2026-05-27",
+      "test_end": "2026-05-29"
+    },
+    {
+      "fold": 410,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-27",
+      "calibration_start": "2026-05-27",
+      "calibration_end": "2026-05-29",
+      "test_start": "2026-05-29",
+      "test_end": "2026-05-31"
+    },
+    {
+      "fold": 411,
+      "train_start": "2023-03-30",
+      "train_end": "2026-05-29",
+      "calibration_start": "2026-05-29",
+      "calibration_end": "2026-05-31",
+      "test_start": "2026-05-31",
+      "test_end": "2026-06-01"
+    }
+  ],
+  "source_fingerprints": {
+    "rows": "19898dcf3070495c1ce32371ab51bcadaf73bfb8b9be7bf5d665e1ee8999514e"
+  },
+  "metrics": {
+    "brier_score": 0.2597405881192544,
+    "log_loss": 0.7159450358289,
+    "accuracy": 0.5218978102189781,
+    "n": 8220
+  },
+  "promotion_gates": {
+    "baseline_available": true,
+    "candidate_improves_baseline_brier": true,
+    "has_walkforward_folds": true,
+    "has_feature_schema": true
+  },
+  "validated": true,
+  "created_at": "2026-06-24T08:23:39.933824+00:00",
+  "built_at": "2026-06-24T08:23:39.933836+00:00"
+}
