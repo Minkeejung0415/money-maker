@@ -64,10 +64,10 @@
 
 ### EVAL — Evaluation Framework
 
-- [ ] **EVAL-01**: Chronological expanding-window backtest with all features frozen at pre-kickoff timestamp (no time leakage)
-- [ ] **EVAL-02**: Metrics tracked per model version: accuracy, multiclass Brier score, log loss, calibration reliability curves, A-grade hit rate (top-class probability >= 0.65)
-- [ ] **EVAL-03**: Isotonic regression calibration fitted on validation fold only; never post-hoc on full dataset
-- [ ] **EVAL-04**: Player-aware model must improve over Elo-only WC baseline on both Brier score and log loss in chronological holdout before promotion to production
+- [x] **EVAL-01**: Chronological expanding-window backtest with all features frozen at pre-kickoff timestamp (no time leakage) — 2018 train/2022 test split in wc_eval.py
+- [x] **EVAL-02**: Metrics tracked per model version: accuracy, multiclass Brier score, log loss, calibration reliability curves, A-grade hit rate (top-class probability >= 0.65) — wc_calibration.py
+- [x] **EVAL-03**: Isotonic regression calibration fitted on validation fold only; never post-hoc on full dataset — WCIsotonicCalibrator fit on 2018 only
+- [x] **EVAL-04**: Player-aware model must improve over Elo-only WC baseline on both Brier score and log loss in chronological holdout before promotion to production — promotion_gate() implemented
 
 ## v2.0 Requirements (deferred)
 
@@ -133,10 +133,10 @@
 | CONTEXT-02 | Phase 32 | Pending |
 | CONTEXT-03 | Phase 32 | Pending |
 | CONTEXT-04 | Phase 32 | Pending |
-| EVAL-01 | Phase 25 | Pending |
-| EVAL-02 | Phase 25 | Pending |
-| EVAL-03 | Phase 25 | Pending |
-| EVAL-04 | Phase 25 | Pending |
+| EVAL-01 | Phase 25 | Complete (25-01) |
+| EVAL-02 | Phase 25 | Complete (25-01) |
+| EVAL-03 | Phase 25 | Complete (25-01) |
+| EVAL-04 | Phase 25 | Complete (25-01) |
 
 **Coverage:**
 - v1.9 requirements: 39 total

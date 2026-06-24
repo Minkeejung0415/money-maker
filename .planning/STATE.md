@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Improving World Cup Win Probability with Team and Player Features
-status: planning
-stopped_at: v1.9 started — defining requirements and roadmap
-last_updated: 2026-06-24T00:00:00.000Z
-last_activity: 2026-06-24 -- Milestone v1.9 started
+status: In progress
+stopped_at: Phase 25 Plan 01 complete — evaluation framework delivered
+last_updated: "2026-06-24T17:48:00.000Z"
+last_activity: 2026-06-24 — Phase 25-01 evaluation framework executed
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 8
+  completed_plans: 1
+  percent: 13
 ---
 
 # Project State
@@ -25,27 +25,29 @@ See: .planning/PROJECT.md (updated 2026-06-24)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-06-24 — Milestone v1.9 started
+Phase: 25 (Evaluation Framework) — COMPLETE
+Plan: 01 of 01 — COMPLETE
+Status: In progress (Phase 26 next)
+Last activity: 2026-06-24 — Phase 25-01 complete: 128-match historical dataset + calibration harness + backtest runner (868/868 tests)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0 (v1.9)
-- Average duration: - min
-- Total execution time: 0 hours
+- Total plans completed: 1 (v1.9)
+- Average duration: 14 min
+- Total execution time: 0.23 hours
 
 **By Phase:**
 
-*Roadmap not yet created*
+| Phase | Plans | Duration | Tests Added |
+|-------|-------|----------|-------------|
+| 25 Evaluation Framework | 1/1 | 14 min | 26 |
 
 **Recent Trend:**
 
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 14 min
+- Trend: baseline
 
 *Updated after each plan completion*
 
@@ -77,6 +79,14 @@ Last activity: 2026-06-24 — Milestone v1.9 started
 - Isotonic regression calibration fitted on validation fold only — never post-hoc on full dataset
 - Player-aware model must beat Elo-only baseline on Brier + log loss before production promotion
 
+### Decisions (Phase 25 — evaluation framework)
+
+- Multiclass Brier uses Formula A (sum per sample, not per-class mean) — consistent with Murphy 1973
+- IsotonicRegression with out_of_bounds=clip + epsilon floor 1e-9 — prevents zero-row edge case on small datasets
+- promotion_gate min_delta=0.001 — prevents trivial pass for identical models
+- WCMatchModel.predict() input always copied — avoids mutation side effects on historical records
+- Baseline (Elo-only, 2022 test set, 64 matches): Brier=0.5181, Log Loss=0.8805, Accuracy=60.9%
+
 ### Pending Todos
 
 - Run Odds API market discovery scan for WC prop markets (carried from v1.1)
@@ -93,9 +103,9 @@ Last activity: 2026-06-24 — Milestone v1.9 started
 ## Session Continuity
 
 Last session: 2026-06-24
-Stopped at: v1.9 milestone initialization — requirements defined, roadmap pending
+Stopped at: Phase 25-01 complete — 868/868 tests passing
 Resume file: None
 
 ## Operator Next Steps
 
-- Start Phase 25 with `/gsd:discuss-phase 25` or `/gsd:plan-phase 25`
+- Start Phase 26: `Hybrid Baseline Ratings` with `/gsd:plan-phase 26`
