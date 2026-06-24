@@ -1,6 +1,11 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
+      "Skill(*)",
+      "WebFetch",
+      "WebFetch(*)",
+      "WebSearch",
       "Bash(do echo:*)",
       "Bash(git:*)",
       "Bash(uv pip:*)",
@@ -48,7 +53,31 @@
       "Bash(tee picks/ml_2026-03-17.txt)",
       "Bash(grep -E \"\\\\.py$\")",
       "Bash(grep -E \"\\\\.toml$\")",
-      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /c/Users/justi/Documents/money-maker/alpha --include=*.py)"
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /c/Users/justi/Documents/money-maker/alpha --include=*.py)",
+      "Skill(gsd-new-milestone)",
+      "Skill(gsd-new-milestone:*)",
+      "Skill(gsd-plan-phase)",
+      "Skill(gsd-plan-phase:*)",
+      "Skill(gsd-execute-phase)",
+      "Skill(gsd-execute-phase:*)",
+      "Bash(./venv/Scripts/pip show statsbombpy)",
+      "WebFetch(domain:www.eloratings.net)",
+      "WebFetch(domain:worldcupelo.com)",
+      "WebFetch(domain:www.footballratings.org)",
+      "Skill(gsd-discuss-phase)",
+      "Skill(gsd-discuss-phase:*)",
+      "Skill(gsd-audit-milestone)",
+      "Skill(gsd-audit-milestone:*)",
+      "WebFetch(domain:www.foxsports.com)",
+      "WebFetch(domain:sports.yahoo.com)",
+      "Skill(gsd-autonomous)",
+      "Skill(gsd-autonomous:*)",
+      "WebFetch(domain:www.lineups.com)",
+      "WebFetch(domain:www.oddschecker.com)",
+      "WebFetch(domain:www.bet365.com)",
+      "WebFetch(domain:www.sportsbettingdime.com)",
+      "WebFetch(domain:www.vegasinsider.com)",
+      "WebFetch(domain:worldsoccertalk.com)"
     ]
   }
 }
