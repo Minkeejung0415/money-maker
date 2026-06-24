@@ -257,9 +257,12 @@ class WCIsotonicCalibrator:
         calibrated = np.column_stack([
             self._calibrators[k].predict(probs[:, k]) for k in range(3)
         ])
-        # Renormalize rows to sum to 1 (zero-safe)
+        # Clip to small epsilon floor before renormalization.
+        # Out-of-range test points can cause all 3 class IRs to output 0.0,
+        # making the row sum 0.0 — which cannot be renormalized to sum to 1.
+        calibrated = np.clip(calibrated, 1e-9, None)
+        # Renormalize rows to sum to 1
         row_sums = calibrated.sum(axis=1, keepdims=True)
-        row_sums = np.where(row_sums == 0, 1.0, row_sums)
         return calibrated / row_sums
 
 
