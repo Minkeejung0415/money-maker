@@ -264,7 +264,8 @@ Tests: 493/493 passing.
 
 - [x] **Phase 12: Soccer Feature Data Pipeline** - Form (last 5), H2H (last 5), days-rest ingestion from football-data.org + FBref set pieces + Club Elo ratings (completed 2026-06-19)
 - [x] **Phase 13: Soccer Model Upgrade** - Retrain EPL XGBoost with expanded feature schema + UCL Elo-logistic model (UCLEloModel) (completed 2026-06-20)
-- [x] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage (completed 2026-06-21)
+- [x] **Phase 14: Draw Betting + Scanner Integration** - Enable draw legs in SGP builder when model EV > 5%, update scanner routing, full test coverage
+ (completed 2026-06-21)
 
 ## Phase Details (v1.4)
 
@@ -452,3 +453,83 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 20. Tactical Calibration and Deployment Gate | 3/3 | Complete    | 2026-06-22 |
+---
+
+## Current Milestone: v1.8 - Player-Aware MLB Moneyline Model
+
+## Phases (v1.8)
+
+- [ ] **Phase 21: MLB Player Data Foundation** - Build canonical game, player-slot, and ID-mapping tables for player-aware moneyline features.
+- [ ] **Phase 22: Player-Aware Feature Builder** - Generate leakage-safe starter, lineup, bullpen, and injury/absence feature blocks.
+- [ ] **Phase 23: Walk-Forward Modeling and Ablations** - Train, calibrate, and compare baseline, starter-only, lineup, bullpen, and full player-aware models.
+- [ ] **Phase 24: Runtime Gating and MLB Scanner Reporting** - Deploy only validated artifacts, surface uncertainty flags, and report selective win-rate metrics.
+
+## Phase Details (v1.8)
+
+### Phase 21: MLB Player Data Foundation
+
+**Goal**: Historical and day-of MLB data can be represented as canonical game and player-slot tables suitable for leak-proof player-aware modeling.
+**Depends on**: v1.3 MLB win-probability model and existing MLB ingestion modules
+**Requirements**: MLBDATA-01, MLBDATA-02, MLBDATA-03, MLBDATA-04
+**Success Criteria**:
+
+1. `games` rows include game IDs, dates, canonical teams, venue, status, doubleheader context, target, and starter IDs.
+2. `game_player_slots` rows include team side, player ID, player name, batting order, position, starter role, and source-confidence status.
+3. ID mapping joins MLBAM, Retrosheet, and internal references with an explicit unmatched-player report.
+4. Day-of refresh can fetch starters, lineups, rosters, and injuries from free/official sources or fail with visible missing-source flags.
+
+**Plans**: TBD
+
+### Phase 22: Player-Aware Feature Builder
+
+**Goal**: Moneyline rows include shifted player-level starter, lineup, bullpen, and absence signals without target-game leakage.
+**Depends on**: Phase 21
+**Requirements**: MLBFEAT-01, MLBFEAT-02, MLBFEAT-03, MLBFEAT-04, MLBFEAT-05
+**Success Criteria**:
+
+1. Starting-pitcher features include shifted quality and rest measures available before first pitch.
+2. Lineup features summarize projected or confirmed hitters, platoon matchups, missing feature counts, and source confidence.
+3. Bullpen features summarize recent relief workload and available quality without same-game contamination.
+4. Injury and absence features use structured player availability rather than average/HR-only team penalties.
+5. Automated tests prove every rolling feature uses shifted history and same-day doubleheader handling is explicit.
+
+**Plans**: TBD
+
+### Phase 23: Walk-Forward Modeling and Ablations
+
+**Goal**: Candidate MLB moneyline models are trained and calibrated through date-based walk-forward validation with clear ablation lift over the v1.3 baseline.
+**Depends on**: Phase 22
+**Requirements**: MLBMODEL-01, MLBMODEL-02, MLBMODEL-03, MLBMODEL-04, MLBMODEL-05
+**Success Criteria**:
+
+1. The v1.3 eight-feature model can be reproduced as the baseline scorecard.
+2. Starter-only, starter-plus-lineup, starter-plus-lineup-plus-bullpen, and full player-aware ablations are reported side by side.
+3. Each fold uses a train block, a later calibration block, and a later test block, with Brier score, log loss, accuracy, and calibration buckets.
+4. Logistic regression, HistGradientBoosting, and LightGBM are compared where dependencies are available.
+5. Any promoted artifact includes schema version, feature names, split dates, source fingerprints, metrics, and promotion gates.
+
+**Plans**: TBD
+
+### Phase 24: Runtime Gating and MLB Scanner Reporting
+
+**Goal**: The MLB scanner uses the player-aware artifact only when validated and sufficiently certain, otherwise falling back visibly to the v1.3 baseline.
+**Depends on**: Phase 23
+**Requirements**: MLBRUN-01, MLBRUN-02, MLBRUN-03, MLBRUN-04, MLBRUN-05
+**Success Criteria**:
+
+1. Scanner output labels each game as v1.8 player-aware, v1.3 baseline fallback, or unavailable with a reason.
+2. Picks are suppressed or downgraded when starter, lineup, injury, or feature uncertainty exceeds configured thresholds.
+3. Reports include selective win rate, coverage, all-games accuracy, Brier score, and log loss for confidence-gated picks.
+4. High-confidence pick output includes inspectable starter, lineup, bullpen, and absence contribution context.
+5. Moneyline runtime paths reject synthetic MLB prop values and legacy crude injury penalties.
+
+**Plans**: TBD
+
+## Progress (v1.8)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 21. MLB Player Data Foundation | 0/0 | Pending | - |
+| 22. Player-Aware Feature Builder | 0/0 | Pending | - |
+| 23. Walk-Forward Modeling and Ablations | 0/0 | Pending | - |
+| 24. Runtime Gating and MLB Scanner Reporting | 0/0 | Pending | - |

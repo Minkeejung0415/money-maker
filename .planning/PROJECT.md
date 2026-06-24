@@ -4,7 +4,20 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.7 - Tactical Calibration and Validation
+## Current Milestone: v1.8 - Player-Aware MLB Moneyline Model
+
+**Goal:** Upgrade the MLB moneyline pipeline from team-only pregame rows to a leak-proof player-conditioned model focused on accuracy and high-confidence win rate.
+
+**Target features:**
+- Historical `games` and `game_player_slots` tables for MLB starters, lineups, and stable player identity joins
+- Starting-pitcher quality/rest, lineup/platoon strength, bullpen freshness, and injury/absence feature blocks
+- Date-based walk-forward retraining with separate calibration windows and ablation reporting against the v1.3 baseline
+- Confidence-gated pick output that reports all-games accuracy, selective win rate, coverage, Brier score, and log loss
+- Legacy/fallback cleanup so synthetic prop features and crude injury penalties do not contaminate moneyline modeling
+
+**Current state:** v1.8 planning. The v1.3 eight-feature MLB model remains the baseline while the player-aware feature store, walk-forward evaluation, and gated runtime path are built.
+
+## Previous Milestone: v1.7 - Tactical Calibration and Validation (Complete)
 
 **Goal:** Replace hand-set tactical weights with leakage-safe, regularized estimates and deploy them only where chronological out-of-sample probability quality improves.
 
@@ -106,6 +119,14 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] One-distribution-per-SGP coherence and visible scanner gate status
 - [x] Real coverage audit blocks promotion when evidence is insufficient
 
+### Active (v1.8)
+
+- [ ] Build MLB historical game and player-slot tables from free/official sources with stable IDs
+- [ ] Add player-aware starter, lineup, bullpen, and injury/absence features without target-game leakage
+- [ ] Train and calibrate MLB moneyline candidates with date-based walk-forward splits and ablations
+- [ ] Gate runtime MLB output on validated artifacts, lineup/starter uncertainty, and confidence thresholds
+- [ ] Quarantine synthetic MLB prop rows and crude injury penalties from the moneyline feature path
+
 ### Out of Scope
 
 - MLB player props — requires a dependable prop-odds source and broader modeling scope
@@ -151,6 +172,8 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 | Validate via validate_picks.py not live runs | Zero API cost, uses real box scores | — Pending |
 | Fix rebounds before other stats | 34.2% hit rate is 15% below random — biggest win | — Pending |
 | Research algorithm options before building | User wants to see options before committing | — Pending |
+| Treat the v1.3 MLB model as the baseline for v1.8 | The current artifact is validated but team-only, so it is the comparison point rather than the target design | — Pending |
+| Optimize MLB moneyline for accuracy and selective win rate before EV | The report prioritizes hit rate and confidence gating over odds-driven betting expansion | — Pending |
 
 ## Previous Milestone: v1.0 — NBA Prop Model Algorithm Upgrade (Complete)
 
@@ -174,4 +197,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-21 - v1.7 Tactical Calibration and Validation planned*
+*Last updated: 2026-06-24 - v1.8 Player-Aware MLB Moneyline Model planned*

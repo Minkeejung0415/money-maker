@@ -1,34 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7
-milestone_name: - Tactical Calibration and Validation
-status: Awaiting next milestone
-stopped_at: Completed 20-03-PLAN.md
-last_updated: "2026-06-22T01:30:48.758Z"
-last_activity: 2026-06-22 — Milestone v1.7 completed and archived
+milestone: v1.8
+milestone_name: Player-Aware MLB Moneyline Model
+status: planning
+last_updated: "2026-06-24T04:56:05.622Z"
+last_activity: 2026-06-24
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-18)
+See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** Planning the next milestone; tactical calibration remains baseline-only pending sufficient data.
+**Current focus:** Planning v1.8 Player-Aware MLB Moneyline Model; Phase 21 is the next phase.
 
 ## Current Position
 
-Phase: Milestone v1.7 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-22 — Milestone v1.7 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-24 — Milestone v1.8 started
 
 ## Performance Metrics
 
@@ -89,4 +88,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd:new-milestone
+- Start Phase 21 with $gsd-discuss-phase 21 or $gsd-plan-phase 21
