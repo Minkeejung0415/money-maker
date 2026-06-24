@@ -49,6 +49,9 @@ Thumbs.db
 
 # Data (large files go here, not in git)
 /data/
+# Allow Python source modules embedded in data/ (e.g. historical match datasets)
+!/data/*.py
+!/data/__init__.py
 *.parquet
 /data/**/*.csv
 *.json.gz
