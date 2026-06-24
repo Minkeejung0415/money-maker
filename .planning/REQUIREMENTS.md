@@ -7,10 +7,10 @@
 
 ### Data Foundation
 
-- [ ] **MLBDATA-01**: User can build a historical MLB games table with canonical game IDs, dates, teams, venue, status, doubleheader context, final target, and probable or actual starter IDs.
-- [ ] **MLBDATA-02**: User can build a historical game-player slots table containing lineup players, batting order, side, position, starter role, player IDs, and confirmation/source status.
-- [ ] **MLBDATA-03**: User can join MLBAM, Retrosheet, and internal player references through a stable ID mapping layer with explicit unmatched-player reporting.
-- [ ] **MLBDATA-04**: User can refresh day-of MLB starter, lineup, roster, and injury availability inputs without using paid data providers.
+- [x] **MLBDATA-01**: User can build a historical MLB games table with canonical game IDs, dates, teams, venue, status, doubleheader context, final target, and probable or actual starter IDs.
+- [x] **MLBDATA-02**: User can build a historical game-player slots table containing lineup players, batting order, side, position, starter role, player IDs, and confirmation/source status.
+- [x] **MLBDATA-03**: User can join MLBAM, Retrosheet, and internal player references through a stable ID mapping layer with explicit unmatched-player reporting.
+- [x] **MLBDATA-04**: User can refresh day-of MLB starter, lineup, roster, and injury availability inputs without using paid data providers.
 
 ### Player Features
 
@@ -59,10 +59,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MLBDATA-01 | Phase 21 | Pending |
-| MLBDATA-02 | Phase 21 | Pending |
-| MLBDATA-03 | Phase 21 | Pending |
-| MLBDATA-04 | Phase 21 | Pending |
+| MLBDATA-01 | Phase 21 | Complete |
+| MLBDATA-02 | Phase 21 | Complete |
+| MLBDATA-03 | Phase 21 | Complete |
+| MLBDATA-04 | Phase 21 | Complete |
 | MLBFEAT-01 | Phase 22 | Pending |
 | MLBFEAT-02 | Phase 22 | Pending |
 | MLBFEAT-03 | Phase 22 | Pending |
