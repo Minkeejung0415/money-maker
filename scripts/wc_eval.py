@@ -210,6 +210,38 @@ def main() -> int:
     print(f"  Calibrated Log Loss    : {metrics_cal['log_loss_calibrated']:.4f}")
     print(f"  Calibrated Accuracy    : {metrics_cal.get('accuracy_calibrated', 0):.4f}")
 
+    # -----------------------------------------------------------------------
+    # Hybrid Baseline Evaluation (Phase 26)
+    # -----------------------------------------------------------------------
+    from alpha.engines.sports.wc_hybrid_model import WCHybridModel
+
+    print("\n## Hybrid Baseline Model (Phase 26)")
+    print("-" * 50)
+
+    hybrid_model = WCHybridModel()
+    hybrid_results = evaluate_model(hybrid_model, test_matches)
+    hybrid_cal_results = evaluate_model(hybrid_model, test_matches, calibrator=calibrator)
+
+    _print_results_table("HYBRID BASELINE (uncalibrated)", hybrid_results)
+
+    print(f"\n  Brier:     {hybrid_results['brier']:.4f}"
+          f"  (cal: {hybrid_cal_results.get('brier_calibrated', hybrid_results['brier']):.4f})")
+    print(f"  Log Loss:  {hybrid_results['log_loss']:.4f}")
+    print(f"  Accuracy:  {hybrid_results['accuracy'] * 100:.1f}%")
+    print(f"  A-grade:   {hybrid_results['a_grade']['a_grade_rate'] * 100:.1f}%")
+
+    print("\n## Promotion Gate: Hybrid vs Elo-Only Baseline")
+    elo_baseline_for_gate = {
+        "brier": metrics_uncal["brier"],
+        "log_loss": metrics_uncal["log_loss"],
+        "n_samples": metrics_uncal["n_samples"],
+    }
+    passes, reason = promotion_gate(elo_baseline_for_gate, hybrid_results)
+    print(f"  {'PASS' if passes else 'FAIL'}: {reason}")
+    if not passes:
+        print("  NOTE: Hybrid model did not beat Elo-only on both metrics by >0.001.")
+        print("  Phase 26 adds infrastructure; further improvements in Phases 27-31.")
+
     print(f"\nwc_eval.py complete. Exit 0.")
     return 0
 
