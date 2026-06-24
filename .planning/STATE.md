@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8
-milestone_name: Player-Aware MLB Moneyline Model
-status: milestone_shipped
-stopped_at: v1.8 shipped — Player-Aware MLB Moneyline Model complete
-last_updated: 2026-06-24T07:13:34.205Z
-last_activity: 2026-06-24 -- v1.8 milestone audit completed
+milestone: v1.9
+milestone_name: Improving World Cup Win Probability with Team and Player Features
+status: planning
+stopped_at: v1.9 started — defining requirements and roadmap
+last_updated: 2026-06-24T00:00:00.000Z
+last_activity: 2026-06-24 -- Milestone v1.9 started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 4
-  completed_plans: 20
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,20 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** v1.8 shipped — ready for next milestone
+**Current focus:** v1.9 — Improving World Cup Win Probability with Team and Player Features
 
 ## Current Position
 
-Phase: 24
-Plan: Complete
-Status: Milestone shipped
-Last activity: 2026-06-24
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-24 — Milestone v1.9 started
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 9 (v1.2)
+- Total plans completed: 0 (v1.9)
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -61,32 +61,41 @@ Last activity: 2026-06-24
 ### Decisions (v1.1 — from research)
 
 - wc_model.py is a completely separate class — never routes WC games through SoccerModel or ProphitBet XGBoost
-- Elo-logistic (chess formula) is the correct model — XGBoost explicitly rejected for WC data volume (~7k international games)
-- Player props deferred to v1.2 — Odds API Business tier required for WC prop markets beyond anytime goalscorer
+- Elo-logistic (chess formula) is the correct baseline for WC data volume (~7k international games)
 - StatsBomb 2018+2022 data (128 matches) cached to data/.wc_cache/ (separate namespace from data/.soccer_cache/)
 - Neutral-venue correction applied: no +100 Elo home-field boost for WC (all matches at US/Canada/Mexico venues)
 - Knockout round SGPs: Draw legs and standard moneyline legs are hard-gated out (settle on 90-min result only)
-- WC Odds API daily budget: 20 requests max; 2h cache TTL (WC odds move faster than club soccer)
+
+### Decisions (v1.9 — from research brief)
+
+- Player data enters through projected XI, not roster averages — structured probabilistic XI model required
+- Hybrid Elo + xG states + FIFA SUM is the recommended baseline stack (not sole Elo)
+- GK stored as a dedicated submodel separate from generic team defense
+- Hierarchical shrinkage required: sparse national-team samples pool toward club-based role priors
+- Club data weighted ~70-80%, national-team ~20-30% for repeatable actions; tunable by backtest
+- Context features (rest, travel, heat) regularized harder than team/player features
+- Isotonic regression calibration fitted on validation fold only — never post-hoc on full dataset
+- Player-aware model must beat Elo-only baseline on Brier + log loss before production promotion
 
 ### Pending Todos
 
-- Run Odds API market discovery scan (`GET /v4/sports/soccer_fifa_world_cup/events/<id>/odds?markets=`) to confirm which player prop market names exist before building any prop pipeline
-- Confirm per-request credit cost for `soccer_fifa_world_cup` h2h endpoint on existing free tier
-- Decide Elo data source for v1.1: static Kaggle CSV (saifalnimri/international-football-elo-ratings, covers through 2025) vs. live eloratings.net scrape
-- Check whether football_data_client.py has retry/backoff for 429 responses before extending
+- Run Odds API market discovery scan for WC prop markets (carried from v1.1)
+- Confirm per-request credit cost for `soccer_fifa_world_cup` h2h endpoint
+- Decide Elo data source for long-run rating: static CSV vs. live scrape
+- Check football_data_client.py retry/backoff for 429 responses
 
 ### Blockers/Concerns
 
-- World Cup 2026 group stage is LIVE (started June 11) — urgency is high, Phase 1 must ship within first week
-- StatsBomb 2026 live data is NOT available mid-tournament (historical pattern: released post-tournament) — wc_stats.py uses 2018/2022 data only as priors
-- If most group stage games complete before Phase 6 ships, the prop mode has limited live testing window before knockout begins
+- World Cup 2026 group stage is LIVE (started June 11) — urgency is high
+- StatsBomb 2026 live data is NOT available mid-tournament — wc_stats.py uses 2018/2022 data only as priors
+- Free player-stats sources for international players (FBref, Understat) have limited WC-specific coverage
 
 ## Session Continuity
 
-Last session: 2026-06-22T01:21:28.919Z
-Stopped at: Completed 20-03-PLAN.md
+Last session: 2026-06-24
+Stopped at: v1.9 milestone initialization — requirements defined, roadmap pending
 Resume file: None
 
 ## Operator Next Steps
 
-- Start Phase 21 with $gsd-discuss-phase 21 or $gsd-plan-phase 21
+- Roadmap pending — roadmapper being spawned

@@ -4,18 +4,21 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.8 - Player-Aware MLB Moneyline Model
+## Current Milestone: v1.9 - Improving World Cup Win Probability with Team and Player Features
 
-**Goal:** Upgrade the MLB moneyline pipeline from team-only pregame rows to a leak-proof player-conditioned model focused on accuracy and high-confidence win rate.
+**Goal:** Upgrade the WC match model from pure Elo-logistic to a stacked system — hybrid team ratings + probabilistic projected XI + dedicated goalkeeper module + tournament-state logic — to improve WDL accuracy and high-confidence hit rate.
 
 **Target features:**
-- Historical `games` and `game_player_slots` tables for MLB starters, lineups, and stable player identity joins
-- Starting-pitcher quality/rest, lineup/platoon strength, bullpen freshness, and injury/absence feature blocks
-- Date-based walk-forward retraining with separate calibration windows and ablation reporting against the v1.3 baseline
-- Confidence-gated pick output that reports all-games accuracy, selective win rate, coverage, Brier score, and log loss
-- Legacy/fallback cleanup so synthetic prop features and crude injury penalties do not contaminate moneyline modeling
+- Hybrid baseline team ratings: Elo-like long-run rating + xG attack/defense EWMA states + FIFA SUM feature; host-country and confederation interaction adjustments
+- Projected-XI layer: starter probability per player, position-specific line scores (sum not mean), replacement-adjusted absence impact, lineup uncertainty variance term, continuity modifiers
+- Dedicated goalkeeper module: goals prevented vs xGOT, save subtypes, cross claims, sweeper actions, GK-CB continuity, stored separately from generic team defense
+- Position-specific player features (CB/DM/CM/Winger/Striker) with hierarchical shrinkage pooling sparse national-team samples toward club-based role priors
+- Tournament-state logic: qualification pressure state, rotation risk, yellow-card accumulation, 2026 best-third-place format scenarios, fair-play tiebreak features
+- Tactical matchup + set-piece: PPDA/possession style, counterattack frequency, style matchup interactions, corner xG for/against
+- Context features with heavy regularization: days rest, minutes load, travel, venue altitude/heat (2026), kick-off local time
+- Chronological evaluation framework: Brier score + log loss + A-grade hit rate; isotonic calibration on validation fold; promotion gate vs Elo-only baseline
 
-**Current state:** v1.8 planning. The v1.3 eight-feature MLB model remains the baseline while the player-aware feature store, walk-forward evaluation, and gated runtime path are built.
+**Current state:** v1.9 planning. The Elo-logistic WC model (with draw calibration and tactical overlay) is the baseline; the stacked player-aware architecture is being designed.
 
 ## Previous Milestone: v1.7 - Tactical Calibration and Validation (Complete)
 
@@ -119,21 +122,35 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] One-distribution-per-SGP coherence and visible scanner gate status
 - [x] Real coverage audit blocks promotion when evidence is insufficient
 
-### Active (v1.8)
+### Validated (v1.8)
 
-- [ ] Build MLB historical game and player-slot tables from free/official sources with stable IDs
-- [ ] Add player-aware starter, lineup, bullpen, and injury/absence features without target-game leakage
-- [ ] Train and calibrate MLB moneyline candidates with date-based walk-forward splits and ablations
-- [ ] Gate runtime MLB output on validated artifacts, lineup/starter uncertainty, and confidence thresholds
-- [ ] Quarantine synthetic MLB prop rows and crude injury penalties from the moneyline feature path
+- [x] Build MLB historical game and player-slot tables from free/official sources with stable IDs
+- [x] Add player-aware starter, lineup, bullpen, and injury/absence features without target-game leakage
+- [x] Train and calibrate MLB moneyline candidates with date-based walk-forward splits and ablations
+- [x] Gate runtime MLB output on validated artifacts, lineup/starter uncertainty, and confidence thresholds
+- [x] Quarantine synthetic MLB prop rows and crude injury penalties from the moneyline feature path
+
+### Active (v1.9)
+
+- [ ] Hybrid Elo-like + xG attack/defense + FIFA SUM baseline with host-country and confederation adjustments
+- [ ] Projected-XI layer: starter probabilities, line scores (sum not mean), replacement-adjusted absence impact, lineup uncertainty band
+- [ ] Dedicated GK module: goals prevented vs xGOT, save subtypes, cross claims, sweeper, GK-CB continuity
+- [ ] Position-specific player features (CB/DM/CM/Winger/Striker) with hierarchical shrinkage toward club-based role priors
+- [ ] Tournament-state logic: qualification pressure, rotation risk, yellow-card accumulation, 2026 best-third format, fair-play tiebreak
+- [ ] Tactical matchup + set-piece: PPDA/possession style, counterattack frequency, corner xG states, style matchup interactions
+- [ ] Context features with heavy regularization: days rest, minutes load, travel, venue altitude/heat, kick-off time
+- [ ] Chronological evaluation: Brier + log loss + A-grade hit rate; isotonic calibration; promotion gate vs Elo-only baseline
 
 ### Out of Scope
 
 - MLB player props — requires a dependable prop-odds source and broader modeling scope
 - MLB parlay optimization — deferred until single-game probabilities are validated
 - Paid baseball or odds feeds — free data only for v1.3
-- World Cup player props - no dependable free player-prop odds source
-- Invented SGP prices - recommendations require actual supplied prices
+- World Cup player props — no dependable free player-prop odds source
+- Invented SGP prices — recommendations require actual supplied prices
+- Commercial data sources (Opta, StatsBomb commercial) — free data only constraint continues
+- Early-sub and game-plan distribution modeling — medium priority, deferred to v2.0
+- Full chemistry/continuity graph — deferred to v2.0
 
 ## Context
 
@@ -197,4 +214,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-24 - v1.8 Player-Aware MLB Moneyline Model planned*
+*Last updated: 2026-06-24 — v1.9 Improving WC Win Probability with Team and Player Features started*

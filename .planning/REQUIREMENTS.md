@@ -1,89 +1,148 @@
-# Requirements: Alpha Terminal - Player-Aware MLB Moneyline Model
+# Requirements: Alpha Terminal — World Cup Win Probability Upgrade
 
 **Defined:** 2026-06-24
-**Core Value:** Every prop line the scanner outputs must have a >55% historical hit rate - if the model can't beat a coin flip, it's not worth betting.
+**Milestone:** v1.9 — Improving World Cup Win Probability with Team and Player Features
+**Core Value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
 
-## v1.8 Requirements
+## v1.9 Requirements
 
-### Data Foundation
+### BASELINE — Hybrid Team Ratings
 
-- [x] **MLBDATA-01**: User can build a historical MLB games table with canonical game IDs, dates, teams, venue, status, doubleheader context, final target, and probable or actual starter IDs.
-- [x] **MLBDATA-02**: User can build a historical game-player slots table containing lineup players, batting order, side, position, starter role, player IDs, and confirmation/source status.
-- [x] **MLBDATA-03**: User can join MLBAM, Retrosheet, and internal player references through a stable ID mapping layer with explicit unmatched-player reporting.
-- [x] **MLBDATA-04**: User can refresh day-of MLB starter, lineup, roster, and injury availability inputs without using paid data providers.
+- [ ] **BASELINE-01**: WC model uses a hybrid Elo-like long-run team rating updated match-by-match on all competitive internationals
+- [ ] **BASELINE-02**: xG attack state and xG defense state computed as EWMA of non-penalty xG for/against, stored per team with configurable half-life
+- [ ] **BASELINE-03**: FIFA SUM rating included as a feature alongside Elo and xG states (not as sole baseline)
+- [ ] **BASELINE-04**: Host-country advantage treated as a distinct feature; all other 2026 WC venues treated as neutral-site
+- [ ] **BASELINE-05**: Confederation interaction feature included for cross-confederation neutral-site matchups
 
-### Player Features
+### LINEUP — Projected XI Layer
 
-- [x] **MLBFEAT-01**: User can generate shifted starting-pitcher quality and rest features from only information available before first pitch.
-- [x] **MLBFEAT-02**: User can generate lineup strength and platoon-matchup aggregates from projected or confirmed hitters, including missing-player counts and source-confidence flags.
-- [x] **MLBFEAT-03**: User can generate bullpen freshness and relief-depth features from recent appearances without allowing target-game usage.
-- [x] **MLBFEAT-04**: User can represent injury and absence deltas as structured player-availability features instead of crude team batting-average penalties.
-- [x] **MLBFEAT-05**: User can run automated leakage checks proving rolling player and team features exclude the target game.
+- [ ] **LINEUP-01**: Starter probability estimated per player per match from recent national-team history, injury/suspension status, and fitness signals
+- [ ] **LINEUP-02**: Player features aggregated into line scores by position group (GK / Back line / Midfield / Front line) using sum not mean
+- [ ] **LINEUP-03**: Replacement-adjusted absence impact computed as: player_value_in_role − expected_replacement_value_in_same_role
+- [ ] **LINEUP-04**: Lineup uncertainty variance term widens WDL confidence intervals when starter probabilities are low or uncertain
+- [ ] **LINEUP-05**: Back-line and midfield-triangle continuity modifiers applied to line scores when starting pairing differs from recent matches
 
-### Modeling and Validation
+### GK — Goalkeeper Module
 
-- [ ] **MLBMODEL-01**: User can reproduce the existing v1.3 eight-feature MLB model as the baseline scorecard.
-- [ ] **MLBMODEL-02**: User can train starter-only, starter-plus-lineup, starter-plus-lineup-plus-bullpen, and full player-aware ablations.
-- [ ] **MLBMODEL-03**: User can evaluate candidates with date-based walk-forward splits, a separate calibration block, Brier score, log loss, all-games accuracy, and calibration buckets.
-- [ ] **MLBMODEL-04**: User can tune and compare regularized logistic regression, HistGradientBoosting, and LightGBM when the dependency is available.
-- [ ] **MLBMODEL-05**: User can persist a player-aware model artifact with schema version, feature names, split dates, data-source fingerprints, metrics, and promotion gates.
+- [ ] **GK-01**: Goalkeeper strength score includes goals prevented vs xGOT and save subtype distribution
+- [ ] **GK-02**: Cross claims, crosses-not-claimed, and sweeper action counts tracked per GK as distinct features
+- [ ] **GK-03**: GK-CB continuity modifier applied when the starting GK-CB pairing differs from the most recent match
+- [ ] **GK-04**: Goalkeeper stored and evaluated as a dedicated submodel, not merged into generic team defense rating
 
-### Runtime and Reporting
+### PLAYER — Position-Specific Player Features
 
-- [ ] **MLBRUN-01**: User can run the MLB scanner and see whether each prediction comes from the validated v1.8 player-aware artifact or the v1.3 baseline fallback.
-- [ ] **MLBRUN-02**: User can suppress or downgrade picks when starter, lineup, injury, or player-feature uncertainty exceeds configured thresholds.
-- [ ] **MLBRUN-03**: User can report selective win rate, coverage, all-games accuracy, Brier score, and log loss for confidence-gated MLB picks.
-- [ ] **MLBRUN-04**: User can inspect why a game received a high-confidence pick, including starter, lineup, bullpen, and absence feature contributions.
-- [ ] **MLBRUN-05**: User is protected from moneyline paths that reuse synthetic MLB prop features or legacy crude injury penalties.
+- [ ] **PLAYER-01**: CB role features: aerial duel win rate, interceptions per 90, errors leading to shot or goal per 90
+- [ ] **PLAYER-02**: DM role features: ball recoveries per 90, interceptions per 90, press resistance proxy, foul/card rate
+- [ ] **PLAYER-03**: CM role features: possession value added, progressive pass and carry counts, chances created per 90
+- [ ] **PLAYER-04**: Winger role features: non-penalty xG per 90, xA per 90, key passes, box entries, cutbacks/pull-backs
+- [ ] **PLAYER-05**: Striker role features: non-penalty xG per 90, shot volume and location distribution, finishing delta (xGOT − xG) shrunk hard toward positional mean
+- [ ] **PLAYER-06**: Hierarchical shrinkage applied at player level: sparse national-team samples pool toward club-based role priors; finishing and shot-stopping estimates shrunk toward positional averages
+- [ ] **PLAYER-07**: Club data weighted ~70–80% and national-team data ~20–30% for repeatable actions; weighting is configurable and tunable by backtest
 
-## Future Requirements
+### TOURNEY — Tournament-State Logic
 
-### Advanced Baseball Context
+- [ ] **TOURNEY-01**: Qualification pressure state computed per team per match: must-win / draw-enough / likely-through / already-through / already-out
+- [ ] **TOURNEY-02**: Rotation risk flag set when a team's group-stage qualification is already secured before the match
+- [ ] **TOURNEY-03**: Yellow-card accumulation tracked per player; suspension risk flag raised for players entering a match on 1 caution; cards wiped after group stage and after quarter-finals per 2026 FIFA regulations
+- [ ] **TOURNEY-04**: Best-third-place ranking scenarios modeled for 2026's 12-group format in final group matches: affects goal-difference incentives and rotation decisions
+- [ ] **TOURNEY-05**: Fair-play score and FIFA ranking included as tiebreak features for borderline group-stage matches
 
-- **MLBFUT-01**: Add catcher framing, defense, and baserunning feature blocks after the starter, lineup, bullpen, and injury layers are validated.
-- **MLBFUT-02**: Add paired statistical significance tests such as McNemar, Diebold-Mariano, and block bootstrap confidence intervals.
-- **MLBFUT-03**: Add optional odds-aware EV reporting only after the accuracy-first player-aware model is validated.
-- **MLBFUT-04**: Replace every fallback source with official MLB/Retrosheet/Savant equivalents where practical.
+### TACTICAL — Tactical Matchup + Set-Piece
+
+- [ ] **TACTICAL-01**: Team pressing effectiveness (PPDA proxy) and possession style index computed from rolling match data per team
+- [ ] **TACTICAL-02**: Counterattack frequency and rest-defense stability included as distinct team style features
+- [ ] **TACTICAL-03**: Style matchup interactions computed: press-vs-build, width-vs-centrality, possession-vs-transition between the two teams
+- [ ] **TACTICAL-04**: Set-piece attack and defense states stored as separate EWMA components, independent of open-play xG states
+- [ ] **TACTICAL-05**: Corner xG for/against and aerial duel edge included as set-piece strength features
+
+### CONTEXT — Context Features (heavily regularized)
+
+- [ ] **CONTEXT-01**: Days rest since last match and expected-starter minutes in prior 7 and 14 days included as regularized context features
+- [ ] **CONTEXT-02**: Intercontinental travel distance, time zones crossed, and travel direction (east/west) included as context features
+- [ ] **CONTEXT-03**: Venue context for 2026 host cities: altitude, roof/open-air status, and kick-off local time included as features
+- [ ] **CONTEXT-04**: All context features regularized more heavily than team/player features; their influence targets availability and confidence band, not core strength coefficients
+
+### EVAL — Evaluation Framework
+
+- [ ] **EVAL-01**: Chronological expanding-window backtest with all features frozen at pre-kickoff timestamp (no time leakage)
+- [ ] **EVAL-02**: Metrics tracked per model version: accuracy, multiclass Brier score, log loss, calibration reliability curves, A-grade hit rate (top-class probability >= 0.65)
+- [ ] **EVAL-03**: Isotonic regression calibration fitted on validation fold only; never post-hoc on full dataset
+- [ ] **EVAL-04**: Player-aware model must improve over Elo-only WC baseline on both Brier score and log loss in chronological holdout before promotion to production
+
+## v2.0 Requirements (deferred)
+
+### Chemistry / Continuity
+
+- **CHEM-01**: Full chemistry/continuity graph: shared club minutes network across lines
+- **CHEM-02**: Club-pair synergy adjustments for frequently co-playing national-team partners
+
+### Game-Plan Distribution
+
+- **PLAN-01**: Early-sub and game-plan distribution modeling for favorites managing advantage
+- **PLAN-02**: In-game state model that adjusts WDL based on scoreline, minute, and momentum proxies
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| MLB player props | The report explicitly targets game-level moneyline accuracy, and prop modeling needs separate odds/data validation. |
-| MLB parlay optimization | Single-game probabilities must improve first before combining them into parlays. |
-| Paid data feeds | v1.8 should prove the lift using free/official sources already aligned with the project constraints. |
-| Odds/EV-driven promotion | The milestone is accuracy and win-rate focused; odds can remain optional comparison context. |
-| Exact batting-order overfitting | The report ranks player talent and matchup quality above slot-level effects. |
+| Commercial data sources (Opta, StatsBomb commercial) | Free data only constraint |
+| WC player props | No dependable free player-prop odds source exists |
+| WC parlay optimization beyond SGP | Deferred until individual match probabilities are validated |
+| MLB player props | Requires dependable prop-odds source — separate scope |
+| Invented SGP prices | Recommendations require actual supplied prices |
+| Early-sub / game-plan distribution | Medium priority — deferred to v2.0 |
+| Full chemistry/continuity graph | Medium priority — deferred to v2.0 |
+| Biomechanical injury prediction | Evidence base too weak for direct performance coefficients |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MLBDATA-01 | Phase 21 | Complete |
-| MLBDATA-02 | Phase 21 | Complete |
-| MLBDATA-03 | Phase 21 | Complete |
-| MLBDATA-04 | Phase 21 | Complete |
-| MLBFEAT-01 | Phase 22 | Complete |
-| MLBFEAT-02 | Phase 22 | Complete |
-| MLBFEAT-03 | Phase 22 | Complete |
-| MLBFEAT-04 | Phase 22 | Complete |
-| MLBFEAT-05 | Phase 22 | Complete |
-| MLBMODEL-01 | Phase 23 | Pending |
-| MLBMODEL-02 | Phase 23 | Pending |
-| MLBMODEL-03 | Phase 23 | Pending |
-| MLBMODEL-04 | Phase 23 | Pending |
-| MLBMODEL-05 | Phase 23 | Pending |
-| MLBRUN-01 | Phase 24 | Pending |
-| MLBRUN-02 | Phase 24 | Pending |
-| MLBRUN-03 | Phase 24 | Pending |
-| MLBRUN-04 | Phase 24 | Pending |
-| MLBRUN-05 | Phase 24 | Pending |
+| BASELINE-01 | — | Pending |
+| BASELINE-02 | — | Pending |
+| BASELINE-03 | — | Pending |
+| BASELINE-04 | — | Pending |
+| BASELINE-05 | — | Pending |
+| LINEUP-01 | — | Pending |
+| LINEUP-02 | — | Pending |
+| LINEUP-03 | — | Pending |
+| LINEUP-04 | — | Pending |
+| LINEUP-05 | — | Pending |
+| GK-01 | — | Pending |
+| GK-02 | — | Pending |
+| GK-03 | — | Pending |
+| GK-04 | — | Pending |
+| PLAYER-01 | — | Pending |
+| PLAYER-02 | — | Pending |
+| PLAYER-03 | — | Pending |
+| PLAYER-04 | — | Pending |
+| PLAYER-05 | — | Pending |
+| PLAYER-06 | — | Pending |
+| PLAYER-07 | — | Pending |
+| TOURNEY-01 | — | Pending |
+| TOURNEY-02 | — | Pending |
+| TOURNEY-03 | — | Pending |
+| TOURNEY-04 | — | Pending |
+| TOURNEY-05 | — | Pending |
+| TACTICAL-01 | — | Pending |
+| TACTICAL-02 | — | Pending |
+| TACTICAL-03 | — | Pending |
+| TACTICAL-04 | — | Pending |
+| TACTICAL-05 | — | Pending |
+| CONTEXT-01 | — | Pending |
+| CONTEXT-02 | — | Pending |
+| CONTEXT-03 | — | Pending |
+| CONTEXT-04 | — | Pending |
+| EVAL-01 | — | Pending |
+| EVAL-02 | — | Pending |
+| EVAL-03 | — | Pending |
+| EVAL-04 | — | Pending |
 
 **Coverage:**
-- v1.8 requirements: 19 total
-- Mapped to phases: 19
-- Unmapped: 0
+- v1.9 requirements: 39 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 39
 
 ---
 *Requirements defined: 2026-06-24*
-*Last updated: 2026-06-24 after v1.8 milestone definition*
+*Last updated: 2026-06-24 — initial v1.9 definition*
