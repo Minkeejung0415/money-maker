@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.8 Player-Aware MLB Moneyline Model (Shipped: 2026-06-24)
+
+**Phases completed:** 4 phases, 4 plans
+
+**Key accomplishments:**
+
+- Canonical MLB game and player-slot data foundation with ID mapping and unmatched-player reports
+- Leakage-safe player-aware feature rows for starters, lineups, bullpen workload/quality, and absences
+- Walk-forward train/calibration/test ablation framework comparing v1.3 baseline, starter, lineup, bullpen, and full player-aware feature sets
+- Artifact metadata with schema version, features, split dates, fingerprints, metrics, and promotion gates
+- Runtime gates for validated v1.8 artifacts, preserved v1.3 fallback, visible market-implied fallback, uncertainty suppression, and scanner labels
+- Legacy non-bundle MLB moneyline artifacts rejected from runtime
+
+---
+
 ## v1.7 Tactical Calibration and Validation (Shipped: 2026-06-22)
 
 **Phases completed:** 1 phase, 3 plans, 9 tasks

@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Player-Aware MLB Moneyline Model
-status: milestone_complete
-stopped_at: Phase 24 complete (1/1) — v1.8 ready for milestone audit
+status: milestone_shipped
+stopped_at: v1.8 shipped — Player-Aware MLB Moneyline Model complete
 last_updated: 2026-06-24T07:13:34.205Z
-last_activity: 2026-06-24 -- Phase 24 execution completed
+last_activity: 2026-06-24 -- v1.8 milestone audit completed
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate — if the model can't beat a coin flip, it's not worth betting.
-**Current focus:** v1.8 milestone audit and closeout
+**Current focus:** v1.8 shipped — ready for next milestone
 
 ## Current Position
 
 Phase: 24
 Plan: Complete
-Status: Milestone complete
+Status: Milestone shipped
 Last activity: 2026-06-24
 
 ## Performance Metrics
