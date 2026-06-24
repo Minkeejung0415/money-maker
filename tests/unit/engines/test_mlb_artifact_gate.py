@@ -2,6 +2,7 @@ import joblib
 import numpy as np
 from alpha.engines.sports.mlb_model import MLBModel
 from alpha.engines.sports.mlb_player_modeling import PLAYER_FEATURE_SETS
+from alpha.engines.sports.mlb_training import FEATURE_NAMES
 
 
 class ConstantProbModel:
@@ -16,6 +17,12 @@ class ConstantProbModel:
 class IdentityCalibrator:
     def predict(self, raw_probs):
         return list(raw_probs)
+
+
+class PredictProbaCalibrator:
+    def predict_proba(self, x):
+        positive = np.full(len(x), 0.56)
+        return np.column_stack((1.0 - positive, positive))
 
 
 def _player_features(**overrides):
@@ -53,6 +60,21 @@ def _valid_player_artifact(**overrides):
             "brier_score": 0.22,
             "log_loss": 0.64,
         },
+    }
+    artifact.update(overrides)
+    return artifact
+
+
+def _valid_baseline_artifact(**overrides):
+    artifact = {
+        "kind": "mlb_win_probability_bundle",
+        "validated": True,
+        "feature_names": list(FEATURE_NAMES),
+        "model": ConstantProbModel(0.56),
+        "calibrator": PredictProbaCalibrator(),
+        "team_state": {},
+        "metrics": {"brier_score": 0.24, "log_loss": 0.68, "accuracy": 0.52},
+        "version": "mlb-v1.3",
     }
     artifact.update(overrides)
     return artifact
@@ -109,6 +131,26 @@ def test_player_aware_uncertainty_suppresses_pick(tmp_path, monkeypatch):
     assert pred["confidence"] == "LOW"
     assert pred["pick_eligible"] is False
     assert "lineup_missing" in pred["uncertainty_flags"]
+
+
+def test_player_aware_missing_features_falls_back_to_v1_3_bundle(tmp_path, monkeypatch):
+    player_path = tmp_path / "mlb_player_moneyline.pkl"
+    baseline_path = tmp_path / "mlb_win_probability.pkl"
+    joblib.dump(_valid_player_artifact(), player_path)
+    joblib.dump(_valid_baseline_artifact(), baseline_path)
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [player_path, baseline_path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -120,
+        "away_odds": 105,
+    })
+
+    assert pred["source"] == "trained_calibrated"
+    assert pred["model_label"] == "v1.3 baseline fallback"
+    assert pred["fallback_reason"].startswith("missing_player_features:")
 
 
 def test_invalid_player_aware_artifact_is_rejected(tmp_path, monkeypatch):

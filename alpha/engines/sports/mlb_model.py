@@ -269,6 +269,8 @@ class MLBModel:
                     continue
                 if self._accept_loaded_artifact(loaded, model_path):
                     logger.info("Loaded MLB model: %s", model_path.name)
+                    if self._player_bundle and not self._model_bundle:
+                        continue
                     return
             logger.debug("No validated MLB model file found - using market-implied")
         except Exception as exc:

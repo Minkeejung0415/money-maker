@@ -6,7 +6,7 @@
 .venv\Scripts\python.exe -m pytest tests/unit/engines/test_mlb_model.py tests/unit/engines/test_mlb_artifact_gate.py tests/unit/engines/test_mlb_player_modeling.py tests/unit/engines/test_mlb_sgp_builder.py -q --tb=short --basetemp=.tmp-tests\pytest-phase24
 ```
 
-Result: 39 passed.
+Result: 40 passed.
 
 ```powershell
 git diff --check
@@ -21,4 +21,3 @@ Result: passed with no whitespace errors. Git reported normal CRLF working-copy 
 3. Runtime report exposes coverage, selective win rate, all-games accuracy, Brier score, and log loss fields when present in artifact metrics.
 4. High-confidence player-aware scanner output can print starter, lineup, bullpen, absence, and missing-feature context.
 5. Runtime rejects legacy non-bundle artifacts and does not use the old crude injury-adjusted moneyline model path.
-
