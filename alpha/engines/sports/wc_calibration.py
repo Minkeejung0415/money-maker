@@ -369,14 +369,20 @@ def evaluate_model(
         y_true_labels.append(LABEL_TO_INT[match["outcome"]])
 
     probs_arr = np.array(y_pred_probs, dtype=float)
+    # Normalize rows to sum to 1.0 — WCMatchModel rounds to 4dp which can
+    # produce sums like 0.9999 or 1.0001, triggering sklearn UserWarnings.
+    row_sums = probs_arr.sum(axis=1, keepdims=True)
+    row_sums = np.where(row_sums == 0, 1.0, row_sums)
+    probs_arr = probs_arr / row_sums
+
     true_arr = np.array(y_true_labels)
     pred_classes = np.argmax(probs_arr, axis=1)
 
     result_dict: dict = {
-        "brier": multiclass_brier(y_true_labels, y_pred_probs),
+        "brier": multiclass_brier(y_true_labels, probs_arr.tolist()),
         "log_loss": float(log_loss(true_arr, probs_arr, labels=[0, 1, 2])),
         "accuracy": float(accuracy_score(true_arr, pred_classes)),
-        "a_grade": compute_a_grade(y_true_labels, y_pred_probs),
+        "a_grade": compute_a_grade(y_true_labels, probs_arr.tolist()),
         "n_samples": len(matches),
     }
 
