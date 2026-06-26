@@ -1,0 +1,412 @@
+﻿[1/4] Fetching WC fixtures (2026-06-26 to 2026-06-26)...
+  Found 2 WC fixture(s)
+  Odds override applied to 0/2 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Loading recent last-10 international form and Elo for every team...
+  Tactical calibration: fallback (artifact missing)
+  Enriched 2 game(s) with Elo predictions
+  Recent form ready for 2 game(s)
+[3/4] Building WC sgp combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: SGP  |  2026-06-26 to 2026-06-26
+=================================================================
+
+Full probability set: 50 nonzero compatible combinations.
+
+TACTICAL MATCHUPS
+  Uruguay [4-4-1-1] vs Spain [4-3-3]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 13.4%/18.2%/68.4% -> 13.4%/18.2%/68.4%
+    Over 2.5: 45.6% -> 45.6% | BTTS Yes: 36.2% -> 36.2%
+    Uruguay: opponent defensive block: disadvantage (-0.68)
+    Uruguay: width vs block: edge (+0.42)
+    Uruguay: possession control: disadvantage (-0.25)
+    Spain: directness vs block: disadvantage (-0.48)
+    Spain: chance creation: edge (+0.31)
+    Spain: set-piece pressure: edge (+0.30)
+  Cape Verde Islands [4-2-3-1] vs Saudi Arabia [4-4-2]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 38.2%/30.0%/31.8% -> 38.2%/30.0%/31.8%
+    Over 2.5: 36.8% -> 36.8% | BTTS Yes: 43.3% -> 43.3%
+    Cape Verde Islands: press resistance: disadvantage (-1.00)
+    Cape Verde Islands: width vs block: disadvantage (-0.93)
+    Cape Verde Islands: possession control: disadvantage (-0.48)
+    Saudi Arabia: width vs block: disadvantage (-1.00)
+    Saudi Arabia: possession control: edge (+0.48)
+    Saudi Arabia: directness vs block: disadvantage (-0.42)
+
+#1  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 49.5%  |  Model fair odds: 2.02x
+    Legs:
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#2  Uruguay vs Spain
+    Joint win probability: 47.7%  |  Model fair odds: 2.10x
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#3  Uruguay vs Spain
+    Joint win probability: 46.3%  |  Model fair odds: 2.16x
+    Legs:
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#4  Uruguay vs Spain
+    Joint win probability: 37.8%  |  Model fair odds: 2.65x
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#5  Uruguay vs Spain
+    Joint win probability: 30.6%  |  Model fair odds: 3.27x
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Under 2.5 goals  |  individual model: 54.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#6  Uruguay vs Spain
+    Joint win probability: 30.6%  |  Model fair odds: 3.27x  |  REDUNDANT LEG
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#7  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 29.6%  |  Model fair odds: 3.38x
+    Legs:
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#8  Uruguay vs Spain
+    Joint win probability: 28.1%  |  Model fair odds: 3.56x
+    Legs:
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#9  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 25.5%  |  Model fair odds: 3.92x
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Under 2.5 goals  |  individual model: 63.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#10  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 24.9%  |  Model fair odds: 4.01x
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#11  Uruguay vs Spain
+    Joint win probability: 20.7%  |  Model fair odds: 4.83x
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#12  Uruguay vs Spain
+    Joint win probability: 20.7%  |  Model fair odds: 4.83x  |  REDUNDANT LEG
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#13  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 19.9%  |  Model fair odds: 5.02x
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#14  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 19.6%  |  Model fair odds: 5.11x
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Under 2.5 goals  |  individual model: 63.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#15  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 19.6%  |  Model fair odds: 5.11x  |  REDUNDANT LEG
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#16  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 18.6%  |  Model fair odds: 5.37x
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Over 2.5 goals  |  individual model: 36.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#17  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 18.2%  |  Model fair odds: 5.50x
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#18  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 18.1%  |  Model fair odds: 5.54x
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Under 2.5 goals  |  individual model: 63.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#19  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 18.1%  |  Model fair odds: 5.54x  |  REDUNDANT LEG
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#20  Uruguay vs Spain
+    Joint win probability: 17.5%  |  Model fair odds: 5.72x
+    Legs:
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#21  Uruguay vs Spain
+    Joint win probability: 17.1%  |  Model fair odds: 5.85x
+    Legs:
+      * Spain win (90 min)  |  individual model: 68.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#22  Uruguay vs Spain
+    Joint win probability: 15.7%  |  Model fair odds: 6.37x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Under 2.5 goals  |  individual model: 54.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#23  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 13.7%  |  Model fair odds: 7.29x
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Over 2.5 goals  |  individual model: 36.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#24  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 13.7%  |  Model fair odds: 7.31x
+    Legs:
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#25  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 13.7%  |  Model fair odds: 7.31x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#26  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 13.3%  |  Model fair odds: 7.54x
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#27  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 13.3%  |  Model fair odds: 7.54x  |  REDUNDANT LEG
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#28  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 11.9%  |  Model fair odds: 8.44x
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#29  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 11.9%  |  Model fair odds: 8.44x  |  REDUNDANT LEG
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#30  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 11.8%  |  Model fair odds: 8.44x
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#31  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 11.8%  |  Model fair odds: 8.44x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Under 2.5 goals  |  individual model: 63.2%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#32  Uruguay vs Spain
+    Joint win probability: 10.6%  |  Model fair odds: 9.43x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#33  Uruguay vs Spain
+    Joint win probability: 8.5%  |  Model fair odds: 11.77x
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#34  Uruguay vs Spain
+    Joint win probability: 8.1%  |  Model fair odds: 12.29x
+    Legs:
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#35  Uruguay vs Spain
+    Joint win probability: 8.1%  |  Model fair odds: 12.29x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#36  Uruguay vs Spain
+    Joint win probability: 8.1%  |  Model fair odds: 12.32x
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Under 2.5 goals  |  individual model: 54.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#37  Uruguay vs Spain
+    Joint win probability: 8.1%  |  Model fair odds: 12.32x  |  REDUNDANT LEG
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#38  Uruguay vs Spain
+    Joint win probability: 7.6%  |  Model fair odds: 13.23x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#39  Uruguay vs Spain
+    Joint win probability: 7.6%  |  Model fair odds: 13.23x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Under 2.5 goals  |  individual model: 54.4%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#40  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 7.2%  |  Model fair odds: 13.82x
+    Legs:
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#41  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 5.4%  |  Model fair odds: 18.63x
+    Legs:
+      * Cape Verde Islands win (90 min)  |  individual model: 38.2%
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#42  Uruguay vs Spain
+    Joint win probability: 5.3%  |  Model fair odds: 18.86x
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#43  Uruguay vs Spain
+    Joint win probability: 4.9%  |  Model fair odds: 20.30x
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#44  Uruguay vs Spain
+    Joint win probability: 4.9%  |  Model fair odds: 20.30x  |  REDUNDANT LEG
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#45  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 4.5%  |  Model fair odds: 22.26x
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Over 2.5 goals  |  individual model: 36.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#46  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 4.5%  |  Model fair odds: 22.26x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 30.0%
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - Yes  |  individual model: 43.3%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#47  Uruguay vs Spain
+    Joint win probability: 2.5%  |  Model fair odds: 40.47x
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Over 2.5 goals  |  individual model: 45.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#48  Uruguay vs Spain
+    Joint win probability: 2.5%  |  Model fair odds: 40.47x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 18.2%
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - Yes  |  individual model: 36.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#49  Cape Verde Islands vs Saudi Arabia
+    Joint win probability: 1.9%  |  Model fair odds: 53.61x
+    Legs:
+      * Saudi Arabia win (90 min)  |  individual model: 31.8%
+      * Over 2.5 goals  |  individual model: 36.8%
+      * Both teams to score - No  |  individual model: 56.7%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#50  Uruguay vs Spain
+    Joint win probability: 0.4%  |  Model fair odds: 265.01x
+    Legs:
+      * Uruguay win (90 min)  |  individual model: 13.4%
+      * Over 2.5 goals  |  individual model: 45.6%
+      * Both teams to score - No  |  individual model: 63.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+

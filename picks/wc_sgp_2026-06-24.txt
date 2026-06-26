@@ -1,0 +1,803 @@
+[1/4] Fetching WC fixtures (2026-06-24 to 2026-06-24)...
+  Found 4 WC fixture(s)
+  Odds override applied to 0/4 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Loading recent last-10 international form and Elo for every team...
+  Tactical calibration: fallback (artifact missing)
+  Enriched 4 game(s) with Elo predictions
+  Recent form ready for 4 game(s)
+[3/4] Building WC sgp combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: SGP  |  2026-06-24 to 2026-06-24
+=================================================================
+
+Full probability set: 100 nonzero compatible combinations.
+
+TACTICAL MATCHUPS
+  Switzerland [3-4-3] vs Canada [4-4-2]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 48.3%/25.8%/25.9% -> 48.3%/25.8%/25.9%
+    Over 2.5: 46.0% -> 46.0% | BTTS Yes: 50.4% -> 50.4%
+    Switzerland: opponent defensive block: disadvantage (-0.82)
+    Switzerland: press resistance: disadvantage (-0.69)
+    Switzerland: chance creation: disadvantage (-0.21)
+    Canada: width vs block: edge (+0.71)
+    Canada: set-piece pressure: edge (+0.65)
+    Canada: opponent defensive block: disadvantage (-0.65)
+  Bosnia-Herzegovina [4-4-2] vs Qatar [4-3-3]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 54.8%/23.3%/21.9% -> 54.8%/23.3%/21.9%
+    Over 2.5: 50.6% -> 50.6% | BTTS Yes: 49.5% -> 49.5%
+    Bosnia-Herzegovina: press resistance: disadvantage (-1.00)
+    Bosnia-Herzegovina: width vs block: disadvantage (-1.00)
+    Bosnia-Herzegovina: directness vs block: disadvantage (-0.97)
+    Qatar: opponent defensive block: disadvantage (-1.00)
+    Qatar: width vs block: disadvantage (-0.99)
+    Qatar: chance creation: disadvantage (-0.66)
+  Morocco [4-2-3-1] vs Haiti [4-4-2]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 73.3%/16.3%/10.5% -> 73.3%/16.3%/10.5%
+    Over 2.5: 38.6% -> 38.6% | BTTS Yes: 27.9% -> 27.9%
+    Morocco: press resistance: edge (+0.81)
+    Morocco: possession control: edge (+0.70)
+    Morocco: opponent defensive block: disadvantage (-0.68)
+    Haiti: press resistance: disadvantage (-1.00)
+    Haiti: possession control: disadvantage (-0.70)
+    Haiti: opponent defensive block: disadvantage (-0.62)
+  Scotland [4-4-2] vs Brazil [4-3-3]
+    Artifact: fallback - artifact missing
+    Gates: 1x2=FALLBACK | totals=FALLBACK | btts=FALLBACK
+    Tactical weights inactive; matchup components are descriptive only.
+    1X2 H/D/A: 17.6%/20.7%/61.7% -> 17.6%/20.7%/61.7%
+    Over 2.5: 58.0% -> 58.0% | BTTS Yes: 54.8% -> 54.8%
+    Scotland: set-piece pressure: disadvantage (-0.35)
+    Scotland: opponent defensive block: disadvantage (-0.29)
+    Scotland: possession control: disadvantage (-0.17)
+    Brazil: width vs block: disadvantage (-0.48)
+    Brazil: press resistance: edge (+0.39)
+    Brazil: set-piece pressure: disadvantage (-0.27)
+
+#1  Morocco vs Haiti
+    Joint win probability: 56.1%  |  Model fair odds: 1.78x
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#2  Morocco vs Haiti
+    Joint win probability: 54.9%  |  Model fair odds: 1.82x
+    Legs:
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#3  Scotland vs Brazil
+    Joint win probability: 45.1%  |  Model fair odds: 2.22x
+    Legs:
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#4  Switzerland vs Canada
+    Joint win probability: 41.7%  |  Model fair odds: 2.40x
+    Legs:
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#5  Scotland vs Brazil
+    Joint win probability: 41.3%  |  Model fair odds: 2.42x
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Over 2.5 goals  |  individual model: 58.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#6  Morocco vs Haiti
+    Joint win probability: 39.2%  |  Model fair odds: 2.55x
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Under 2.5 goals  |  individual model: 61.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#7  Morocco vs Haiti
+    Joint win probability: 39.2%  |  Model fair odds: 2.55x  |  REDUNDANT LEG
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#8  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 38.4%  |  Model fair odds: 2.60x
+    Legs:
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#9  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 38.3%  |  Model fair odds: 2.61x
+    Legs:
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#10  Switzerland vs Canada
+    Joint win probability: 38.2%  |  Model fair odds: 2.62x
+    Legs:
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#11  Morocco vs Haiti
+    Joint win probability: 34.1%  |  Model fair odds: 2.93x
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Over 2.5 goals  |  individual model: 38.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#12  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 33.8%  |  Model fair odds: 2.96x
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Over 2.5 goals  |  individual model: 50.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#13  Scotland vs Brazil
+    Joint win probability: 32.3%  |  Model fair odds: 3.09x
+    Legs:
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#14  Scotland vs Brazil
+    Joint win probability: 32.1%  |  Model fair odds: 3.11x
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#15  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 32.0%  |  Model fair odds: 3.12x
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#16  Scotland vs Brazil
+    Joint win probability: 29.6%  |  Model fair odds: 3.38x
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#17  Scotland vs Brazil
+    Joint win probability: 29.6%  |  Model fair odds: 3.38x  |  REDUNDANT LEG
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#18  Switzerland vs Canada
+    Joint win probability: 27.2%  |  Model fair odds: 3.67x
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#19  Switzerland vs Canada
+    Joint win probability: 26.4%  |  Model fair odds: 3.79x
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Over 2.5 goals  |  individual model: 46.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#20  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 22.8%  |  Model fair odds: 4.39x
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#21  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 22.8%  |  Model fair odds: 4.39x  |  REDUNDANT LEG
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#22  Switzerland vs Canada
+    Joint win probability: 21.9%  |  Model fair odds: 4.57x
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Under 2.5 goals  |  individual model: 54.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#23  Switzerland vs Canada
+    Joint win probability: 21.9%  |  Model fair odds: 4.57x  |  REDUNDANT LEG
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#24  Morocco vs Haiti
+    Joint win probability: 21.5%  |  Model fair odds: 4.66x
+    Legs:
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#25  Switzerland vs Canada
+    Joint win probability: 21.1%  |  Model fair odds: 4.75x
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#26  Switzerland vs Canada
+    Joint win probability: 21.1%  |  Model fair odds: 4.75x  |  REDUNDANT LEG
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#27  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 21.0%  |  Model fair odds: 4.76x
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Under 2.5 goals  |  individual model: 49.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#28  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 21.0%  |  Model fair odds: 4.76x  |  REDUNDANT LEG
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#29  Scotland vs Brazil
+    Joint win probability: 20.4%  |  Model fair odds: 4.91x
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Under 2.5 goals  |  individual model: 42.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#30  Scotland vs Brazil
+    Joint win probability: 20.4%  |  Model fair odds: 4.91x  |  REDUNDANT LEG
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#31  Switzerland vs Canada
+    Joint win probability: 20.1%  |  Model fair odds: 4.97x
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Under 2.5 goals  |  individual model: 54.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#32  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 17.9%  |  Model fair odds: 5.58x
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Under 2.5 goals  |  individual model: 49.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#33  Switzerland vs Canada
+    Joint win probability: 17.9%  |  Model fair odds: 5.58x
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#34  Morocco vs Haiti
+    Joint win probability: 17.2%  |  Model fair odds: 5.82x
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#35  Morocco vs Haiti
+    Joint win probability: 17.2%  |  Model fair odds: 5.82x  |  REDUNDANT LEG
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#36  Morocco vs Haiti
+    Joint win probability: 17.1%  |  Model fair odds: 5.84x
+    Legs:
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#37  Morocco vs Haiti
+    Joint win probability: 16.9%  |  Model fair odds: 5.91x
+    Legs:
+      * Morocco win (90 min)  |  individual model: 73.3%
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#38  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 16.4%  |  Model fair odds: 6.09x
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#39  Scotland vs Brazil
+    Joint win probability: 15.9%  |  Model fair odds: 6.30x
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#40  Morocco vs Haiti
+    Joint win probability: 14.9%  |  Model fair odds: 6.69x
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Under 2.5 goals  |  individual model: 61.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#41  Scotland vs Brazil
+    Joint win probability: 14.5%  |  Model fair odds: 6.88x
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Under 2.5 goals  |  individual model: 42.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#42  Switzerland vs Canada
+    Joint win probability: 14.5%  |  Model fair odds: 6.90x
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#43  Switzerland vs Canada
+    Joint win probability: 14.0%  |  Model fair odds: 7.17x
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Over 2.5 goals  |  individual model: 46.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#44  Scotland vs Brazil
+    Joint win probability: 12.9%  |  Model fair odds: 7.77x
+    Legs:
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#45  Switzerland vs Canada
+    Joint win probability: 12.2%  |  Model fair odds: 8.17x
+    Legs:
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#46  Switzerland vs Canada
+    Joint win probability: 12.2%  |  Model fair odds: 8.17x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#47  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 12.2%  |  Model fair odds: 8.23x
+    Legs:
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#48  Switzerland vs Canada
+    Joint win probability: 12.0%  |  Model fair odds: 8.35x
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Under 2.5 goals  |  individual model: 54.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#49  Switzerland vs Canada
+    Joint win probability: 12.0%  |  Model fair odds: 8.35x  |  REDUNDANT LEG
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#50  Scotland vs Brazil
+    Joint win probability: 11.8%  |  Model fair odds: 8.49x
+    Legs:
+      * Brazil win (90 min)  |  individual model: 61.7%
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#51  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 11.6%  |  Model fair odds: 8.62x
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#52  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 11.5%  |  Model fair odds: 8.73x
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Over 2.5 goals  |  individual model: 50.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#53  Switzerland vs Canada
+    Joint win probability: 11.4%  |  Model fair odds: 8.74x
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#54  Switzerland vs Canada
+    Joint win probability: 11.4%  |  Model fair odds: 8.74x  |  REDUNDANT LEG
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#55  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 11.1%  |  Model fair odds: 9.03x
+    Legs:
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#56  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 11.1%  |  Model fair odds: 9.03x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#57  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 11.0%  |  Model fair odds: 9.07x
+    Legs:
+      * Bosnia-Herzegovina win (90 min)  |  individual model: 54.8%
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#58  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 10.5%  |  Model fair odds: 9.54x
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Under 2.5 goals  |  individual model: 49.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#59  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 10.5%  |  Model fair odds: 9.54x  |  REDUNDANT LEG
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#60  Scotland vs Brazil
+    Joint win probability: 10.5%  |  Model fair odds: 9.56x
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Over 2.5 goals  |  individual model: 58.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#61  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 10.3%  |  Model fair odds: 9.69x
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#62  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 10.3%  |  Model fair odds: 9.69x  |  REDUNDANT LEG
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#63  Scotland vs Brazil
+    Joint win probability: 9.7%  |  Model fair odds: 10.29x
+    Legs:
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#64  Scotland vs Brazil
+    Joint win probability: 9.7%  |  Model fair odds: 10.29x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#65  Scotland vs Brazil
+    Joint win probability: 9.4%  |  Model fair odds: 10.67x
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#66  Scotland vs Brazil
+    Joint win probability: 9.4%  |  Model fair odds: 10.67x  |  REDUNDANT LEG
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#67  Morocco vs Haiti
+    Joint win probability: 8.5%  |  Model fair odds: 11.76x
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#68  Morocco vs Haiti
+    Joint win probability: 8.5%  |  Model fair odds: 11.76x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#69  Scotland vs Brazil
+    Joint win probability: 8.2%  |  Model fair odds: 12.17x
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#70  Switzerland vs Canada
+    Joint win probability: 7.9%  |  Model fair odds: 12.72x
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#71  Switzerland vs Canada
+    Joint win probability: 7.9%  |  Model fair odds: 12.72x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Under 2.5 goals  |  individual model: 54.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#72  Switzerland vs Canada
+    Joint win probability: 7.8%  |  Model fair odds: 12.79x
+    Legs:
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#73  Morocco vs Haiti
+    Joint win probability: 7.8%  |  Model fair odds: 12.86x
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#74  Morocco vs Haiti
+    Joint win probability: 7.5%  |  Model fair odds: 13.34x
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#75  Morocco vs Haiti
+    Joint win probability: 7.3%  |  Model fair odds: 13.74x
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Under 2.5 goals  |  individual model: 61.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#76  Morocco vs Haiti
+    Joint win probability: 7.3%  |  Model fair odds: 13.74x  |  REDUNDANT LEG
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#77  Scotland vs Brazil
+    Joint win probability: 7.1%  |  Model fair odds: 14.02x
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Under 2.5 goals  |  individual model: 42.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#78  Scotland vs Brazil
+    Joint win probability: 7.1%  |  Model fair odds: 14.02x  |  REDUNDANT LEG
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#79  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 6.9%  |  Model fair odds: 14.58x
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#80  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 6.9%  |  Model fair odds: 14.58x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Under 2.5 goals  |  individual model: 49.4%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#81  Morocco vs Haiti
+    Joint win probability: 6.4%  |  Model fair odds: 15.52x
+    Legs:
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#82  Morocco vs Haiti
+    Joint win probability: 6.4%  |  Model fair odds: 15.52x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Under 2.5 goals  |  individual model: 61.4%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#83  Scotland vs Brazil
+    Joint win probability: 6.1%  |  Model fair odds: 16.27x
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Over 2.5 goals  |  individual model: 58.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#84  Scotland vs Brazil
+    Joint win probability: 6.1%  |  Model fair odds: 16.27x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - Yes  |  individual model: 54.8%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#85  Switzerland vs Canada
+    Joint win probability: 5.7%  |  Model fair odds: 17.62x
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Over 2.5 goals  |  individual model: 46.0%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#86  Switzerland vs Canada
+    Joint win probability: 5.7%  |  Model fair odds: 17.62x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 25.8%
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - Yes  |  individual model: 50.4%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#87  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 5.4%  |  Model fair odds: 18.68x
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Over 2.5 goals  |  individual model: 50.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#88  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 5.4%  |  Model fair odds: 18.68x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 23.3%
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - Yes  |  individual model: 49.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#89  Switzerland vs Canada
+    Joint win probability: 5.3%  |  Model fair odds: 18.84x
+    Legs:
+      * Switzerland win (90 min)  |  individual model: 48.3%
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#90  Scotland vs Brazil
+    Joint win probability: 4.8%  |  Model fair odds: 20.74x
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#91  Scotland vs Brazil
+    Joint win probability: 4.8%  |  Model fair odds: 20.74x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 20.7%
+      * Under 2.5 goals  |  individual model: 42.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#92  Morocco vs Haiti
+    Joint win probability: 3.2%  |  Model fair odds: 31.36x
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Over 2.5 goals  |  individual model: 38.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#93  Morocco vs Haiti
+    Joint win probability: 3.0%  |  Model fair odds: 33.64x
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#94  Morocco vs Haiti
+    Joint win probability: 3.0%  |  Model fair odds: 33.64x  |  REDUNDANT LEG
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#95  Switzerland vs Canada
+    Joint win probability: 2.5%  |  Model fair odds: 39.88x
+    Legs:
+      * Canada win (90 min)  |  individual model: 25.9%
+      * Over 2.5 goals  |  individual model: 46.0%
+      * Both teams to score - No  |  individual model: 49.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#96  Morocco vs Haiti
+    Joint win probability: 1.3%  |  Model fair odds: 75.26x
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Over 2.5 goals  |  individual model: 38.6%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#97  Morocco vs Haiti
+    Joint win probability: 1.3%  |  Model fair odds: 75.26x  |  REDUNDANT LEG
+    Legs:
+      * Draw (90 min)  |  individual model: 16.3%
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - Yes  |  individual model: 27.9%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#98  Bosnia-Herzegovina vs Qatar
+    Joint win probability: 1.1%  |  Model fair odds: 88.61x
+    Legs:
+      * Qatar win (90 min)  |  individual model: 21.9%
+      * Over 2.5 goals  |  individual model: 50.6%
+      * Both teams to score - No  |  individual model: 50.5%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#99  Scotland vs Brazil
+    Joint win probability: 1.1%  |  Model fair odds: 92.13x
+    Legs:
+      * Scotland win (90 min)  |  individual model: 17.6%
+      * Over 2.5 goals  |  individual model: 58.0%
+      * Both teams to score - No  |  individual model: 45.2%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+
+#100  Morocco vs Haiti
+    Joint win probability: 0.2%  |  Model fair odds: 461.40x
+    Legs:
+      * Haiti win (90 min)  |  individual model: 10.5%
+      * Over 2.5 goals  |  individual model: 38.6%
+      * Both teams to score - No  |  individual model: 72.1%
+    Probability only - no sportsbook odds, edge, EV, or stake assumed.
+

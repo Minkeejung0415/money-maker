@@ -1,0 +1,44 @@
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator _BinMapper from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator HistGradientBoostingClassifier from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegression from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+[1/6] Fetching today's MLB games (MLB Stats API)...
+    Found 16 game(s)
+
+    Today's win probabilities:
+      Texas Rangers 47.7% at Miami Marlins 52.3% | v1.3 baseline fallback | fair odds 2.10 / 1.91
+      Chicago Cubs 50.0% at New York Mets 50.0% | v1.3 baseline fallback | fair odds 2.00 / 2.00
+      Chicago Cubs 50.0% at New York Mets 50.0% | v1.3 baseline fallback | fair odds 2.00 / 2.00
+      Cleveland Guardians 49.5% at Chicago White Sox 50.5% | v1.3 baseline fallback | fair odds 2.02 / 1.98
+      Boston Red Sox 47.3% at Colorado Rockies 52.7% | v1.3 baseline fallback | fair odds 2.11 / 1.90
+      Baltimore Orioles 50.6% at Los Angeles Angels 49.4% | v1.3 baseline fallback | fair odds 1.98 / 2.02
+      Seattle Mariners 49.5% at Pittsburgh Pirates 50.5% | v1.3 baseline fallback | fair odds 2.02 / 1.98
+      Kansas City Royals 42.1% at Tampa Bay Rays 57.9% | v1.3 baseline fallback | fair odds 2.37 / 1.73
+      New York Yankees 53.3% at Detroit Tigers 46.7% | v1.3 baseline fallback | fair odds 1.88 / 2.14
+      Philadelphia Phillies 56.1% at Washington Nationals 43.9% | v1.3 baseline fallback | fair odds 1.78 / 2.28
+      Houston Astros 47.4% at Toronto Blue Jays 52.6% | v1.3 baseline fallback | fair odds 2.11 / 1.90
+      Milwaukee Brewers 56.7% at Cincinnati Reds 43.3% | v1.3 baseline fallback | fair odds 1.76 / 2.31
+      Los Angeles Dodgers 58.3% at Minnesota Twins 41.7% | v1.3 baseline fallback | fair odds 1.71 / 2.40
+      Arizona Diamondbacks 52.1% at St. Louis Cardinals 47.9% | v1.3 baseline fallback | fair odds 1.92 / 2.09
+      Atlanta Braves 51.4% at San Diego Padres 48.6% | v1.3 baseline fallback | fair odds 1.95 / 2.06
+      Athletics 46.7% at San Francisco Giants 53.3% | v1.3 baseline fallback | fair odds 2.14 / 1.88
+[2/6] Skipping prop lines (classic parlay mode)
+[3/6] Skipping prop model (no prop lines or classic parlay mode)
+[4/6] Skipping correlation adjustment
+[5/6] Skipping validation  (run with --validate to check model source)
+[6/6] Building MLB SGP combinations...
+
+=================================================================
+MLB SCANNER — Mode: PARLAY  |  Min edge: 5.0%
+=================================================================
+
+No combinations found with >=5.0% edge today.
+  No real market odds supplied; edge/parlay output intentionally disabled.

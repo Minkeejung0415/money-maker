@@ -1,0 +1,77 @@
+﻿venv\Scripts\python.exe : C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: 
+InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.9.0 when using version 1.8.0. 
+This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+At line:2 char:1
++ venv\Scripts\python.exe scripts\mlb_scanner.py --mode parlay *> picks ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\justi\...lease refer to::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to 
+unpickle estimator _BinMapper from version 1.9.0 when using version 1.8.0. This might lead to breaking code or invalid 
+results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to 
+unpickle estimator HistGradientBoostingClassifier from version 1.9.0 when using version 1.8.0. This might lead to 
+breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\justi\Documents\money-maker\venv\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to 
+unpickle estimator LogisticRegression from version 1.9.0 when using version 1.8.0. This might lead to breaking code or 
+invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+WARNING alpha.data.ingestion.mlb_stats: MLB pitcher stats fetch failed: Error accessing 
+'https://www.fangraphs.com/leaders-legacy.aspx'. Received status code 403
+WARNING alpha.data.ingestion.mlb_stats: MLB team pitching stats fetch failed: Error accessing 
+'https://www.fangraphs.com/leaders-legacy.aspx'. Received status code 403
+[1/6] Fetching today's MLB games (MLB Stats API)...
+    Found 15 game(s)
+
+    Today's win probabilities:
+      Houston Astros 54.1% at Detroit Tigers 45.9% | v1.8 player-aware | fair odds 1.85 / 2.18
+        context: sp_quality_diff=0.0009687250872546516, player_feature_missing_flag=0.0
+      Cincinnati Reds 48.9% at Pittsburgh Pirates 51.1% | v1.8 player-aware | fair odds 2.04 / 1.96
+        context: sp_quality_diff=0.01984126984126977, player_feature_missing_flag=0.0
+      Washington Nationals 46.4% at Baltimore Orioles 53.6% | v1.8 player-aware | fair odds 2.16 / 1.86
+        context: sp_quality_diff=0.107910828574936, player_feature_missing_flag=0.0
+      Texas Rangers 51.2% at Toronto Blue Jays 48.8% | v1.8 player-aware | fair odds 1.95 / 2.05
+        context: sp_quality_diff=-0.03008673141604623, player_feature_missing_flag=0.0
+      Seattle Mariners 51.8% at Cleveland Guardians 48.2% | v1.8 player-aware | fair odds 1.93 / 2.08
+        context: sp_quality_diff=-0.0065593321407274585, player_feature_missing_flag=0.0
+      Arizona Diamondbacks 46.4% at Tampa Bay Rays 53.6% | v1.8 player-aware | fair odds 2.16 / 1.86
+        context: sp_quality_diff=0.09253757332375634, player_feature_missing_flag=0.0
+      Philadelphia Phillies 54.9% at New York Mets 45.1% | v1.8 player-aware | fair odds 1.82 / 2.22
+        context: sp_quality_diff=-0.042333572288022814, player_feature_missing_flag=0.0
+      New York Yankees 54.5% at Boston Red Sox 45.5% | v1.8 player-aware | fair odds 1.83 / 2.20
+        context: sp_quality_diff=-0.05244460031694076, player_feature_missing_flag=0.0
+      Kansas City Royals 50.1% at Chicago White Sox 49.9% | v1.8 player-aware | fair odds 1.99 / 2.01
+        context: sp_quality_diff=-0.07985536855076691, player_feature_missing_flag=0.0
+      Chicago Cubs 45.0% at Milwaukee Brewers 55.0% | v1.8 player-aware | fair odds 2.22 / 1.82
+        context: sp_quality_diff=0.050758101139204204, player_feature_missing_flag=0.0
+      Colorado Rockies 37.8% at Minnesota Twins 62.2% | v1.8 player-aware | fair odds 2.64 / 1.61
+        context: sp_quality_diff=0.2384300038779016, player_feature_missing_flag=0.0
+      Miami Marlins 48.4% at St. Louis Cardinals 51.6% | v1.8 player-aware | fair odds 2.06 / 1.94
+        context: sp_quality_diff=0.024488849457595663, player_feature_missing_flag=0.0
+      Athletics 53.3% at Los Angeles Angels 46.7% | v1.8 player-aware | fair odds 1.87 / 2.14
+        context: sp_quality_diff=-0.014610062841055427, player_feature_missing_flag=0.0
+      Los Angeles Dodgers 52.7% at San Diego Padres 47.3% | v1.8 player-aware | fair odds 1.90 / 2.11
+        context: sp_quality_diff=0.026505142233304912, player_feature_missing_flag=0.0
+      Atlanta Braves 57.7% at San Francisco Giants 42.3% | v1.8 player-aware | fair odds 1.73 / 2.36
+        context: sp_quality_diff=-0.03817903808729506, player_feature_missing_flag=0.0
+[2/6] Skipping prop lines (classic parlay mode)
+[3/6] Skipping prop model (no prop lines or classic parlay mode)
+[4/6] Skipping correlation adjustment
+[5/6] Skipping validation  (run with --validate to check model source)
+[6/6] Building MLB SGP combinations...
+
+=================================================================
+MLB SCANNER — Mode: PARLAY  |  Min edge: 5.0%
+=================================================================
+
+No combinations found with >=5.0% edge today.
+  No real market odds supplied; edge/parlay output intentionally disabled.
+

@@ -1,0 +1,15 @@
+﻿[1/4] Fetching WC fixtures (2026-06-26 to 2026-06-26)...
+  Found 2 WC fixture(s)
+  Odds override applied to 0/2 game(s) from wc_odds_override.json
+[2/4] Running Elo-logistic model (WCMatchModel)...
+  Enriched 2 game(s) with Elo predictions
+[3/4] Building WC parlay combinations...
+[4/4] Ranking complete.
+
+=================================================================
+WC SCANNER — Mode: PARLAY  |  2026-06-26 to 2026-06-26  |  Min edge: 4.0%
+=================================================================
+
+No combinations found with >=4.0% edge in this date range.
+  (2 games enriched — try --min-edge 0.02 or expand date range)
+
