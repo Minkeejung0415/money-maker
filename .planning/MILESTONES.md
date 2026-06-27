@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.9 World Cup Player-Aware Win Probability (Shipped: 2026-06-24)
+
+**Phases completed:** 8 phases, 8 plans
+
+**Key accomplishments:**
+
+- Chronological evaluation framework with Brier score, log loss, A-grade hit rate, and validation-fold isotonic calibration
+- Hybrid baseline ratings combining Elo-like strength, xG attack/defense states, FIFA SUM, host, and confederation adjustments
+- Projected XI layer with starter probabilities, position line scores, replacement impact, uncertainty, and continuity
+- Dedicated goalkeeper module separated from generic team defense
+- Tournament-state, position-specific player, tactical matchup, set-piece, and context feature modules
+- Promotion gate passed in Phase 26: Brier 0.5181 to 0.4889 and log loss 0.8805 to 0.8439
+
+---
+
 ## v1.8 Player-Aware MLB Moneyline Model (Shipped: 2026-06-24)
 
 **Phases completed:** 4 phases, 4 plans
