@@ -22,6 +22,7 @@ Usage:
   python scripts/wc_scanner.py --mode parlay
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
   python scripts/wc_scanner.py --mode parlay --min-edge 0.02 --top 10
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
 """
 from __future__ import annotations
 
@@ -73,6 +74,7 @@ Data sources:
 Examples:
   python scripts/wc_scanner.py --mode parlay
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
         """,
     )
     parser.add_argument(
@@ -119,6 +121,11 @@ Examples:
         help=f"End date YYYY-MM-DD (default: today+7 = {next_week})",
     )
     parser.add_argument(
+        "--fixtures-file",
+        default=None,
+        help="Optional JSON fixture file to use instead of football-data.org",
+    )
+    parser.add_argument(
         "--bankroll", type=float, default=10_000.0,
         help="Bankroll for Kelly sizing (default: 10000)",
     )
@@ -162,16 +169,24 @@ def main() -> None:
 
     # ── Step 1: Fetch WC fixtures ────────────────────────────────────────
     print(f"[1/4] Fetching WC fixtures ({args.date_from} to {args.date_to})...")
-    fd_client = FootballDataClient()
-    if not fd_client.is_configured():
-        print("  FOOTBALL_API_KEY not set. Add it to .env and retry.")
-        sys.exit(0)
+    if args.fixtures_file:
+        try:
+            all_games = _load_fixture_file(args.fixtures_file)
+        except Exception as exc:
+            print(f"  ERROR: could not load fixtures file: {exc}")
+            sys.exit(1)
+        print(f"  Loaded fixtures from {args.fixtures_file}")
+    else:
+        fd_client = FootballDataClient()
+        if not fd_client.is_configured():
+            print("  FOOTBALL_API_KEY not set. Add it to .env and retry.")
+            sys.exit(0)
 
-    try:
-        all_games = fd_client.fetch_wc_games(args.date_from, args.date_to)
-    except Exception as exc:
-        logger.warning("Could not fetch WC games: %s", exc)
-        all_games = []
+        try:
+            all_games = fd_client.fetch_wc_games(args.date_from, args.date_to)
+        except Exception as exc:
+            logger.warning("Could not fetch WC games: %s", exc)
+            all_games = []
 
     if not all_games:
         print("  No WC games found in date range. Exiting.")
@@ -533,6 +548,17 @@ def _resolve_runtime_model(args: argparse.Namespace, validator) -> tuple[str, ob
     if model_id == "wc_player_v1":
         raise RuntimeError("promoted player artifact is valid but player runtime is not implemented")
     raise RuntimeError(f"unsupported promoted model_id={model_id!r}")
+
+
+def _load_fixture_file(path_str: str) -> list[dict]:
+    path = Path(path_str)
+    if not path.is_absolute():
+        path = ROOT / path
+    data = json.loads(path.read_text(encoding="utf-8"))
+    games = data.get("games", data) if isinstance(data, dict) else data
+    if not isinstance(games, list):
+        raise ValueError("fixture file must contain a list or {'games': [...]}")
+    return games
 
 
 def _shadow_row(

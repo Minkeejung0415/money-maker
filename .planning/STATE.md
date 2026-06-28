@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Runtime Truth and Artifact Registry
+milestone: v2.1
+milestone_name: World Cup Knockout Runtime Slate Support
 status: Complete
-stopped_at: Phase 34 complete - runtime truth and artifact metadata gates delivered
+stopped_at: Phase 35 complete - Round of 32 fixture-file runtime delivered
 last_updated: "2026-06-28T00:00:00.000-07:00"
-last_activity: 2026-06-28 - v2.0 implemented and June 28 Pacific scanners run
+last_activity: 2026-06-28 - v2.1 Round of 32 individual probabilities generated
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 100
 ---
 
@@ -21,20 +21,19 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate; if the model cannot beat a coin flip, it is not worth betting.
-**Current focus:** v2.0 - COMPLETE
+**Current focus:** v2.1 - COMPLETE
 
 ## Current Position
 
-Phase: 34 (Lightweight Artifact Registry) - COMPLETE
-Status: Milestone v2.0 COMPLETE
-Last activity: 2026-06-28 - Runtime truth, artifact registry, and June 28 Pacific scanner run complete
+Phase: 35 (World Cup Knockout Runtime Slate Support) - COMPLETE
+Status: Milestone v2.1 COMPLETE
+Last activity: 2026-06-28 - Round of 32 fixture-file run complete
 
-## Milestone v2.0 Summary
+## Milestone v2.1 Summary
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 33 | Runtime Truth | Complete |
-| 34 | Lightweight Artifact Registry | Complete |
+| 35 | Round of 32 Runtime Slate | Complete |
 
 ## Accumulated Context
 

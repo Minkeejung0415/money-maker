@@ -6,20 +6,21 @@ The repo is organized around versioned milestones. Each milestone documents what
 
 ## Current Version
 
-**v2.0 - Runtime truth and artifact registry**
+**v2.1 - World Cup knockout runtime slate support**
 
 Status: complete as of 2026-06-28.
 
-v2.0 makes scanner model routing explicit: no silent fallback, runtime artifact metadata gates, active model labels, and shadow challenger logging. The WC scanner defaults to the conservative Elo model; use `--model hybrid` for the hybrid challenger and `--shadow-model hybrid` to log challenger predictions without changing picks.
+v2.1 adds World Cup Round of 32 knockout handling, local fixture-file scanner runs, and individual-only output for full knockout slates. The WC scanner defaults to the conservative Elo model; use `--model hybrid` for the hybrid challenger and `--shadow-model hybrid` to log challenger predictions without changing picks.
 
 ## Version Guide
 
-See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v2.0.
+See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v2.1.
 
 Quick labels:
 
 | Version | Label | Status |
 | --- | --- | --- |
+| v2.1 | World Cup knockout runtime slate support | Complete |
 | v2.0 | Runtime truth and artifact registry | Complete |
 | v1.9 | World Cup player-aware win probability | Complete |
 | v1.8 | Player-aware MLB moneyline | Complete |
@@ -56,6 +57,12 @@ Generate World Cup same-game-parlay style picks:
 
 ```powershell
 ./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode sgp
+```
+
+Generate individual World Cup Round of 32 probabilities from a fixture file:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --date-from 2026-06-28 --date-to 2026-07-03 --model elo --shadow-model hybrid --validate --individual-only
 ```
 
 Generate MLB moneyline parlay research for a specific slate:

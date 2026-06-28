@@ -34,6 +34,8 @@ def model(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_knockout_stages_contains_expected_values():
+    assert "LAST_32" in KNOCKOUT_STAGES
+    assert "ROUND_OF_32" in KNOCKOUT_STAGES
     assert "LAST_16" in KNOCKOUT_STAGES
     assert "QUARTER_FINALS" in KNOCKOUT_STAGES
     assert "SEMI_FINALS" in KNOCKOUT_STAGES

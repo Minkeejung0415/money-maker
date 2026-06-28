@@ -1,0 +1,183 @@
+{
+  "source": "Sports Illustrated confirmed Round of 32 schedule, model team names normalized to wc_priors.json",
+  "as_of": "2026-06-28",
+  "stage": "LAST_32",
+  "games": [
+    {
+      "home_team": "South Africa",
+      "away_team": "Canada",
+      "league": "wc",
+      "event_id": "wc-r32-01",
+      "commence_time": "2026-06-28T19:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Brazil",
+      "away_team": "Japan",
+      "league": "wc",
+      "event_id": "wc-r32-02",
+      "commence_time": "2026-06-29T17:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Germany",
+      "away_team": "Paraguay",
+      "league": "wc",
+      "event_id": "wc-r32-03",
+      "commence_time": "2026-06-29T20:30:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Netherlands",
+      "away_team": "Morocco",
+      "league": "wc",
+      "event_id": "wc-r32-04",
+      "commence_time": "2026-06-30T01:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Ivory Coast",
+      "away_team": "Norway",
+      "league": "wc",
+      "event_id": "wc-r32-05",
+      "commence_time": "2026-06-30T17:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "France",
+      "away_team": "Sweden",
+      "league": "wc",
+      "event_id": "wc-r32-06",
+      "commence_time": "2026-06-30T21:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Mexico",
+      "away_team": "Ecuador",
+      "league": "wc",
+      "event_id": "wc-r32-07",
+      "commence_time": "2026-07-01T01:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "England",
+      "away_team": "Congo DR",
+      "league": "wc",
+      "event_id": "wc-r32-08",
+      "commence_time": "2026-07-01T16:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Belgium",
+      "away_team": "Senegal",
+      "league": "wc",
+      "event_id": "wc-r32-09",
+      "commence_time": "2026-07-01T20:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "United States",
+      "away_team": "Bosnia-Herzegovina",
+      "league": "wc",
+      "event_id": "wc-r32-10",
+      "commence_time": "2026-07-02T00:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Spain",
+      "away_team": "Austria",
+      "league": "wc",
+      "event_id": "wc-r32-11",
+      "commence_time": "2026-07-02T19:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Portugal",
+      "away_team": "Croatia",
+      "league": "wc",
+      "event_id": "wc-r32-12",
+      "commence_time": "2026-07-02T23:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Switzerland",
+      "away_team": "Algeria",
+      "league": "wc",
+      "event_id": "wc-r32-13",
+      "commence_time": "2026-07-03T03:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Australia",
+      "away_team": "Egypt",
+      "league": "wc",
+      "event_id": "wc-r32-14",
+      "commence_time": "2026-07-03T18:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Argentina",
+      "away_team": "Cape Verde Islands",
+      "league": "wc",
+      "event_id": "wc-r32-15",
+      "commence_time": "2026-07-03T22:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Colombia",
+      "away_team": "Ghana",
+      "league": "wc",
+      "event_id": "wc-r32-16",
+      "commence_time": "2026-07-04T01:30:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    }
+  ]
+}

@@ -31,6 +31,8 @@ _WC_DRAW_SCALE: float = 500.0
 """Elo-points scale factor for exponential decay (500 points yields about 12%)."""
 
 KNOCKOUT_STAGES: frozenset[str] = frozenset({
+    "LAST_32",
+    "ROUND_OF_32",
     "LAST_16",
     "QUARTER_FINALS",
     "SEMI_FINALS",

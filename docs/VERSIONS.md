@@ -6,6 +6,7 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 
 | Version | Git tag | Shipped | Status | Label |
 | --- | --- | --- | --- | --- |
+| v2.1 | v2.1 | 2026-06-28 | Complete | World Cup knockout runtime slate support |
 | v2.0 | v2.0 | 2026-06-28 | Complete | Runtime truth and artifact registry |
 | v1.9 | `v1.9` | 2026-06-24 | Complete | World Cup player-aware win probability |
 | v1.8 | `v1.8` | 2026-06-24 | Complete | Player-aware MLB moneyline |
@@ -19,6 +20,25 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 | v1.0 | not tagged | 2026-03-12 | Complete | NBA prop model algorithm upgrade |
 
 Older versions v1.0 through v1.3 predate the consistent release-tag pattern used from v1.4 onward. They are documented here, but left untagged unless a historical release point is explicitly chosen.
+
+## v2.1 - World Cup Knockout Runtime Slate Support
+
+Shipped: 2026-06-28
+
+Purpose: run full World Cup knockout slates even when the live fixture API is unavailable, and treat the 2026 Round of 32 as true knockout.
+
+Highlights:
+
+- `LAST_32` and `ROUND_OF_32` are classified as knockout stages, so draw probability is suppressed.
+- WC scanner supports `--fixtures-file` for local JSON fixture slates.
+- Added the confirmed Round of 32 fixture file for the remaining June 28 Pacific slate.
+- Generated individual-only Round of 32 probability output.
+
+Primary artifacts:
+
+- `data/wc_round32_remaining_2026-06-28.json`
+- `picks/wc_individual_round32_remaining_2026-06-28.txt`
+- `picks/wc_individual_2026-06-28.txt`
 
 ## v2.0 - Runtime Truth and Artifact Registry
 
