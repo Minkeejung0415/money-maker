@@ -23,6 +23,7 @@ Usage:
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
   python scripts/wc_scanner.py --mode parlay --min-edge 0.02 --top 10
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --props-only
 """
 from __future__ import annotations
 
@@ -75,6 +76,7 @@ Examples:
   python scripts/wc_scanner.py --mode parlay
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --props-only
         """,
     )
     parser.add_argument(
@@ -109,6 +111,11 @@ Examples:
         "--individual-only",
         action="store_true",
         help="Print individual fixture probabilities only; skip SGP/parlay building",
+    )
+    parser.add_argument(
+        "--props-only",
+        action="store_true",
+        help="Print per-game model prop probabilities only; skip SGP/parlay building",
     )
     parser.add_argument(
         "--date-from",
@@ -412,6 +419,10 @@ def main() -> None:
         print("\nIndividual-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
         return
 
+    if args.props_only:
+        _print_game_props(enriched, wc_model, args, requested_model, model_choice, fallback_used, fallback_reason)
+        return
+
     # ── Step 3: Build SGP combinations ──────────────────────────────────
     print(f"[3/4] Building WC {args.mode} combinations...")
     builder = WCSGPBuilder(
@@ -559,6 +570,41 @@ def _load_fixture_file(path_str: str) -> list[dict]:
     if not isinstance(games, list):
         raise ValueError("fixture file must contain a list or {'games': [...]}")
     return games
+
+
+def _print_game_props(
+    games: list[dict],
+    wc_model,
+    args: argparse.Namespace,
+    requested_model: str,
+    model_choice: str,
+    fallback_used: bool,
+    fallback_reason: str | None,
+) -> None:
+    from alpha.engines.sports.wc_goal_markets import WCScorelineModel
+
+    scoreline_model = WCScorelineModel(getattr(wc_model, "_wc_stats", {}))
+    print(f"\nWC game prop probabilities ({args.date_from} to {args.date_to})")
+    print("Player props unavailable: no WC player-prop lines/source configured.")
+    print(f"requested_model={requested_model} active_model={model_choice} "
+          f"fallback_used={str(fallback_used).lower()} "
+          f"fallback_reason={fallback_reason or 'none'}")
+    if args.shadow_model != "none":
+        print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
+
+    for game in games:
+        distribution = scoreline_model.build(game)
+        print(f"\n{game['home_team']} vs {game['away_team']} | stage={game.get('stage', '')}")
+        print(f"  {game['home_team']} advance: {game['win_prob']:.1%}")
+        print(f"  {game['away_team']} advance: {game['loss_prob']:.1%}")
+        print(f"  Over 2.5 goals: {distribution.probability('over_2_5'):.1%}")
+        print(f"  Under 2.5 goals: {distribution.probability('under_2_5'):.1%}")
+        print(f"  BTTS Yes: {distribution.probability('btts_yes'):.1%}")
+        print(f"  BTTS No: {distribution.probability('btts_no'):.1%}")
+        print(f"  xG mean: {game['home_team']} {distribution.home_lambda:.2f} | "
+              f"{game['away_team']} {distribution.away_lambda:.2f}")
+
+    print("\nProps-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
 
 
 def _shadow_row(

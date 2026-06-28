@@ -6,20 +6,21 @@ The repo is organized around versioned milestones. Each milestone documents what
 
 ## Current Version
 
-**v2.1 - World Cup knockout runtime slate support**
+**v2.2 - World Cup game prop probability output**
 
 Status: complete as of 2026-06-28.
 
-v2.1 adds World Cup Round of 32 knockout handling, local fixture-file scanner runs, and individual-only output for full knockout slates. The WC scanner defaults to the conservative Elo model; use `--model hybrid` for the hybrid challenger and `--shadow-model hybrid` to log challenger predictions without changing picks.
+v2.2 adds per-game World Cup prop probability output for full slates: win-to-advance, over/under 2.5, BTTS yes/no, and expected-goals means. Player props remain unavailable until a dependable WC player-prop line source exists.
 
 ## Version Guide
 
-See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v2.1.
+See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v2.2.
 
 Quick labels:
 
 | Version | Label | Status |
 | --- | --- | --- |
+| v2.2 | World Cup game prop probability output | Complete |
 | v2.1 | World Cup knockout runtime slate support | Complete |
 | v2.0 | Runtime truth and artifact registry | Complete |
 | v1.9 | World Cup player-aware win probability | Complete |
@@ -63,6 +64,12 @@ Generate individual World Cup Round of 32 probabilities from a fixture file:
 
 ```powershell
 ./venv/Scripts/python.exe ./scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --date-from 2026-06-28 --date-to 2026-07-03 --model elo --shadow-model hybrid --validate --individual-only
+```
+
+Generate World Cup Round of 32 game prop probabilities:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --date-from 2026-06-28 --date-to 2026-07-03 --model elo --shadow-model hybrid --validate --props-only
 ```
 
 Generate MLB moneyline parlay research for a specific slate:

@@ -217,6 +217,50 @@ def test_main_fixtures_file_individual_only(capsys, tmp_path):
     assert "H/D/A 60.0%/0.0%/40.0%" in output
 
 
+def test_main_props_only_prints_game_props(capsys, tmp_path):
+    fixture_file = tmp_path / "fixtures.json"
+    fixture_file.write_text(
+        """
+        {
+          "games": [
+            {
+              "home_team": "Brazil",
+              "away_team": "Germany",
+              "league": "wc",
+              "event_id": "fixture-1",
+              "commence_time": "2026-06-29T17:00:00Z",
+              "stage": "LAST_32",
+              "group": "",
+              "home_odds": -110,
+              "away_odds": -110
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--fixtures-file", str(fixture_file), "--props-only"]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: {
+             **g,
+             "win_prob": 0.6,
+             "draw_prob": 0.0,
+             "loss_prob": 0.4,
+             "model_name": "wc_elo_logistic",
+             "elo_diff": 120.0,
+         }):
+        main()
+
+    output = capsys.readouterr().out
+    assert "WC game prop probabilities" in output
+    assert "Player props unavailable" in output
+    assert "Over 2.5 goals" in output
+    assert "BTTS Yes" in output
+    assert "Building WC" not in output
+
+
 def test_main_hybrid_model_prints_model_label(capsys):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main

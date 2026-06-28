@@ -6,6 +6,7 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 
 | Version | Git tag | Shipped | Status | Label |
 | --- | --- | --- | --- | --- |
+| v2.2 | v2.2 | 2026-06-28 | Complete | World Cup game prop probability output |
 | v2.1 | v2.1 | 2026-06-28 | Complete | World Cup knockout runtime slate support |
 | v2.0 | v2.0 | 2026-06-28 | Complete | Runtime truth and artifact registry |
 | v1.9 | `v1.9` | 2026-06-24 | Complete | World Cup player-aware win probability |
@@ -20,6 +21,23 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 | v1.0 | not tagged | 2026-03-12 | Complete | NBA prop model algorithm upgrade |
 
 Older versions v1.0 through v1.3 predate the consistent release-tag pattern used from v1.4 onward. They are documented here, but left untagged unless a historical release point is explicitly chosen.
+
+## v2.2 - World Cup Game Prop Probability Output
+
+Shipped: 2026-06-28
+
+Purpose: print all available per-game World Cup prop probabilities for a full slate without sportsbook assumptions.
+
+Highlights:
+
+- WC scanner supports `--props-only`.
+- Output includes win-to-advance, over/under 2.5 goals, BTTS yes/no, and expected-goals means.
+- Player props are explicitly labeled unavailable until a dependable WC player-prop line source exists.
+
+Primary artifacts:
+
+- `picks/wc_props_round32_remaining_2026-06-28.txt`
+- `scripts/wc_scanner.py`
 
 ## v2.1 - World Cup Knockout Runtime Slate Support
 

@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.1
-milestone_name: World Cup Knockout Runtime Slate Support
+milestone: v2.2
+milestone_name: World Cup Game Prop Probability Output
 status: Complete
-stopped_at: Phase 35 complete - Round of 32 fixture-file runtime delivered
+stopped_at: Phase 36 complete - WC game props-only output delivered
 last_updated: "2026-06-28T00:00:00.000-07:00"
-last_activity: 2026-06-28 - v2.1 Round of 32 individual probabilities generated
+last_activity: 2026-06-28 - v2.2 Round of 32 game prop probabilities generated
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,19 +21,19 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate; if the model cannot beat a coin flip, it is not worth betting.
-**Current focus:** v2.1 - COMPLETE
+**Current focus:** v2.2 - COMPLETE
 
 ## Current Position
 
-Phase: 35 (World Cup Knockout Runtime Slate Support) - COMPLETE
-Status: Milestone v2.1 COMPLETE
-Last activity: 2026-06-28 - Round of 32 fixture-file run complete
+Phase: 36 (World Cup Game Prop Probability Output) - COMPLETE
+Status: Milestone v2.2 COMPLETE
+Last activity: 2026-06-28 - Round of 32 props-only run complete
 
-## Milestone v2.1 Summary
+## Milestone v2.2 Summary
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 35 | Round of 32 Runtime Slate | Complete |
+| 36 | Game Prop Probability Output | Complete |
 
 ## Accumulated Context
 
