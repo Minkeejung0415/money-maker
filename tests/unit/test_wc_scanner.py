@@ -160,6 +160,22 @@ def test_parse_args_accepts_runtime_truth_flags():
     assert args.shadow_model == "hybrid"
 
 
+def test_main_individual_only_skips_combo_building(capsys):
+    game = _make_enriched_game("Brazil", "Germany", event_id="101")
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--individual-only"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: g):
+        main()
+    output = capsys.readouterr().out
+    assert "WC individual probabilities" in output
+    assert "Brazil vs Germany" in output
+    assert "skipped SGP/parlay" in output
+    assert "Building WC" not in output
+
+
 def test_main_hybrid_model_prints_model_label(capsys):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main

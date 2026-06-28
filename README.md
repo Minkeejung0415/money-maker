@@ -64,6 +64,12 @@ Generate MLB moneyline parlay research for a specific slate:
 ./venv/Scripts/python.exe ./scripts/mlb_scanner.py --mode parlay --date 2026-06-28 --validate
 ```
 
+Generate individual MLB win probabilities only:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/mlb_scanner.py --date 2026-06-28 --validate --individual-only
+```
+
 Run the test suite:
 
 ```powershell

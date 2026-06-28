@@ -104,6 +104,11 @@ Examples:
         help="Runtime artifact metadata JSON for --model auto/player",
     )
     parser.add_argument(
+        "--individual-only",
+        action="store_true",
+        help="Print individual fixture probabilities only; skip SGP/parlay building",
+    )
+    parser.add_argument(
         "--date-from",
         default=today,
         help=f"Start date YYYY-MM-DD (default: today = {today})",
@@ -375,6 +380,22 @@ def main() -> None:
     print(f"  Enriched {len(enriched)} game(s) with {model_choice} predictions")
     if recent_client:
         print(f"  Recent form ready for {len(enriched)} game(s)")
+
+    if args.individual_only:
+        print(f"\nWC individual probabilities ({args.date_from} to {args.date_to})")
+        print(f"requested_model={requested_model} active_model={model_choice} "
+              f"fallback_used={str(fallback_used).lower()} "
+              f"fallback_reason={fallback_reason or 'none'}")
+        if args.shadow_model != "none":
+            print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
+        for game in enriched:
+            print(
+                f"  {game['home_team']} vs {game['away_team']} | "
+                f"H/D/A {game['win_prob']:.1%}/{game['draw_prob']:.1%}/{game['loss_prob']:.1%} | "
+                f"model={game.get('model_name', model_choice)}"
+            )
+        print("\nIndividual-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
+        return
 
     # ── Step 3: Build SGP combinations ──────────────────────────────────
     print(f"[3/4] Building WC {args.mode} combinations...")

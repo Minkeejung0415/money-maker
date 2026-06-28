@@ -22,6 +22,7 @@ Usage:
   python scripts/mlb_scanner.py --mode parlay --min-edge 0.04
   python scripts/mlb_scanner.py --mode parlay --validate
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
+  python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
 """
 from __future__ import annotations
 
@@ -82,6 +83,7 @@ Examples:
   python scripts/mlb_scanner.py --mode parlay --min-edge 0.03
   python scripts/mlb_scanner.py --mode parlay --validate
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
+  python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
         """,
     )
     parser.add_argument(
@@ -109,6 +111,10 @@ Examples:
     parser.add_argument(
         "--date", default=None,
         help="MLB schedule date in YYYY-MM-DD format (default: today)",
+    )
+    parser.add_argument(
+        "--individual-only", action="store_true",
+        help="Print individual game probabilities only; skip props, parlays, edge, and staking output",
     )
     parser.add_argument(
         "--no-corr", action="store_true",
@@ -226,7 +232,7 @@ def main() -> None:
                 f"log_loss={selective.get('log_loss', 'n/a')}"
             )
 
-    print("\n    Today's win probabilities:")
+    print(f"\n    Individual win probabilities ({schedule_label}):")
     for game in games:
         hp, ap = game["home_model_prob"], game["away_model_prob"]
         label = game["mlb_model_label"]
@@ -240,6 +246,10 @@ def main() -> None:
         if game.get("mlb_confidence") == "HIGH" and context:
             pieces = ", ".join(f"{key}={value}" for key, value in context.items())
             print(f"        context: {pieces}")
+
+    if args.individual_only:
+        print("\n    Individual-only mode: skipped props, parlays, edge, EV, and staking output.")
+        return
 
     # ── Step 2: Fetch props ──────────────────────────────────────────────
     prop_legs_raw: list[dict] = []
