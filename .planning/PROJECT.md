@@ -4,21 +4,18 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v1.9 - Improving World Cup Win Probability with Team and Player Features
+## Current Milestone: v2.0 - Runtime Truth and Artifact Registry
 
-**Goal:** Upgrade the WC match model from pure Elo-logistic to a stacked system — hybrid team ratings + probabilistic projected XI + dedicated goalkeeper module + tournament-state logic — to improve WDL accuracy and high-confidence hit rate.
+**Goal:** Make scanner model selection truthful and artifact-gated: no silent fallback, clear active model labels, shadow logging for challengers, and lightweight JSON metadata gates before runtime artifacts are trusted.
 
 **Target features:**
-- Hybrid baseline team ratings: Elo-like long-run rating + xG attack/defense EWMA states + FIFA SUM feature; host-country and confederation interaction adjustments
-- Projected-XI layer: starter probability per player, position-specific line scores (sum not mean), replacement-adjusted absence impact, lineup uncertainty variance term, continuity modifiers
-- Dedicated goalkeeper module: goals prevented vs xGOT, save subtypes, cross claims, sweeper actions, GK-CB continuity, stored separately from generic team defense
-- Position-specific player features (CB/DM/CM/Winger/Striker) with hierarchical shrinkage pooling sparse national-team samples toward club-based role priors
-- Tournament-state logic: qualification pressure state, rotation risk, yellow-card accumulation, 2026 best-third-place format scenarios, fair-play tiebreak features
-- Tactical matchup + set-piece: PPDA/possession style, counterattack frequency, style matchup interactions, corner xG for/against
-- Context features with heavy regularization: days rest, minutes load, travel, venue altitude/heat (2026), kick-off local time
-- Chronological evaluation framework: Brier score + log loss + A-grade hit rate; isotonic calibration on validation fold; promotion gate vs Elo-only baseline
+- WC scanner model choices: `--model elo`, `--model hybrid`, `--model player`, and `--model auto`
+- Explicit fallback labels: `requested_model`, `active_model`, `fallback_used`, and `fallback_reason`
+- Shadow challenger logging with `--shadow-model` that never changes pick ranking
+- Lightweight JSON artifact metadata validation for runtime trust gates
+- Fail-closed `auto` and `player` paths unless `--allow-fallback` is explicitly supplied
 
-**Current state:** v1.9 planning. The Elo-logistic WC model (with draw calibration and tactical overlay) is the baseline; the stacked player-aware architecture is being designed.
+**Current state:** v2.0 complete. The WC scanner now supports explicit runtime model selection and shadow logging; auto/player paths are artifact-gated and fail closed by default.
 
 ## Previous Milestone: v1.7 - Tactical Calibration and Validation (Complete)
 
@@ -130,16 +127,27 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Gate runtime MLB output on validated artifacts, lineup/starter uncertainty, and confidence thresholds
 - [x] Quarantine synthetic MLB prop rows and crude injury penalties from the moneyline feature path
 
-### Active (v1.9)
+### Validated (v1.9)
 
-- [ ] Hybrid Elo-like + xG attack/defense + FIFA SUM baseline with host-country and confederation adjustments
-- [ ] Projected-XI layer: starter probabilities, line scores (sum not mean), replacement-adjusted absence impact, lineup uncertainty band
-- [ ] Dedicated GK module: goals prevented vs xGOT, save subtypes, cross claims, sweeper, GK-CB continuity
-- [ ] Position-specific player features (CB/DM/CM/Winger/Striker) with hierarchical shrinkage toward club-based role priors
-- [ ] Tournament-state logic: qualification pressure, rotation risk, yellow-card accumulation, 2026 best-third format, fair-play tiebreak
-- [ ] Tactical matchup + set-piece: PPDA/possession style, counterattack frequency, corner xG states, style matchup interactions
-- [ ] Context features with heavy regularization: days rest, minutes load, travel, venue altitude/heat, kick-off time
-- [ ] Chronological evaluation: Brier + log loss + A-grade hit rate; isotonic calibration; promotion gate vs Elo-only baseline
+- [x] Hybrid Elo-like + xG attack/defense + FIFA SUM baseline with host-country and confederation adjustments
+- [x] Projected-XI layer: starter probabilities, line scores, replacement-adjusted absence impact, lineup uncertainty band
+- [x] Dedicated GK module: goals prevented vs xGOT, save subtypes, cross claims, sweeper, GK-CB continuity
+- [x] Position-specific player features with hierarchical shrinkage toward club-based role priors
+- [x] Tournament-state logic: qualification pressure, rotation risk, yellow-card accumulation, 2026 best-third format, fair-play tiebreak
+- [x] Tactical matchup + set-piece and context feature modules
+- [x] Chronological evaluation framework with Brier, log loss, A-grade hit rate, and promotion gates
+
+### Validated (v2.0)
+
+- [x] WC scanner explicit model choices: `--model elo`, `--model hybrid`, `--model player`, and `--model auto`
+- [x] Fail-closed `auto` and `player` paths unless `--allow-fallback` is explicitly supplied
+- [x] Runtime labels: `requested_model`, `active_model`, `fallback_used`, and `fallback_reason`
+- [x] Shadow challenger logging via `--shadow-model` without affecting picks
+- [x] Lightweight JSON artifact metadata validation for runtime trust gates
+
+### Active
+
+(None � v2.0 scope complete; next likely work is MLB runtime truth parity or WC player runtime.)
 
 ### Out of Scope
 
@@ -214,4 +222,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-24 — v1.9 Improving WC Win Probability with Team and Player Features started*
+*Last updated: 2026-06-28 after v2.0 Runtime Truth and Artifact Registry*

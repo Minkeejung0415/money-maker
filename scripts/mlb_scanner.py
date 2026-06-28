@@ -21,6 +21,7 @@ Usage:
   python scripts/mlb_scanner.py --mode parlay
   python scripts/mlb_scanner.py --mode parlay --min-edge 0.04
   python scripts/mlb_scanner.py --mode parlay --validate
+  python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
 """
 from __future__ import annotations
 
@@ -80,6 +81,7 @@ Examples:
   python scripts/mlb_scanner.py --mode parlay
   python scripts/mlb_scanner.py --mode parlay --min-edge 0.03
   python scripts/mlb_scanner.py --mode parlay --validate
+  python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
         """,
     )
     parser.add_argument(
@@ -103,6 +105,10 @@ Examples:
     parser.add_argument(
         "--top", type=int, default=5,
         help="Number of top combinations to display (default: 5)",
+    )
+    parser.add_argument(
+        "--date", default=None,
+        help="MLB schedule date in YYYY-MM-DD format (default: today)",
     )
     parser.add_argument(
         "--no-corr", action="store_true",
@@ -142,15 +148,16 @@ def main() -> None:
     sgp_mode = mode_map[args.mode]
 
     # ── Step 1: Fetch games ──────────────────────────────────────────────
-    print("[1/6] Fetching today's MLB games (MLB Stats API)...")
+    schedule_label = args.date or "today"
+    print(f"[1/6] Fetching MLB games for {schedule_label} (MLB Stats API)...")
     try:
-        games = fetch_today_games()
+        games = fetch_today_games(args.date)
     except Exception as exc:
         logger.warning("MLB games fetch failed: %s", exc)
         games = []
 
     if not games:
-        print("    No MLB games found today. Exiting.")
+        print(f"    No MLB games found for {schedule_label}. Exiting.")
         sys.exit(0)
     print(f"    Found {len(games)} game(s)")
 

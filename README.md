@@ -6,20 +6,21 @@ The repo is organized around versioned milestones. Each milestone documents what
 
 ## Current Version
 
-**v1.9 - World Cup player-aware win probability**
+**v2.0 - Runtime truth and artifact registry**
 
-Status: complete as of 2026-06-24.
+Status: complete as of 2026-06-28.
 
-v1.9 adds the hybrid/player-aware World Cup modeling modules and evaluation gates. The scanner defaults to the conservative Elo model; use `--model hybrid` to run the v1.9 hybrid baseline path and see that model label in output.
+v2.0 makes scanner model routing explicit: no silent fallback, runtime artifact metadata gates, active model labels, and shadow challenger logging. The WC scanner defaults to the conservative Elo model; use `--model hybrid` for the hybrid challenger and `--shadow-model hybrid` to log challenger predictions without changing picks.
 
 ## Version Guide
 
-See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v1.9.
+See [docs/VERSIONS.md](docs/VERSIONS.md) for the full version index from v1.0 through v2.0.
 
 Quick labels:
 
 | Version | Label | Status |
 | --- | --- | --- |
+| v2.0 | Runtime truth and artifact registry | Complete |
 | v1.9 | World Cup player-aware win probability | Complete |
 | v1.8 | Player-aware MLB moneyline | Complete |
 | v1.7 | Tactical calibration and validation | Complete |
@@ -45,10 +46,22 @@ Run the optional v1.9 hybrid World Cup baseline:
 ./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode parlay --model hybrid
 ```
 
+Log hybrid as a shadow model while keeping Elo active:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode parlay --model elo --shadow-model hybrid
+```
+
 Generate World Cup same-game-parlay style picks:
 
 ```powershell
 ./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode sgp
+```
+
+Generate MLB moneyline parlay research for a specific slate:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/mlb_scanner.py --mode parlay --date 2026-06-28 --validate
 ```
 
 Run the test suite:

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import logging
 import sys
 from datetime import date, datetime, timedelta
@@ -82,9 +83,25 @@ Examples:
     )
     parser.add_argument(
         "--model",
-        choices=["elo", "hybrid"],
+        choices=["elo", "hybrid", "player", "auto"],
         default="elo",
-        help="Match model: elo=production baseline, hybrid=v1.9 composite ratings (default: elo)",
+        help="Match model: elo baseline, hybrid challenger, player/auto require promoted artifact",
+    )
+    parser.add_argument(
+        "--shadow-model",
+        choices=["none", "elo", "hybrid"],
+        default="none",
+        help="Log a challenger model beside active picks without affecting rankings",
+    )
+    parser.add_argument(
+        "--allow-fallback",
+        action="store_true",
+        help="Allow auto/player artifact failures to fall back to Elo with explicit labels",
+    )
+    parser.add_argument(
+        "--artifact-meta",
+        default=str(ROOT / "alpha" / "models" / "wc_runtime_model.meta.json"),
+        help="Runtime artifact metadata JSON for --model auto/player",
     )
     parser.add_argument(
         "--date-from",
@@ -130,6 +147,7 @@ def main() -> None:
     from alpha.data.ingestion.wc_market_odds import load_wc_market_odds
     from alpha.data.ingestion.wc_recent_form import WCRecentFormClient
     from alpha.data.ingestion.wc_tactics import WCTacticsClient
+    from alpha.engines.model_registry import validate_runtime_artifact
     from alpha.engines.sports.wc_hybrid_model import WCHybridModel
     from alpha.engines.sports.wc_model import WCMatchModel
     from alpha.engines.sports.wc_goal_markets import WCScorelineModel
@@ -173,21 +191,50 @@ def main() -> None:
         print(f"  Odds override applied to {patched}/{len(all_games)} game(s) from {_odds_path.name}")
 
     # ── Step 2: Run selected match model ─────────────────────────────────
-    model_label = "WCMatchModel / wc_elo_logistic" if args.model == "elo" else "WCHybridModel / wc_hybrid_baseline"
+    requested_model = args.model
+    fallback_used = False
+    fallback_reason = None
+    artifact_metadata: dict = {}
+    try:
+        model_choice, artifact_check = _resolve_runtime_model(args, validate_runtime_artifact)
+    except RuntimeError as exc:
+        print(f"  ERROR: {exc}")
+        sys.exit(1)
+
+    if artifact_check is not None:
+        artifact_metadata = artifact_check.metadata
+        if not artifact_check.ok:
+            fallback_used = True
+            fallback_reason = artifact_check.reason
+            print(f"  fallback_used=true fallback_reason={fallback_reason} "
+                  f"active_model=elo requested_model={requested_model}")
+
+    model_label = (
+        "WCMatchModel / wc_elo_logistic"
+        if model_choice == "elo"
+        else "WCHybridModel / wc_hybrid_baseline"
+    )
     print(f"[2/4] Running {model_label}...")
     try:
         wc_model = (
             WCMatchModel(min_edge=args.min_edge)
-            if args.model == "elo"
+            if model_choice == "elo"
             else WCHybridModel(min_edge=args.min_edge)
         )
+        shadow_model = None
+        if args.shadow_model != "none":
+            shadow_model = (
+                WCMatchModel(min_edge=args.min_edge)
+                if args.shadow_model == "elo"
+                else WCHybridModel(min_edge=args.min_edge)
+            )
     except FileNotFoundError as exc:
         print(f"  ERROR: {exc}")
         print("  Run: ./venv/Scripts/python.exe scripts/build_wc_priors.py")
         sys.exit(1)
 
     if args.validate:
-        if args.model == "elo":
+        if model_choice == "elo":
             print(f"  Model: wc_elo_logistic | Elo ratings: {len(wc_model._elo_ratings)} | "
                   f"Stats: {len(wc_model._wc_stats)} teams")
         else:
@@ -195,6 +242,14 @@ def main() -> None:
             ratings = wc_model._ratings
             print(f"  Model: wc_hybrid_baseline | Base Elo ratings: "
                   f"{len(base_model._elo_ratings)} | Hybrid teams: {len(ratings._elo)}")
+        print(f"  requested_model={requested_model} active_model={model_choice} "
+              f"fallback_used={str(fallback_used).lower()} "
+              f"fallback_reason={fallback_reason or 'none'}")
+        if artifact_metadata:
+            print(f"  artifact_id={artifact_metadata.get('model_id')} "
+                  f"artifact_path={args.artifact_meta}")
+        if args.shadow_model != "none":
+            print(f"  shadow_model={args.shadow_model} shadow_affects_picks=false")
 
     recent_client = WCRecentFormClient() if args.mode == "sgp" else None
     tactics_client = WCTacticsClient() if args.mode == "sgp" else None
@@ -206,6 +261,7 @@ def main() -> None:
         print(f"  Tactical calibration: {artifact_status['status']} ({artifact_status['reason']})")
 
     enriched: list[dict] = []
+    shadow_rows: list[dict] = []
     for game in all_games:
         try:
             if recent_client:
@@ -281,7 +337,16 @@ def main() -> None:
                 else:
                     game["tactical_artifact_status"] = artifact_status
                 game["tactical_market_gates"] = gates
+            if shadow_model is not None:
+                shadow_pred = shadow_model.predict(dict(game))
+                shadow_rows.append(
+                    _shadow_row(game, shadow_pred, requested_model, model_choice, args.shadow_model)
+                )
             game = wc_model.predict(game)
+            game["requested_model"] = requested_model
+            game["active_model"] = model_choice
+            game["fallback_used"] = fallback_used
+            game["fallback_reason"] = fallback_reason
             if recent_client:
                 baseline_distribution = WCScorelineModel().build(baseline_game)
                 adjusted_distribution = WCScorelineModel().build(game)
@@ -303,7 +368,11 @@ def main() -> None:
                 game.get("home_team"), game.get("away_team"), exc,
             )
 
-    print(f"  Enriched {len(enriched)} game(s) with {args.model} predictions")
+    if shadow_rows:
+        shadow_path = _write_shadow_predictions(shadow_rows, args.date_from)
+        print(f"  Shadow predictions logged: {len(shadow_rows)} -> {shadow_path}")
+
+    print(f"  Enriched {len(enriched)} game(s) with {model_choice} predictions")
     if recent_client:
         print(f"  Recent form ready for {len(enriched)} game(s)")
 
@@ -324,10 +393,15 @@ def main() -> None:
     print("[4/4] Ranking complete.")
     print(f"\n{'='*65}")
     header = (f"WC SCANNER — Mode: {args.mode.upper()}  |  "
-              f"Model: {args.model.upper()}  |  {args.date_from} to {args.date_to}")
+              f"Model: {model_choice.upper()}  |  {args.date_from} to {args.date_to}")
     if args.mode != "sgp":
         header += f"  |  Min edge: {args.min_edge:.1%}"
     print(header)
+    print(f"requested_model={requested_model} active_model={model_choice} "
+          f"fallback_used={str(fallback_used).lower()} "
+          f"fallback_reason={fallback_reason or 'none'}")
+    if args.shadow_model != "none":
+        print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
     print(f"{'='*65}")
 
     if args.mode == "sgp" and results:
@@ -410,6 +484,66 @@ def main() -> None:
                       f"model: {prob:.1%}  [Elo: {elo}]{elo_flag}")
 
     print()
+
+
+def _resolve_runtime_model(args: argparse.Namespace, validator) -> tuple[str, object | None]:
+    """Resolve requested model to an active model with no silent fallback."""
+    if args.model in ("elo", "hybrid"):
+        return args.model, None
+
+    check = validator(
+        args.artifact_meta,
+        league="WC",
+        market="moneyline",
+        supported_model_ids={"wc_hybrid_baseline", "wc_player_v1"},
+    )
+    if not check.ok:
+        if args.allow_fallback:
+            return "elo", check
+        raise RuntimeError(f"promoted model unavailable ({check.reason}); no silent fallback")
+
+    model_id = check.metadata.get("model_id")
+    if args.model == "player" and model_id != "wc_player_v1":
+        if args.allow_fallback:
+            return "elo", check
+        raise RuntimeError(f"promoted player model unavailable (artifact model_id={model_id!r})")
+    if model_id == "wc_hybrid_baseline":
+        return "hybrid", check
+    if model_id == "wc_player_v1":
+        raise RuntimeError("promoted player artifact is valid but player runtime is not implemented")
+    raise RuntimeError(f"unsupported promoted model_id={model_id!r}")
+
+
+def _shadow_row(
+    game: dict,
+    shadow_pred: dict,
+    requested_model: str,
+    active_model: str,
+    shadow_model: str,
+) -> dict:
+    return {
+        "event_id": game.get("event_id"),
+        "home_team": game.get("home_team"),
+        "away_team": game.get("away_team"),
+        "commence_time": game.get("commence_time"),
+        "requested_model": requested_model,
+        "active_model": active_model,
+        "shadow_model": shadow_model,
+        "shadow_model_name": shadow_pred.get("model_name"),
+        "shadow_win_prob": shadow_pred.get("win_prob"),
+        "shadow_draw_prob": shadow_pred.get("draw_prob"),
+        "shadow_loss_prob": shadow_pred.get("loss_prob"),
+    }
+
+
+def _write_shadow_predictions(rows: list[dict], date_from: str) -> str:
+    out_dir = ROOT / "reports" / "shadow_predictions"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"wc_{date_from}.jsonl"
+    with path.open("a", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, sort_keys=True) + "\n")
+    return str(path.relative_to(ROOT))
 
 
 if __name__ == "__main__":

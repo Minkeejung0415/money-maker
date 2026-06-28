@@ -152,6 +152,14 @@ def test_parse_args_accepts_hybrid_model():
         assert _parse_args().model == "hybrid"
 
 
+def test_parse_args_accepts_runtime_truth_flags():
+    from scripts.wc_scanner import _parse_args
+    with patch("sys.argv", ["wc_scanner.py", "--model", "auto", "--shadow-model", "hybrid"]):
+        args = _parse_args()
+    assert args.model == "auto"
+    assert args.shadow_model == "hybrid"
+
+
 def test_main_hybrid_model_prints_model_label(capsys):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main
@@ -164,6 +172,50 @@ def test_main_hybrid_model_prints_model_label(capsys):
     output = capsys.readouterr().out
     assert "Model: HYBRID" in output
     assert "wc_hybrid_baseline" in output
+
+
+def test_main_auto_model_missing_artifact_errors(capsys):
+    game = _make_enriched_game("Brazil", "Germany", event_id="101")
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--model", "auto"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]):
+        with pytest.raises(SystemExit):
+            main()
+    output = capsys.readouterr().out
+    assert "promoted model unavailable" in output
+    assert "no silent fallback" in output
+
+
+def test_main_auto_model_explicit_fallback_is_labeled(capsys):
+    game = _make_enriched_game("Brazil", "Germany", event_id="101")
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--model", "auto", "--allow-fallback", "--min-edge", "0.99"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: g):
+        main()
+    output = capsys.readouterr().out
+    assert "requested_model=auto active_model=elo fallback_used=true" in output
+    assert "fallback_reason=artifact_metadata_missing" in output
+
+
+def test_main_shadow_model_logs_without_affecting_picks(capsys):
+    game = _make_enriched_game("Brazil", "Germany", event_id="101")
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--shadow-model", "hybrid", "--min-edge", "0.99"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: g), \
+         patch("alpha.engines.sports.wc_hybrid_model.WCHybridModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_hybrid_model.WCHybridModel.predict", side_effect=lambda g: {**g, "model_name": "wc_hybrid_baseline"}), \
+         patch("scripts.wc_scanner._write_shadow_predictions", return_value="reports/shadow_predictions/wc_test.jsonl") as write_shadow:
+        main()
+    output = capsys.readouterr().out
+    assert write_shadow.called
+    assert "shadow_model=hybrid shadow_affects_picks=false" in output
 
 
 def test_main_sgp_prints_same_game_market_legs(capsys):

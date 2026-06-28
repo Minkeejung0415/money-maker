@@ -6,6 +6,7 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 
 | Version | Git tag | Shipped | Status | Label |
 | --- | --- | --- | --- | --- |
+| v2.0 | v2.0 | 2026-06-28 | Complete | Runtime truth and artifact registry |
 | v1.9 | `v1.9` | 2026-06-24 | Complete | World Cup player-aware win probability |
 | v1.8 | `v1.8` | 2026-06-24 | Complete | Player-aware MLB moneyline |
 | v1.7 | `v1.7` | 2026-06-22 | Complete | Tactical calibration and validation |
@@ -18,6 +19,26 @@ This file is the GitHub-facing guide to the repo's version labels. The detailed 
 | v1.0 | not tagged | 2026-03-12 | Complete | NBA prop model algorithm upgrade |
 
 Older versions v1.0 through v1.3 predate the consistent release-tag pattern used from v1.4 onward. They are documented here, but left untagged unless a historical release point is explicitly chosen.
+
+## v2.0 - Runtime Truth and Artifact Registry
+
+Shipped: 2026-06-28
+
+Purpose: make scanner runtime behavior honest and artifact-gated before further model accuracy work.
+
+Highlights:
+
+- WC scanner supports `--model elo`, `--model hybrid`, `--model player`, and `--model auto`.
+- `auto` and `player` fail closed when no promoted runtime artifact is available.
+- Explicit fallback requires `--allow-fallback` and prints `fallback_used` plus `fallback_reason`.
+- `--shadow-model` logs challenger predictions without affecting picks.
+- Lightweight JSON metadata validator added for promoted runtime artifacts.
+
+Primary docs:
+
+- `.planning/REQUIREMENTS.md`
+- `.planning/ROADMAP.md`
+- `.planning/STATE.md`
 
 ## v1.9 - World Cup Player-Aware Win Probability
 

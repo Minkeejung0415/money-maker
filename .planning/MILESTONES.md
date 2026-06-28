@@ -1,5 +1,19 @@
 # Milestones
 
+## v2.0 Runtime Truth and Artifact Registry (Shipped: 2026-06-28)
+
+**Phases completed:** 2 phases, 2 plans
+
+**Key accomplishments:**
+
+- WC scanner exposes explicit model selection: `--model elo`, `--model hybrid`, `--model player`, and `--model auto`
+- `auto` and `player` fail closed when a promoted runtime artifact is missing or invalid; fallback requires `--allow-fallback`
+- Scanner output prints `requested_model`, `active_model`, `fallback_used`, and `fallback_reason`
+- `--shadow-model` logs challenger predictions without affecting picks or rankings
+- Lightweight JSON runtime artifact metadata validator added for promotion/runtime/schema gates
+
+---
+
 ## v1.9 World Cup Player-Aware Win Probability (Shipped: 2026-06-24)
 
 **Phases completed:** 8 phases, 8 plans
