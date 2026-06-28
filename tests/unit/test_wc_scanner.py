@@ -146,6 +146,26 @@ def test_parse_args_accepts_true_sgp_mode():
         assert _parse_args().mode == "sgp"
 
 
+def test_parse_args_accepts_hybrid_model():
+    from scripts.wc_scanner import _parse_args
+    with patch("sys.argv", ["wc_scanner.py", "--model", "hybrid"]):
+        assert _parse_args().model == "hybrid"
+
+
+def test_main_hybrid_model_prints_model_label(capsys):
+    game = _make_enriched_game("Brazil", "Germany", event_id="101")
+    from scripts.wc_scanner import main
+    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--model", "hybrid", "--min-edge", "0.99"]), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
+         patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
+         patch("alpha.engines.sports.wc_hybrid_model.WCHybridModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_hybrid_model.WCHybridModel.predict", side_effect=lambda g: {**g, "model_name": "wc_hybrid_baseline"}):
+        main()
+    output = capsys.readouterr().out
+    assert "Model: HYBRID" in output
+    assert "wc_hybrid_baseline" in output
+
+
 def test_main_sgp_prints_same_game_market_legs(capsys):
     game = _make_enriched_game("Brazil", "Germany", win_prob=0.60, event_id="101")
     odds = WCMarketOdds(

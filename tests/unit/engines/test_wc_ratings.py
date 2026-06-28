@@ -20,7 +20,7 @@ def ratings() -> WCTeamRatings:
 
 
 def test_get_features_returns_required_keys(ratings: WCTeamRatings) -> None:
-    """Result must contain all 11 documented keys."""
+    """Result must contain documented feature keys."""
     feats = ratings.get_features("Argentina", "France")
     required = (
         "elo",
@@ -31,6 +31,7 @@ def test_get_features_returns_required_keys(ratings: WCTeamRatings) -> None:
         "xg_defense_away",
         "fifa_sum",
         "host_flag",
+        "away_host_flag",
         "confederation_interaction",
         "composite_home_elo",
         "composite_away_elo",
@@ -79,6 +80,8 @@ def test_composite_elo_bounded(ratings: WCTeamRatings) -> None:
     base_elo = feats["elo"]
     delta = abs(feats["composite_home_elo"] - base_elo)
     assert delta <= 130, f"Composite Elo delta {delta:.1f} exceeds expected bound 130"
+    away_delta = abs(feats["composite_away_elo"] - feats["elo_away"])
+    assert away_delta <= 130, f"Away composite Elo delta {away_delta:.1f} exceeds expected bound 130"
 
 
 def test_sequential_elo_updates(ratings: WCTeamRatings) -> None:
@@ -113,7 +116,14 @@ def test_elo_values_are_ints(ratings: WCTeamRatings) -> None:
     assert isinstance(feats["elo_away"], int)
 
 
-def test_away_composite_elo_equals_sequential(ratings: WCTeamRatings) -> None:
-    """composite_away_elo must equal sequential elo_away (adjustments are home-perspective only)."""
+def test_away_composite_elo_uses_away_features(ratings: WCTeamRatings) -> None:
+    """composite_away_elo must include away-side adjustments, not raw Elo only."""
     feats = ratings.get_features("Argentina", "France")
-    assert feats["composite_away_elo"] == float(feats["elo_away"])
+    assert feats["composite_away_elo"] != float(feats["elo_away"])
+
+
+def test_away_host_flag_and_boost(ratings: WCTeamRatings) -> None:
+    """A host listed as away still receives host-aware composite treatment."""
+    feats = ratings.get_features("Argentina", "Mexico")
+    assert feats["away_host_flag"] == 1
+    assert feats["composite_away_elo"] != float(feats["elo_away"])

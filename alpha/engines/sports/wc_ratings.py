@@ -1,17 +1,17 @@
 """
-WCTeamRatings — hybrid team ratings for WC model evaluation.
+WCTeamRatings — hybrid team ratings for WC model evaluation and scanner use.
 
 Builds sequential Elo states from WC_HISTORICAL, seeds xG EWMA
 from .wc_cache/wc_stats.pkl, and exposes composite Elo for injection
 into WCMatchModel game dicts.
 
-No live data. No modification to wc_model.py or wc_scanner.py.
+No live data. Composite ratings can be injected into WCMatchModel.
 
 Design:
     - Sequential Elo updated match-by-match through 2018 and 2022 tournaments
     - xG EWMA seeded from wc_stats.pkl per-team averages (avg_xG, defense_score)
     - Composite Elo = sequential_elo + xG_adj + FIFA_adj + host_adj + conf_adj
-    - Used for backtesting via WCHybridModel; scanner is unchanged
+    - Used by WCHybridModel for backtesting and optional scanner runs
 """
 from __future__ import annotations
 
@@ -252,15 +252,17 @@ class WCTeamRatings:
         away_rank = get_fifa_rank(away_team)
         fifa_sum = home_rank + away_rank
 
-        # Host flag
+        # Host flags
         host_flag = 1 if home_team in WC_2026_HOSTS else 0
+        away_host_flag = 1 if away_team in WC_2026_HOSTS else 0
 
         # Confederation interaction (1 = cross-confederation)
         home_conf = get_confederation(home_team)
         away_conf = get_confederation(away_team)
         confederation_interaction = 0 if home_conf == away_conf else 1
 
-        # Composite Elo calculation
+        # Composite Elo calculation. Compute each side from its own perspective
+        # so host/xG/FIFA adjustments are not accidentally home-team-only.
         composite_home_elo = self._composite_elo(
             elo_home=elo_home,
             elo_away=elo_away,
@@ -274,6 +276,19 @@ class WCTeamRatings:
             home_conf=home_conf,
             away_conf=away_conf,
         )
+        composite_away_elo = self._composite_elo(
+            elo_home=elo_away,
+            elo_away=elo_home,
+            xg_atk_h=xg_atk_a,
+            xg_def_h=xg_def_a,
+            xg_atk_a=xg_atk_h,
+            xg_def_a=xg_def_h,
+            home_rank=away_rank,
+            away_rank=home_rank,
+            host_flag=away_host_flag,
+            home_conf=away_conf,
+            away_conf=home_conf,
+        )
 
         return {
             "elo": elo_home,
@@ -284,9 +299,10 @@ class WCTeamRatings:
             "xg_defense_away": xg_def_a,
             "fifa_sum": fifa_sum,
             "host_flag": host_flag,
+            "away_host_flag": away_host_flag,
             "confederation_interaction": confederation_interaction,
             "composite_home_elo": composite_home_elo,
-            "composite_away_elo": float(elo_away),
+            "composite_away_elo": composite_away_elo,
         }
 
     @staticmethod

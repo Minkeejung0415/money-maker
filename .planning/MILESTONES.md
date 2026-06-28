@@ -12,6 +12,7 @@
 - Dedicated goalkeeper module separated from generic team defense
 - Tournament-state, position-specific player, tactical matchup, set-piece, and context feature modules
 - Promotion gate passed in Phase 26: Brier 0.5181 to 0.4889 and log loss 0.8805 to 0.8439
+- Scanner model selection now exposes the hybrid baseline with `--model hybrid`; default remains `--model elo`
 
 ---
 

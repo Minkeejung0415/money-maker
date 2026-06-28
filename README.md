@@ -10,7 +10,7 @@ The repo is organized around versioned milestones. Each milestone documents what
 
 Status: complete as of 2026-06-24.
 
-v1.9 upgrades the World Cup match model from an Elo-only baseline into a stacked system with hybrid team ratings, projected XI features, goalkeeper signals, tournament-state logic, tactical matchup features, context features, and chronological evaluation gates.
+v1.9 adds the hybrid/player-aware World Cup modeling modules and evaluation gates. The scanner defaults to the conservative Elo model; use `--model hybrid` to run the v1.9 hybrid baseline path and see that model label in output.
 
 ## Version Guide
 
@@ -37,6 +37,12 @@ Generate World Cup parlay picks:
 
 ```powershell
 ./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode parlay
+```
+
+Run the optional v1.9 hybrid World Cup baseline:
+
+```powershell
+./venv/Scripts/python.exe ./scripts/wc_scanner.py --mode parlay --model hybrid
 ```
 
 Generate World Cup same-game-parlay style picks:

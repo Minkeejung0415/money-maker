@@ -58,7 +58,7 @@ def _parse_args() -> argparse.Namespace:
     today = date.today().isoformat()
     next_week = (date.today() + timedelta(days=7)).isoformat()
     parser = argparse.ArgumentParser(
-        description="WC 2026 match parlay generator with Elo-logistic model.",
+        description="WC 2026 match parlay generator.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Modes:
@@ -79,6 +79,12 @@ Examples:
         choices=["parlay", "sgp"],
         default="parlay",
         help="Combination mode (default: parlay)",
+    )
+    parser.add_argument(
+        "--model",
+        choices=["elo", "hybrid"],
+        default="elo",
+        help="Match model: elo=production baseline, hybrid=v1.9 composite ratings (default: elo)",
     )
     parser.add_argument(
         "--date-from",
@@ -124,6 +130,7 @@ def main() -> None:
     from alpha.data.ingestion.wc_market_odds import load_wc_market_odds
     from alpha.data.ingestion.wc_recent_form import WCRecentFormClient
     from alpha.data.ingestion.wc_tactics import WCTacticsClient
+    from alpha.engines.sports.wc_hybrid_model import WCHybridModel
     from alpha.engines.sports.wc_model import WCMatchModel
     from alpha.engines.sports.wc_goal_markets import WCScorelineModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
@@ -165,18 +172,29 @@ def main() -> None:
                 patched += 1
         print(f"  Odds override applied to {patched}/{len(all_games)} game(s) from {_odds_path.name}")
 
-    # ── Step 2: Run Elo model ────────────────────────────────────────────
-    print("[2/4] Running Elo-logistic model (WCMatchModel)...")
+    # ── Step 2: Run selected match model ─────────────────────────────────
+    model_label = "WCMatchModel / wc_elo_logistic" if args.model == "elo" else "WCHybridModel / wc_hybrid_baseline"
+    print(f"[2/4] Running {model_label}...")
     try:
-        wc_model = WCMatchModel(min_edge=args.min_edge)
+        wc_model = (
+            WCMatchModel(min_edge=args.min_edge)
+            if args.model == "elo"
+            else WCHybridModel(min_edge=args.min_edge)
+        )
     except FileNotFoundError as exc:
         print(f"  ERROR: {exc}")
         print("  Run: ./venv/Scripts/python.exe scripts/build_wc_priors.py")
         sys.exit(1)
 
     if args.validate:
-        print(f"  Model: wc_elo_logistic | Elo ratings: {len(wc_model._elo_ratings)} | "
-              f"Stats: {len(wc_model._wc_stats)} teams")
+        if args.model == "elo":
+            print(f"  Model: wc_elo_logistic | Elo ratings: {len(wc_model._elo_ratings)} | "
+                  f"Stats: {len(wc_model._wc_stats)} teams")
+        else:
+            base_model = wc_model._base
+            ratings = wc_model._ratings
+            print(f"  Model: wc_hybrid_baseline | Base Elo ratings: "
+                  f"{len(base_model._elo_ratings)} | Hybrid teams: {len(ratings._elo)}")
 
     recent_client = WCRecentFormClient() if args.mode == "sgp" else None
     tactics_client = WCTacticsClient() if args.mode == "sgp" else None
@@ -285,7 +303,7 @@ def main() -> None:
                 game.get("home_team"), game.get("away_team"), exc,
             )
 
-    print(f"  Enriched {len(enriched)} game(s) with Elo predictions")
+    print(f"  Enriched {len(enriched)} game(s) with {args.model} predictions")
     if recent_client:
         print(f"  Recent form ready for {len(enriched)} game(s)")
 
@@ -306,7 +324,7 @@ def main() -> None:
     print("[4/4] Ranking complete.")
     print(f"\n{'='*65}")
     header = (f"WC SCANNER — Mode: {args.mode.upper()}  |  "
-              f"{args.date_from} to {args.date_to}")
+              f"Model: {args.model.upper()}  |  {args.date_from} to {args.date_to}")
     if args.mode != "sgp":
         header += f"  |  Min edge: {args.min_edge:.1%}"
     print(header)

@@ -25,6 +25,8 @@ Shipped: 2026-06-24
 
 Purpose: improve World Cup WDL accuracy and high-confidence hit rate beyond the Elo-only baseline.
 
+Runtime trust note: v1.9 delivers the hybrid/player-aware modules and evaluation gates. The scanner default remains `--model elo`; use `scripts/wc_scanner.py --model hybrid` for the v1.9 hybrid baseline path. Modules such as context, projected XI, goalkeeper, tournament state, and tactical features should be read as delivered feature/evaluation layers unless the selected scanner model consumes them explicitly.
+
 Highlights:
 
 - Chronological evaluation framework with Brier score, log loss, A-grade hit rate, and isotonic calibration.
@@ -33,6 +35,7 @@ Highlights:
 - Dedicated goalkeeper module separate from generic team defense.
 - Tournament-state, position-specific player, tactical matchup, set-piece, and context feature modules.
 - Promotion gate passed in Phase 26: Brier 0.5181 to 0.4889 and log loss 0.8805 to 0.8439.
+- Optional scanner model selection with output labels: `--model elo` or `--model hybrid`.
 
 Primary docs:
 

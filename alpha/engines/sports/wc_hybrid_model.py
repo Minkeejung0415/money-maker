@@ -1,8 +1,8 @@
 """
 WCHybridModel — wraps WCMatchModel with WCTeamRatings composite Elo injection.
 
-wc_scanner.py continues using WCMatchModel directly (unchanged).
-Use WCHybridModel for backtesting and evaluation only.
+wc_scanner.py can opt into this model with --model hybrid. The default scanner
+path remains --model elo for conservative production compatibility.
 
 Design pattern:
     1. WCTeamRatings.get_features() computes composite_home_elo and composite_away_elo
@@ -23,8 +23,8 @@ class WCHybridModel:
     Uses WCTeamRatings to compute composite Elo per matchup, injects as
     home_elo_override / away_elo_override, then delegates to WCMatchModel.predict().
 
-    wc_scanner.py is NOT modified — scanner keeps using WCMatchModel directly.
-    This class is used for backtesting and evaluation only.
+    The scanner default remains WCMatchModel, but --model hybrid uses this class
+    and prints model_name="wc_hybrid_baseline" for traceability.
 
     Parameters
     ----------
