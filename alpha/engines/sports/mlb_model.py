@@ -466,6 +466,11 @@ class MLBModel:
         confidence = features.get("player_source_confidence")
         if confidence is not None and float(confidence) < 0.8:
             flags.append("low_player_source_confidence")
+        if float(features.get("player_data_stale_flag") or 0.0) >= 1.0:
+            flags.append("player_data_stale")
+        lineup_confidence = features.get("lineup_source_confidence")
+        if lineup_confidence is not None and float(lineup_confidence) < 0.8:
+            flags.append("low_lineup_source_confidence")
         return flags
 
     def _player_feature_context(self, game: dict) -> dict:
@@ -477,6 +482,11 @@ class MLBModel:
             "absence_value_diff",
             "lineup_missing_count_total",
             "player_feature_missing_flag",
+            "player_source_confidence",
+            "lineup_source_confidence",
+            "player_data_stale_flag",
+            "player_data_source",
+            "player_data_last_updated",
         )
         return {key: features.get(key) for key in keys if key in features}
 

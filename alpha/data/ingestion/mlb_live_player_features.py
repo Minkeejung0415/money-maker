@@ -155,6 +155,7 @@ def build_live_player_features(
     game_date: str | None = None,
     season: int | None = None,
     team_quality_override: dict[str, float] | None = None,
+    database_features_by_event: dict[str, dict] | None = None,
 ) -> dict[str, dict]:
     """
     Build starter-only player feature dicts for today's games.
@@ -169,6 +170,8 @@ def build_live_player_features(
         Defaults to today.
     season:
         MLB season year for pitcher stats (defaults to current year).
+    database_features_by_event:
+        Optional event-id keyed feature overrides from the local player database.
 
     Returns
     -------
@@ -204,21 +207,28 @@ def build_live_player_features(
         away_team = str(game.get("away_team", ""))
 
         features: dict[str, float] = {}
+        feature_sources: list[str] = []
 
         for side, team in (("home", home_team), ("away", away_team)):
-            raw_pitcher = probable.get(team, "")
+            raw_pitcher = (
+                str(game.get(f"{side}_probable_pitcher") or "").strip()
+                or probable.get(team, "")
+            )
             pitcher_name = _normalize_pitcher_name(raw_pitcher) if raw_pitcher else ""
 
             if pitcher_name and pitcher_name in pitcher_quality:
                 quality = pitcher_quality[pitcher_name]
                 missing = 0.0
+                feature_sources.append(f"{side}_named_starter")
             elif team in team_quality:
                 # Fall back to team-level ERA proxy
                 quality = team_quality[team]
                 missing = 0.0
+                feature_sources.append(f"{side}_team_pitching_fallback")
             else:
                 quality = 0.0
                 missing = 1.0
+                feature_sources.append(f"{side}_starter_missing")
 
             features[f"{side}_sp_quality"] = quality
             features[f"{side}_sp_workload"] = _DEFAULT_WORKLOAD
@@ -232,6 +242,19 @@ def build_live_player_features(
         features["player_feature_missing_flag"] = float(
             features["home_sp_missing"] >= 1.0 or features["away_sp_missing"] >= 1.0
         )
+        features["player_source_confidence"] = 1.0 - (
+            0.25 * features["player_feature_missing_flag"]
+        )
+        features["player_data_stale_flag"] = 0.0
+        features["player_data_source"] = ",".join(feature_sources)
+
+        if database_features_by_event and event_id in database_features_by_event:
+            db_features = dict(database_features_by_event[event_id] or {})
+            features.update(db_features)
+            source = str(features.get("player_data_source") or "")
+            features["player_data_source"] = (
+                f"{source},local_player_database" if source else "local_player_database"
+            )
 
         result[event_id] = features
 

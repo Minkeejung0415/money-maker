@@ -133,6 +133,46 @@ def test_player_aware_uncertainty_suppresses_pick(tmp_path, monkeypatch):
     assert "lineup_missing" in pred["uncertainty_flags"]
 
 
+def test_player_aware_stale_database_features_suppress_pick(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(_valid_player_artifact(), path)
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -120,
+        "away_odds": 105,
+        "player_features": _player_features(player_data_stale_flag=1.0),
+    })
+
+    assert pred["source"] == "player_aware"
+    assert pred["confidence"] == "LOW"
+    assert pred["pick_eligible"] is False
+    assert "player_data_stale" in pred["uncertainty_flags"]
+
+
+def test_player_aware_low_lineup_confidence_suppresses_pick(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(_valid_player_artifact(), path)
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -120,
+        "away_odds": 105,
+        "player_features": _player_features(lineup_source_confidence=0.4),
+    })
+
+    assert pred["source"] == "player_aware"
+    assert pred["confidence"] == "LOW"
+    assert pred["pick_eligible"] is False
+    assert "low_lineup_source_confidence" in pred["uncertainty_flags"]
+
+
 def test_player_aware_missing_features_falls_back_to_v1_3_bundle(tmp_path, monkeypatch):
     player_path = tmp_path / "mlb_player_moneyline.pkl"
     baseline_path = tmp_path / "mlb_win_probability.pkl"

@@ -23,6 +23,7 @@ Usage:
   python scripts/mlb_scanner.py --mode parlay --validate
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
   python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
+  python scripts/mlb_scanner.py --date 2026-06-28 --player-features-file data/mlb_player_features.json
 """
 from __future__ import annotations
 
@@ -84,6 +85,7 @@ Examples:
   python scripts/mlb_scanner.py --mode parlay --validate
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
   python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
+  python scripts/mlb_scanner.py --date 2026-06-28 --player-features-file data/mlb_player_features.json
         """,
     )
     parser.add_argument(
@@ -117,6 +119,11 @@ Examples:
         help="Print individual game probabilities only; skip props, parlays, edge, and staking output",
     )
     parser.add_argument(
+        "--player-features-file",
+        default=None,
+        help="Optional JSON file of event-id keyed local player database features",
+    )
+    parser.add_argument(
         "--no-corr", action="store_true",
         help="Skip correlation adjustment (faster)",
     )
@@ -131,6 +138,20 @@ Examples:
         help="Minimum confidence level (default: MEDIUM)",
     )
     return parser.parse_args()
+
+
+def _load_player_features_file(path: str | None) -> dict[str, dict]:
+    if not path:
+        return {}
+    feature_path = Path(path)
+    if not feature_path.is_absolute():
+        feature_path = ROOT / feature_path
+    data = json.loads(feature_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("player features file must contain a JSON object")
+    if "events" in data and isinstance(data["events"], dict):
+        data = data["events"]
+    return {str(event_id): dict(features or {}) for event_id, features in data.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +199,14 @@ def main() -> None:
                 game["away_odds"] = odds["away_american"]
                 game["has_market_odds"] = True
 
+    database_features_by_event = {}
+    if args.player_features_file:
+        try:
+            database_features_by_event = _load_player_features_file(args.player_features_file)
+            print(f"    Loaded local player features for {len(database_features_by_event)} event(s)")
+        except Exception as exc:
+            logger.warning("Local player features unavailable: %s", exc)
+
     # Load the model first so we can use its team_state as quality fallback
     mlb_model = MLBModel()
 
@@ -195,7 +224,9 @@ def main() -> None:
             )
         player_features_map = build_live_player_features(
             games,
+            game_date=args.date,
             team_quality_override=_team_quality_override,
+            database_features_by_event=database_features_by_event,
         )
         for game in games:
             eid = str(game.get("event_id", ""))
@@ -243,7 +274,7 @@ def main() -> None:
             reason = ", ".join(flags) or game.get("mlb_fallback_reason") or "not pick eligible"
             print(f"      {game['away_team']} {ap:.1%} at {game['home_team']} {hp:.1%} | {label} | suppressed: {reason}")
         context = game.get("mlb_feature_context") or {}
-        if game.get("mlb_confidence") == "HIGH" and context:
+        if context:
             pieces = ", ".join(f"{key}={value}" for key, value in context.items())
             print(f"        context: {pieces}")
 

@@ -351,6 +351,10 @@ def fetch_today_games(date_str: str | None = None) -> list[dict]:
                 "league": "mlb",
                 "event_id": game_id,
                 "commence_time": commence,
+                "game_date": target,
+                "game_number": game.get("game_num") or game.get("game_number"),
+                "home_probable_pitcher": game.get("home_probable_pitcher", ""),
+                "away_probable_pitcher": game.get("away_probable_pitcher", ""),
             })
 
         if games:

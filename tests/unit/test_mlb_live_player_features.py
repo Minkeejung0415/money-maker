@@ -103,6 +103,17 @@ def test_build_live_player_features_returns_all_event_ids():
     assert set(result.keys()) == {"g1", "g2"}
 
 
+def test_build_live_player_features_uses_explicit_game_date():
+    with (
+        patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value={}) as probable,
+        patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=[]),
+        patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=[]),
+    ):
+        build_live_player_features(_FAKE_GAMES, game_date="2026-06-28")
+
+    probable.assert_called_once_with("2026-06-28")
+
+
 def test_build_live_player_features_named_pitcher_used():
     with (
         patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value=_FAKE_PITCHERS),
@@ -115,6 +126,34 @@ def test_build_live_player_features_named_pitcher_used():
     # Gerrit Cole ERA 2.80 → quality = (6.5-2.80)/5.0 = 0.74
     assert g1["home_sp_quality"] == pytest.approx(_era_to_quality(2.80), abs=0.01)
     assert g1["home_sp_missing"] == pytest.approx(0.0)
+
+
+def test_build_live_player_features_event_probables_can_vary_same_matchup():
+    games = [
+        {
+            "event_id": "dh1",
+            "home_team": "New York Yankees",
+            "away_team": "Boston Red Sox",
+            "home_probable_pitcher": "Cole, Gerrit",
+            "away_probable_pitcher": "Crawford, Kutter",
+        },
+        {
+            "event_id": "dh2",
+            "home_team": "New York Yankees",
+            "away_team": "Boston Red Sox",
+            "home_probable_pitcher": "Crawford, Kutter",
+            "away_probable_pitcher": "Cole, Gerrit",
+        },
+    ]
+    with (
+        patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value={}),
+        patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
+        patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=[]),
+    ):
+        result = build_live_player_features(games, game_date="2026-06-28")
+
+    assert result["dh1"]["sp_quality_diff"] == pytest.approx(-result["dh2"]["sp_quality_diff"])
+    assert result["dh1"]["sp_quality_diff"] != pytest.approx(0.0)
 
 
 def test_build_live_player_features_team_fallback_used():
@@ -259,3 +298,30 @@ def test_build_live_player_features_uses_team_quality_override():
     assert g1["home_sp_quality"] == pytest.approx(0.85, abs=0.01)
     assert g1["away_sp_quality"] == pytest.approx(0.45, abs=0.01)
     assert g1["home_sp_missing"] == pytest.approx(0.0)
+
+
+def test_build_live_player_features_merges_database_features():
+    with (
+        patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value=_FAKE_PITCHERS),
+        patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
+        patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
+    ):
+        result = build_live_player_features(
+            _FAKE_GAMES[:1],
+            game_date="2026-06-28",
+            database_features_by_event={
+                "g1": {
+                    "lineup_strength_diff": 0.12,
+                    "bullpen_quality_diff": -0.04,
+                    "lineup_missing_count_total": 0.0,
+                    "player_source_confidence": 0.94,
+                    "player_data_last_updated": "2026-06-28",
+                }
+            },
+        )
+
+    g1 = result["g1"]
+    assert g1["lineup_strength_diff"] == pytest.approx(0.12)
+    assert g1["bullpen_quality_diff"] == pytest.approx(-0.04)
+    assert g1["player_source_confidence"] == pytest.approx(0.94)
+    assert "local_player_database" in g1["player_data_source"]
