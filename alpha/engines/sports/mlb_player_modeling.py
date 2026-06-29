@@ -250,6 +250,16 @@ def score_probabilities(outcomes: Sequence[int], probs: Sequence[float]) -> dict
     metrics = probability_metrics(list(outcomes), list(probs))
     correct = sum((float(p) >= 0.5) == bool(y) for y, p in zip(outcomes, probs))
     metrics["accuracy"] = correct / len(outcomes)
+    selective = [
+        (int(y), float(p))
+        for y, p in zip(outcomes, probs)
+        if abs(float(p) - 0.5) >= 0.05
+    ]
+    metrics["coverage"] = len(selective) / len(outcomes) if len(outcomes) else 0.0
+    metrics["selective_win_rate"] = (
+        sum((p >= 0.5) == bool(y) for y, p in selective) / len(selective)
+        if selective else None
+    )
     return metrics
 
 
@@ -440,12 +450,18 @@ def _logit_array(raw_probs: Sequence[float]) -> Any:
 
 
 def _mean_metrics(metrics: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    keys = ("brier_score", "log_loss", "accuracy")
+    keys = ("brier_score", "log_loss", "accuracy", "coverage")
     total_n = sum(int(m["n"]) for m in metrics)
     means = {
         key: sum(float(m[key]) * int(m["n"]) for m in metrics) / total_n
         for key in keys
     }
+    selective = [m for m in metrics if m.get("selective_win_rate") is not None]
+    means["selective_win_rate"] = (
+        sum(float(m["selective_win_rate"]) * int(m["n"]) for m in selective)
+        / sum(int(m["n"]) for m in selective)
+        if selective else None
+    )
     means["n"] = total_n
     return means
 

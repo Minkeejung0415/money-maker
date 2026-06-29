@@ -2,7 +2,7 @@
 
 **Milestone:** v2.3
 **Phases:** 5 (Phase 38 -> Phase 42)
-**Requirements:** 22 total | All mapped
+**Requirements:** 22 total | All mapped and complete
 **Phase numbering:** Continues from Phase 37
 
 ---
@@ -11,11 +11,11 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|-----------------|
-| 38 | MLB Data Source Resilience | Remove Fangraphs scraping as a required runtime dependency and formalize source/fallback labels. | DATA-01..04 | 5 |
-| 39 | Automated Player Database Updates | Add repeatable daily/date-range MLB player database update commands. | DB-01..04 | 5 |
-| 40 | Player Feature Interpretation Layer | Turn raw player/team stats into event-level starter, lineup, bullpen, absence, and uncertainty features. | FEAT-01..05 | 6 |
-| 41 | MLB Accuracy Retraining and Promotion | Retrain and gate richer player-aware MLB moneyline artifacts using walk-forward evaluation. | MODEL-01..05 | 6 |
-| 42 | MLB Scanner Auto-Load Runtime | Auto-load local player features in scanner output with truthful source/freshness/confidence labeling. | SCAN-01..04 | 5 |
+| 38 | MLB Data Source Resilience | Remove Fangraphs scraping as a required runtime dependency and formalize source/fallback labels. | DATA-01..04 | Complete |
+| 39 | Automated Player Database Updates | Add repeatable daily/date-range MLB player database update commands. | DB-01..04 | Complete |
+| 40 | Player Feature Interpretation Layer | Turn raw player/team stats into event-level starter, lineup, bullpen, absence, and uncertainty features. | FEAT-01..05 | Complete |
+| 41 | MLB Accuracy Retraining and Promotion | Retrain and gate richer player-aware MLB moneyline artifacts using walk-forward evaluation. | MODEL-01..05 | Complete |
+| 42 | MLB Scanner Auto-Load Runtime | Auto-load local player features in scanner output with truthful source/freshness/confidence labeling. | SCAN-01..04 | Complete |
 
 ---
 
@@ -122,4 +122,5 @@
 ---
 
 *Roadmap created: 2026-06-28*
-*Milestone: v2.3 | Phases 38-42 | 22 requirements | 5 phases*
+*Last updated: 2026-06-28 after autonomous execution*
+*Milestone: v2.3 | Phases 38-42 | 22 requirements complete | 5 phases complete*

@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from alpha.data.ingestion.mlb_player_database import (
+    normalize_absence_rows,
+    normalize_batter_rows,
+    normalize_bullpen_rows,
+    normalize_lineup_rows,
+    normalize_pitcher_rows,
+)
+from alpha.engines.sports.mlb_player_feature_interpreter import (
+    build_event_player_features,
+    write_event_player_features_file,
+)
+
+
+def _snapshot(updated_at: str = "2026-06-28T10:00:00+00:00") -> dict:
+    return {
+        "updated_at": updated_at,
+        "components": {
+            "batters": normalize_batter_rows([
+                {"player": "Home Bat", "team": "Home", "date": "2026-06-27", "h": 2, "ab": 4, "bb": 1, "tb": 5, "pa": 5},
+                {"player": "Away Bat", "team": "Away", "date": "2026-06-27", "h": 1, "ab": 4, "bb": 0, "tb": 1, "pa": 4},
+            ]),
+            "pitchers": normalize_pitcher_rows([
+                {"player": "Home Starter", "team": "Home", "date": "2026-06-27", "er": 1, "ip": "6.0", "h": 3, "bb": 1, "so": 7, "pit": 92},
+                {"player": "Away Starter", "team": "Away", "date": "2026-06-27", "er": 4, "ip": "5.0", "h": 7, "bb": 2, "so": 4, "pit": 88},
+            ]),
+            "bullpen": normalize_bullpen_rows([
+                {"team": "Home", "date": "2026-06-27", "er": 1, "ip": "3.0", "pit": 40},
+                {"team": "Away", "date": "2026-06-27", "er": 3, "ip": "3.0", "pit": 61},
+            ]),
+            "lineups": normalize_lineup_rows([
+                {"game_id": "g1", "player": "Home Bat", "team": "Home", "date": "2026-06-28", "order": 1, "confirmed": "true", "bats": "L"},
+                {"game_id": "g1", "player": "Away Bat", "team": "Away", "date": "2026-06-28", "order": 1, "confirmed": "true", "bats": "R"},
+            ]),
+            "absences": normalize_absence_rows([
+                {"game_id": "g1", "player": "Away Missing", "team": "Away", "date": "2026-06-28", "absence_value": 0.2},
+            ]),
+        },
+    }
+
+
+def test_build_event_player_features_interprets_components():
+    games = [{
+        "event_id": "g1",
+        "home_team": "Home",
+        "away_team": "Away",
+        "home_probable_pitcher": "Home Starter",
+        "away_probable_pitcher": "Away Starter",
+    }]
+
+    result = build_event_player_features(games, _snapshot(), target_date="2026-06-28")
+
+    g1 = result["g1"]
+    assert g1["home_sp_quality"] > g1["away_sp_quality"]
+    assert g1["lineup_strength_diff"] > 0
+    assert g1["bullpen_quality_diff"] > 0
+    assert g1["absence_value_diff"] < 0
+    assert g1["player_source_confidence"] == pytest.approx(1.0)
+    assert g1["player_data_stale_flag"] == pytest.approx(0.0)
+
+
+def test_build_event_player_features_marks_stale_low_confidence():
+    games = [{"event_id": "g1", "home_team": "Home", "away_team": "Away"}]
+
+    result = build_event_player_features(
+        games,
+        _snapshot(updated_at="2026-06-20T10:00:00+00:00"),
+        target_date="2026-06-28",
+    )
+
+    assert result["g1"]["player_data_stale_flag"] == pytest.approx(1.0)
+    assert result["g1"]["player_source_confidence"] < 0.8
+
+
+def test_write_event_player_features_file(tmp_path):
+    output = tmp_path / "features.json"
+    write_event_player_features_file(
+        output,
+        games=[{"event_id": "g1", "home_team": "Home", "away_team": "Away"}],
+        database_snapshot=_snapshot(),
+        target_date="2026-06-28",
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == "mlb-player-features-v2.3"
+    assert "g1" in payload["events"]

@@ -16,7 +16,7 @@ A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UC
 - Walk-forward retraining, ablation, calibration, and promotion gates for a richer MLB player-aware moneyline artifact
 - MLB scanner auto-loads date-specific local player features and prints source/freshness/confidence context
 
-**Current state:** Phase 37 fixed the immediate repeated-probability bug and added a local player-feature hook, but the MLB pipeline still needs automated data ingestion and a retrained/promoted artifact before richer player stats fully drive probabilities.
+**Current state:** v2.3 complete. The MLB scanner no longer depends on live Fangraphs scraping by default, local player database update/build scripts exist, event-level player features can be auto-loaded, and promotion metadata now includes accuracy and selective-pick metrics.
 
 ## Previous Milestone: v1.7 - Tactical Calibration and Validation (Complete)
 
@@ -146,14 +146,19 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] Shadow challenger logging via `--shadow-model` without affecting picks
 - [x] Lightweight JSON artifact metadata validation for runtime trust gates
 
+
+### Validated (v2.3)
+
+- [x] Runtime MLB scanner does not require Fangraphs/pybaseball scraping by default
+- [x] Local MLB player database snapshots support batter, pitcher, bullpen, lineup, and absence rows
+- [x] Date-specific event-level player feature files can be generated for scanner runtime
+- [x] MLB feature interpretation includes starter, lineup, bullpen, absence, coverage, stale, and confidence context
+- [x] MLB walk-forward modeling reports include Brier, log loss, accuracy, coverage, and selective win rate
+- [x] MLB scanner auto-loads local player feature files while preserving manual override
+
 ### Active
 
-- [ ] Replace runtime MLB Fangraphs dependency with robust local/official data-source fallbacks
-- [ ] Automate daily MLB player-stat database updates from CSV/API inputs
-- [ ] Generate date-specific event-level player feature files for scanner use
-- [ ] Improve MLB feature interpretation so player stats affect win probabilities through validated model features
-- [ ] Retrain, calibrate, validate, and promote a richer MLB player-aware moneyline artifact
-- [ ] Auto-load local MLB player features in the scanner with visible source/freshness/confidence labels
+(None - v2.3 scope complete; next likely work is populating real MLB data and running a full retrain.)
 
 ### Out of Scope
 
@@ -228,4 +233,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 after starting v2.3 Automated MLB Player Data and Accuracy Upgrade*
+*Last updated: 2026-06-28 after v2.3 Automated MLB Player Data and Accuracy Upgrade*

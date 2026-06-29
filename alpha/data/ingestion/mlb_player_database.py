@@ -8,6 +8,7 @@ files for future scanner/retraining steps.
 from __future__ import annotations
 
 import csv
+import json
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -120,6 +121,43 @@ def normalize_bullpen_rows(rows: Iterable[dict], *, source: str = "", as_of: str
             "strikeouts": _float(row, "strikeouts", "so", "k"),
             "home_runs_allowed": _float(row, "home_runs_allowed", "hr"),
             "pitches": _float(row, "pitches", "pit"),
+            "source": source or _text(row, "source"),
+            "as_of": as_of or _text(row, "as_of"),
+        })
+    return normalized
+
+
+def normalize_lineup_rows(rows: Iterable[dict], *, source: str = "", as_of: str | None = None) -> list[dict]:
+    normalized: list[dict] = []
+    for row in rows:
+        normalized.append({
+            "game_id": _text(row, "game_id", "event_id"),
+            "player_id": _text(row, "player_id", "id", "mlbam_id"),
+            "player_name": _text(row, "player_name", "player", "name"),
+            "team": _text(row, "team", "team_abbr"),
+            "side": _text(row, "side", "home_away"),
+            "game_date": _text(row, "game_date", "date", default=as_of or ""),
+            "batting_order": _float(row, "batting_order", "order", default=99.0),
+            "confirmed": bool(str(row.get("confirmed", "")).lower() in {"1", "true", "yes", "y"}),
+            "bats": _text(row, "bats", "bat_side"),
+            "source": source or _text(row, "source"),
+            "as_of": as_of or _text(row, "as_of"),
+        })
+    return normalized
+
+
+def normalize_absence_rows(rows: Iterable[dict], *, source: str = "", as_of: str | None = None) -> list[dict]:
+    normalized: list[dict] = []
+    for row in rows:
+        normalized.append({
+            "game_id": _text(row, "game_id", "event_id"),
+            "player_id": _text(row, "player_id", "id", "mlbam_id"),
+            "player_name": _text(row, "player_name", "player", "name"),
+            "team": _text(row, "team", "team_abbr"),
+            "side": _text(row, "side", "home_away"),
+            "game_date": _text(row, "game_date", "date", default=as_of or ""),
+            "reason": _text(row, "reason", "status"),
+            "absence_value": _float(row, "absence_value", "player_value", "batting_value"),
             "source": source or _text(row, "source"),
             "as_of": as_of or _text(row, "as_of"),
         })
@@ -259,6 +297,95 @@ def write_rows_csv(path: str | Path, rows: Iterable[dict]) -> Path:
         writer.writeheader()
         writer.writerows(rows)
     return output
+
+
+def read_rows_csv(path: str | Path) -> list[dict]:
+    input_path = Path(path)
+    if not input_path.exists():
+        return []
+    with input_path.open("r", newline="", encoding="utf-8-sig") as handle:
+        return [dict(row) for row in csv.DictReader(handle)]
+
+
+def read_json(path: str | Path, default: object | None = None) -> object:
+    input_path = Path(path)
+    if not input_path.exists():
+        return {} if default is None else default
+    return json.loads(input_path.read_text(encoding="utf-8"))
+
+
+def write_json(path: str | Path, payload: object) -> Path:
+    output = Path(path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return output
+
+
+def empty_database_snapshot(*, schema_version: str = "mlb-player-db-v2.3") -> dict:
+    now = datetime.now(UTC).isoformat(timespec="seconds")
+    return {
+        "schema_version": schema_version,
+        "created_at": now,
+        "updated_at": now,
+        "components": {
+            "batters": [],
+            "pitchers": [],
+            "bullpen": [],
+            "lineups": [],
+            "absences": [],
+        },
+        "sources": {},
+    }
+
+
+def load_database_snapshot(path: str | Path) -> dict:
+    payload = read_json(path, default=None)
+    if not payload:
+        return empty_database_snapshot()
+    if not isinstance(payload, dict):
+        raise ValueError("MLB player database snapshot must be a JSON object")
+    payload.setdefault("components", {})
+    for name in ("batters", "pitchers", "bullpen", "lineups", "absences"):
+        payload["components"].setdefault(name, [])
+    payload.setdefault("sources", {})
+    return payload
+
+
+def update_database_snapshot(
+    snapshot: dict,
+    *,
+    batters: Iterable[dict] = (),
+    pitchers: Iterable[dict] = (),
+    bullpen: Iterable[dict] = (),
+    lineups: Iterable[dict] = (),
+    absences: Iterable[dict] = (),
+    source: str,
+    import_date: str,
+) -> dict:
+    result = load_database_snapshot_from_object(snapshot)
+    components = result["components"]
+    components["batters"] = append_rows(components.get("batters", []), batters)
+    components["pitchers"] = append_rows(components.get("pitchers", []), pitchers)
+    components["bullpen"] = append_rows(components.get("bullpen", []), bullpen)
+    components["lineups"] = append_rows(components.get("lineups", []), lineups)
+    components["absences"] = append_rows(components.get("absences", []), absences)
+    result["updated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+    result["sources"][source] = {
+        "last_import_date": import_date,
+        "updated_at": result["updated_at"],
+    }
+    return result
+
+
+def load_database_snapshot_from_object(snapshot: dict) -> dict:
+    if not snapshot:
+        return empty_database_snapshot()
+    result = dict(snapshot)
+    result["components"] = dict(result.get("components") or {})
+    for name in ("batters", "pitchers", "bullpen", "lineups", "absences"):
+        result["components"][name] = list(result["components"].get(name) or [])
+    result["sources"] = dict(result.get("sources") or {})
+    return result
 
 
 def write_rows_parquet_or_csv(path: str | Path, rows: Iterable[dict]) -> Path:

@@ -155,7 +155,9 @@ def build_live_player_features(
     game_date: str | None = None,
     season: int | None = None,
     team_quality_override: dict[str, float] | None = None,
+    team_quality_source: str = "team_quality_fallback",
     database_features_by_event: dict[str, dict] | None = None,
+    allow_external_stats: bool = False,
 ) -> dict[str, dict]:
     """
     Build starter-only player feature dicts for today's games.
@@ -172,6 +174,12 @@ def build_live_player_features(
         MLB season year for pitcher stats (defaults to current year).
     database_features_by_event:
         Optional event-id keyed feature overrides from the local player database.
+    team_quality_source:
+        Label used when caller-supplied team quality is used as fallback.
+    allow_external_stats:
+        If true, allow pybaseball/Fangraphs-backed stat lookups. Runtime scanner
+        callers should leave this false so blocked scrapes cannot break or slow
+        daily probabilities.
 
     Returns
     -------
@@ -189,11 +197,14 @@ def build_live_player_features(
     except Exception as exc:
         logger.warning("Probable pitchers unavailable: %s", exc)
 
-    pitcher_quality = _pitcher_quality_lookup(season=season)
-    # Team quality: try pybaseball first, then caller-supplied override (e.g. team_state-derived)
-    team_quality = _team_quality_by_full_name(season=season)
+    pitcher_quality = _pitcher_quality_lookup(season=season) if allow_external_stats else {}
+    # Runtime default: caller-supplied local/artifact quality only. Optional
+    # external stat lookups are enrichment and are never required for scanner runs.
+    team_quality_source_label = "external_team_pitching" if allow_external_stats else team_quality_source
+    team_quality = _team_quality_by_full_name(season=season) if allow_external_stats else {}
     if not team_quality and team_quality_override:
         team_quality = team_quality_override
+        team_quality_source_label = team_quality_source
         logger.debug("Using team_quality_override (%d teams)", len(team_quality))
 
     result: dict[str, dict] = {}
@@ -220,11 +231,20 @@ def build_live_player_features(
                 quality = pitcher_quality[pitcher_name]
                 missing = 0.0
                 feature_sources.append(f"{side}_named_starter")
+            elif pitcher_name and event_id in (database_features_by_event or {}):
+                missing = 0.0
+                quality = float(
+                    (database_features_by_event or {})
+                    .get(event_id, {})
+                    .get(f"{side}_sp_quality", 0.0)
+                    or 0.0
+                )
+                feature_sources.append(f"{side}_local_starter")
             elif team in team_quality:
                 # Fall back to team-level ERA proxy
                 quality = team_quality[team]
                 missing = 0.0
-                feature_sources.append(f"{side}_team_pitching_fallback")
+                feature_sources.append(f"{side}_{team_quality_source_label}")
             else:
                 quality = 0.0
                 missing = 1.0

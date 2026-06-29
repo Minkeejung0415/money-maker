@@ -98,7 +98,7 @@ def test_build_live_player_features_returns_all_event_ids():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     assert set(result.keys()) == {"g1", "g2"}
 
@@ -114,13 +114,26 @@ def test_build_live_player_features_uses_explicit_game_date():
     probable.assert_called_once_with("2026-06-28")
 
 
+def test_build_live_player_features_skips_external_stats_by_default():
+    with (
+        patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value=_FAKE_PITCHERS),
+        patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats") as pitcher_stats,
+        patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats") as team_stats,
+    ):
+        result = build_live_player_features(_FAKE_GAMES[:1], game_date="2026-06-28")
+
+    pitcher_stats.assert_not_called()
+    team_stats.assert_not_called()
+    assert result["g1"]["player_data_source"] == "home_starter_missing,away_starter_missing"
+
+
 def test_build_live_player_features_named_pitcher_used():
     with (
         patch("alpha.data.ingestion.mlb_stats.get_probable_pitchers", return_value=_FAKE_PITCHERS),
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     g1 = result["g1"]
     # Gerrit Cole ERA 2.80 → quality = (6.5-2.80)/5.0 = 0.74
@@ -150,7 +163,7 @@ def test_build_live_player_features_event_probables_can_vary_same_matchup():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=[]),
     ):
-        result = build_live_player_features(games, game_date="2026-06-28")
+        result = build_live_player_features(games, game_date="2026-06-28", allow_external_stats=True)
 
     assert result["dh1"]["sp_quality_diff"] == pytest.approx(-result["dh2"]["sp_quality_diff"])
     assert result["dh1"]["sp_quality_diff"] != pytest.approx(0.0)
@@ -162,7 +175,7 @@ def test_build_live_player_features_team_fallback_used():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=[]),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     # g2 = LAD vs SF, team fallback
     g2 = result["g2"]
@@ -176,7 +189,7 @@ def test_build_live_player_features_missing_team_sets_missing_flag():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=[]),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=[]),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     g1 = result["g1"]
     assert g1["home_sp_missing"] == pytest.approx(1.0)
@@ -189,7 +202,7 @@ def test_build_live_player_features_sp_quality_diff():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     g1 = result["g1"]
     expected_diff = g1["home_sp_quality"] - g1["away_sp_quality"]
@@ -202,7 +215,7 @@ def test_build_live_player_features_default_workload_and_rest():
         patch("alpha.data.ingestion.mlb_stats.get_pitcher_stats", return_value=_FAKE_PITCHER_STATS),
         patch("alpha.data.ingestion.mlb_stats.get_team_pitching_stats", return_value=_FAKE_TEAM_PITCHING),
     ):
-        result = build_live_player_features(_FAKE_GAMES)
+        result = build_live_player_features(_FAKE_GAMES, allow_external_stats=True)
 
     g1 = result["g1"]
     assert g1["home_sp_workload"] == pytest.approx(90.0)
@@ -309,6 +322,7 @@ def test_build_live_player_features_merges_database_features():
         result = build_live_player_features(
             _FAKE_GAMES[:1],
             game_date="2026-06-28",
+            allow_external_stats=True,
             database_features_by_event={
                 "g1": {
                     "lineup_strength_diff": 0.12,

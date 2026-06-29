@@ -1,5 +1,24 @@
 # Milestones
 
+## v2.3 Automated MLB Player Data and Accuracy Upgrade (Shipped: 2026-06-28)
+
+**Phases completed:** 5 phases, 5 plans
+
+**Key accomplishments:**
+
+- MLB scanner no longer requires live Fangraphs/pybaseball stat scraping by default.
+- `--allow-external-player-stats` makes external stat enrichment explicit and opt-in.
+- Local MLB player database snapshots support batter, pitcher, bullpen, lineup, and absence rows.
+- `scripts/update_mlb_player_database.py` updates local JSON database snapshots from CSV inputs.
+- Event-level player feature interpreter converts raw stats into starter, lineup, bullpen, absence, coverage, stale, and confidence features.
+- `scripts/build_mlb_player_features.py` emits date-specific scanner feature files.
+- MLB player modeling reports now include coverage and selective win-rate metrics in addition to Brier, log loss, and accuracy.
+- `scripts/evaluate_mlb_player_accuracy.py` writes promotion metadata and fails closed when no candidate beats baseline.
+- MLB scanner auto-loads `data/mlb/player_features/mlb_player_features_<date>.json` when present while preserving manual override.
+- Runtime source labels distinguish local player data, artifact team-state fallback, external enrichment, stale data, and suppression reasons.
+
+---
+
 ## v2.0 Runtime Truth and Artifact Registry (Shipped: 2026-06-28)
 
 **Phases completed:** 2 phases, 2 plans

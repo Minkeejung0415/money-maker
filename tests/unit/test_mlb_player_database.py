@@ -10,9 +10,15 @@ from alpha.data.ingestion.mlb_player_database import (
     filter_rows_through,
     normalize_batter_rows,
     normalize_bullpen_rows,
+    normalize_absence_rows,
+    normalize_lineup_rows,
     normalize_pitcher_rows,
     parse_innings,
+    read_rows_csv,
+    update_database_snapshot,
+    write_json,
     write_rows_parquet_or_csv,
+    write_rows_csv,
 )
 
 
@@ -47,6 +53,19 @@ def test_normalize_pitcher_and_bullpen_rows_preserve_components():
     assert pitchers[0]["innings_pitched"] == pytest.approx(4.0)
     assert bullpen[0]["team"] == "BOS"
     assert bullpen[0]["innings_pitched"] == pytest.approx(3 + 2 / 3)
+
+
+def test_normalize_lineup_and_absence_rows_preserve_game_links():
+    lineup = normalize_lineup_rows([
+        {"game_id": "g1", "player": "Batter One", "team": "NYY", "date": "2026-06-28", "order": 1, "confirmed": "true", "bats": "L"},
+    ])
+    absences = normalize_absence_rows([
+        {"game_id": "g1", "player": "Batter Two", "team": "NYY", "date": "2026-06-28", "absence_value": 0.25, "reason": "injury"},
+    ])
+
+    assert lineup[0]["game_id"] == "g1"
+    assert lineup[0]["confirmed"] is True
+    assert absences[0]["absence_value"] == pytest.approx(0.25)
 
 
 def test_derive_batter_stats_formula_outputs():
@@ -121,3 +140,33 @@ def test_write_rows_parquet_or_csv_falls_back_to_file(tmp_path):
 
     assert output.exists()
     assert output.suffix in {".parquet", ".csv"}
+
+
+def test_csv_and_json_helpers_round_trip(tmp_path):
+    csv_path = write_rows_csv(tmp_path / "rows.csv", [{"a": 1, "b": "two"}])
+    json_path = write_json(tmp_path / "payload.json", {"ok": True})
+
+    assert read_rows_csv(csv_path) == [{"a": "1", "b": "two"}]
+    assert json_path.exists()
+
+
+def test_update_database_snapshot_is_idempotent():
+    batters = normalize_batter_rows([
+        {"player": "Batter One", "team": "NYY", "date": "2026-06-28", "h": 1, "ab": 4},
+    ], source="fixture")
+
+    first = update_database_snapshot(
+        {},
+        batters=batters,
+        source="fixture",
+        import_date="2026-06-28",
+    )
+    second = update_database_snapshot(
+        first,
+        batters=batters,
+        source="fixture",
+        import_date="2026-06-28",
+    )
+
+    assert len(second["components"]["batters"]) == 1
+    assert second["sources"]["fixture"]["last_import_date"] == "2026-06-28"

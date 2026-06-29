@@ -8,6 +8,7 @@ from alpha.engines.sports.mlb_player_modeling import (
     available_model_factories,
     build_model_artifact_metadata,
     run_walkforward_ablations,
+    score_probabilities,
     select_promoted_result,
     walkforward_train_cal_test_splits,
 )
@@ -126,8 +127,15 @@ def test_run_walkforward_ablations_reports_models_feature_sets_and_metrics():
     assert len(report["ablations"]) == 2
     for ablation in report["ablations"]:
         assert ablation["folds"]
-        assert {"brier_score", "log_loss", "accuracy", "n"} <= set(ablation["mean_metrics"])
+        assert {"brier_score", "log_loss", "accuracy", "coverage", "selective_win_rate", "n"} <= set(ablation["mean_metrics"])
         assert "reliability_table" in ablation["folds"][0]["metrics"]
+
+
+def test_score_probabilities_includes_selective_metrics():
+    metrics = score_probabilities([1, 0, 1, 0], [0.72, 0.31, 0.51, 0.49])
+
+    assert metrics["coverage"] == 0.5
+    assert metrics["selective_win_rate"] == 1.0
 
 
 def test_lightgbm_is_optional_and_core_models_are_available():
@@ -164,4 +172,3 @@ def test_artifact_metadata_contains_schema_features_split_dates_metrics_and_gate
     assert {"baseline_available", "candidate_improves_baseline_brier", "has_walkforward_folds", "has_feature_schema"} <= set(
         metadata["promotion_gates"]
     )
-

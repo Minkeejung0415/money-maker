@@ -24,6 +24,7 @@ Usage:
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
   python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
   python scripts/mlb_scanner.py --date 2026-06-28 --player-features-file data/mlb_player_features.json
+  python scripts/mlb_scanner.py --date 2026-06-28 --allow-external-player-stats
 """
 from __future__ import annotations
 
@@ -86,6 +87,7 @@ Examples:
   python scripts/mlb_scanner.py --mode parlay --date 2026-06-28
   python scripts/mlb_scanner.py --date 2026-06-28 --individual-only
   python scripts/mlb_scanner.py --date 2026-06-28 --player-features-file data/mlb_player_features.json
+  python scripts/mlb_scanner.py --date 2026-06-28 --allow-external-player-stats
         """,
     )
     parser.add_argument(
@@ -124,6 +126,16 @@ Examples:
         help="Optional JSON file of event-id keyed local player database features",
     )
     parser.add_argument(
+        "--no-auto-player-features",
+        action="store_true",
+        help="Disable automatic date-specific local player feature file loading",
+    )
+    parser.add_argument(
+        "--allow-external-player-stats",
+        action="store_true",
+        help="Allow optional pybaseball/Fangraphs stat lookups during live feature building",
+    )
+    parser.add_argument(
         "--no-corr", action="store_true",
         help="Skip correlation adjustment (faster)",
     )
@@ -152,6 +164,21 @@ def _load_player_features_file(path: str | None) -> dict[str, dict]:
     if "events" in data and isinstance(data["events"], dict):
         data = data["events"]
     return {str(event_id): dict(features or {}) for event_id, features in data.items()}
+
+
+def _default_player_features_path(schedule_date: str | None) -> Path:
+    label = schedule_date or "today"
+    return ROOT / "data" / "mlb" / "player_features" / f"mlb_player_features_{label}.json"
+
+
+def _resolve_player_features_file(args: argparse.Namespace) -> tuple[Path | None, str]:
+    if args.player_features_file:
+        path = Path(args.player_features_file)
+        return (path if path.is_absolute() else ROOT / path), "manual_override"
+    if args.no_auto_player_features:
+        return None, "disabled"
+    path = _default_player_features_path(args.date)
+    return (path, "auto") if path.exists() else (None, "not_found")
 
 
 # ---------------------------------------------------------------------------
@@ -200,12 +227,19 @@ def main() -> None:
                 game["has_market_odds"] = True
 
     database_features_by_event = {}
-    if args.player_features_file:
+    feature_file_path, feature_file_mode = _resolve_player_features_file(args)
+    if feature_file_path:
         try:
-            database_features_by_event = _load_player_features_file(args.player_features_file)
-            print(f"    Loaded local player features for {len(database_features_by_event)} event(s)")
+            database_features_by_event = _load_player_features_file(str(feature_file_path))
+            print(
+                "    Loaded local player features "
+                f"({feature_file_mode}) for {len(database_features_by_event)} event(s): "
+                f"{feature_file_path}"
+            )
         except Exception as exc:
             logger.warning("Local player features unavailable: %s", exc)
+    elif feature_file_mode == "not_found":
+        print(f"    No local player feature file found at {_default_player_features_path(args.date)}")
 
     # Load the model first so we can use its team_state as quality fallback
     mlb_model = MLBModel()
@@ -226,7 +260,9 @@ def main() -> None:
             games,
             game_date=args.date,
             team_quality_override=_team_quality_override,
+            team_quality_source="artifact_team_state",
             database_features_by_event=database_features_by_event,
+            allow_external_stats=args.allow_external_player_stats,
         )
         for game in games:
             eid = str(game.get("event_id", ""))
