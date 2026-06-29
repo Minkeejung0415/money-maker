@@ -1,22 +1,35 @@
-# MLB Win Probability Research Summary
+# Research Summary: v2.3 Automated MLB Player Data and Accuracy Upgrade
 
-## Recommendation
+**Date:** 2026-06-28
 
-Build a leakage-safe, time-ordered MLB game dataset and benchmark a calibrated logistic model against a calibrated gradient-boosted model. Ship the model with the best untouched future-window Brier score/log loss, not the model with the flashiest training accuracy.
+## Stack Additions
 
-## Reuse
+- Keep MLB StatsAPI as the runtime identity source for schedules, game ids, and probable pitchers where available.
+- Treat pybaseball/Fangraphs as optional enrichment only. The scanner must remain usable if Fangraphs returns 403.
+- Use local CSV/API imports and cached database snapshots as the runtime player-stat source.
+- Emit event-id keyed feature JSON files so scanner inference is deterministic for a requested date.
 
-The repository already contains the runtime `MLBModel`, daily fixture ingestion, team/pitcher statistic readers, scanner integration, and probability evaluation utilities. The missing pieces are a reproducible historical dataset builder, trainer, calibration/evaluation pipeline, and validated artifact.
+## Feature Table Stakes
 
-## Release Gate
+- One-command daily/date-range update for local MLB player data.
+- Deterministic schemas for batter, starter, bullpen, lineup, and absence rows.
+- Rolling feature interpretation, not raw stat dumping: starter quality/rest/workload, lineup strength/coverage, bullpen fatigue/availability, absence impact, and uncertainty.
+- Walk-forward ablations that prove which feature groups improve Brier score, log loss, selective win rate, and coverage.
+- Runtime source/freshness/confidence labels for every game.
 
-- Every feature is demonstrably available before first pitch.
-- Train, calibration, and test windows are chronological and disjoint.
-- The chosen model beats 50/50 and historical home-win baselines on Brier score and log loss.
-- Reliability buckets are reported with adequate sample counts.
-- Artifact metadata records schema, dates, metrics, and model version.
-- Scanner refuses silent 50/50 output and labels fallback/unvalidated states clearly.
+## Watch Outs
 
-## Scope
+- Live web scrapes are fragile and should not be required by scanner runtime.
+- Same-day data can leak target-game outcomes into training unless feature builders enforce pregame availability.
+- Richer features can improve explanations without improving probabilities unless the model artifact is retrained and promoted with those fields.
+- Missing or stale player data must suppress betting picks, not silently fall back to confident recommendations.
 
-Game-level home/away win probabilities and fair odds only. Manual sportsbook odds may be compared after modeling, but paid feeds, props, and parlays remain deferred.
+## Planning Implication
+
+The milestone should proceed in this order:
+
+1. Make MLB runtime resilient to blocked sources.
+2. Automate local player database updates.
+3. Build an interpretation layer that turns raw stats into event-level features.
+4. Retrain/evaluate/promote only if probability metrics improve.
+5. Auto-load the resulting feature files in scanner runtime with truthful labels.

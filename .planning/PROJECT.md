@@ -4,18 +4,19 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v2.0 - Runtime Truth and Artifact Registry
+## Current Milestone: v2.3 - Automated MLB Player Data and Accuracy Upgrade
 
-**Goal:** Make scanner model selection truthful and artifact-gated: no silent fallback, clear active model labels, shadow logging for challengers, and lightweight JSON metadata gates before runtime artifacts are trusted.
+**Goal:** Replace fragile live MLB stat scraping with an automated local player-data pipeline, then improve and promote a richer MLB player-aware algorithm whose stats meaningfully change win probabilities.
 
 **Target features:**
-- WC scanner model choices: `--model elo`, `--model hybrid`, `--model player`, and `--model auto`
-- Explicit fallback labels: `requested_model`, `active_model`, `fallback_used`, and `fallback_reason`
-- Shadow challenger logging with `--shadow-model` that never changes pick ranking
-- Lightweight JSON artifact metadata validation for runtime trust gates
-- Fail-closed `auto` and `player` paths unless `--allow-fallback` is explicitly supplied
+- Runtime MLB data source policy that treats Fangraphs/pybaseball scraping as optional enrichment, not a required scanner dependency
+- Automated daily MLB schedule, probable pitcher, player-stat, bullpen, lineup, and absence import/update scripts
+- Local player-stat database snapshots and event-level feature files keyed by MLB game id
+- Accuracy-focused feature interpretation layer for rolling form, starter quality, lineup strength, bullpen fatigue, absence impact, and uncertainty
+- Walk-forward retraining, ablation, calibration, and promotion gates for a richer MLB player-aware moneyline artifact
+- MLB scanner auto-loads date-specific local player features and prints source/freshness/confidence context
 
-**Current state:** v2.0 complete. The WC scanner now supports explicit runtime model selection and shadow logging; auto/player paths are artifact-gated and fail closed by default.
+**Current state:** Phase 37 fixed the immediate repeated-probability bug and added a local player-feature hook, but the MLB pipeline still needs automated data ingestion and a retrained/promoted artifact before richer player stats fully drive probabilities.
 
 ## Previous Milestone: v1.7 - Tactical Calibration and Validation (Complete)
 
@@ -147,7 +148,12 @@ Every prop line the scanner outputs must have a >55% historical hit rate â€” if 
 
 ### Active
 
-(None — v2.0 scope complete; next likely work is MLB runtime truth parity or WC player runtime.)
+- [ ] Replace runtime MLB Fangraphs dependency with robust local/official data-source fallbacks
+- [ ] Automate daily MLB player-stat database updates from CSV/API inputs
+- [ ] Generate date-specific event-level player feature files for scanner use
+- [ ] Improve MLB feature interpretation so player stats affect win probabilities through validated model features
+- [ ] Retrain, calibrate, validate, and promote a richer MLB player-aware moneyline artifact
+- [ ] Auto-load local MLB player features in the scanner with visible source/freshness/confidence labels
 
 ### Out of Scope
 
@@ -222,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 after v2.0 Runtime Truth and Artifact Registry*
+*Last updated: 2026-06-28 after starting v2.3 Automated MLB Player Data and Accuracy Upgrade*
