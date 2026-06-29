@@ -157,6 +157,17 @@ def test_knockout_probs_sum_to_one(model):
     assert total == pytest.approx(1.0, abs=0.001)
 
 
+def test_predict_90_minute_keeps_draw_for_knockout(model):
+    game = {"home_team": "Brazil", "away_team": "Germany", "league": "wc", "stage": "LAST_32"}
+    result = model.predict_90_minute(game)
+    total = result["win_prob"] + result["draw_prob"] + result["loss_prob"]
+    assert result["draw_prob"] > 0.0
+    assert result["knockout"] is True
+    assert result["stage"] == "LAST_32"
+    assert result["market_type"] == "90_minute"
+    assert total == pytest.approx(1.0, abs=0.001)
+
+
 # ---------------------------------------------------------------------------
 # Elo edge flag (MODEL-04)
 # ---------------------------------------------------------------------------

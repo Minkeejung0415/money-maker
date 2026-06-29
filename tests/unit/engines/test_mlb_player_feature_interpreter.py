@@ -64,6 +64,25 @@ def test_build_event_player_features_interprets_components():
     assert g1["player_data_stale_flag"] == pytest.approx(0.0)
 
 
+def test_general_unconfirmed_lineups_get_medium_confidence():
+    snap = _snapshot()
+    for row in snap["components"]["lineups"]:
+        row["confirmed"] = False
+        row["source"] = "mlb_statsapi_general_lineup"
+    games = [{
+        "event_id": "g1",
+        "home_team": "Home",
+        "away_team": "Away",
+        "home_probable_pitcher": "Home Starter",
+        "away_probable_pitcher": "Away Starter",
+    }]
+
+    result = build_event_player_features(games, snap, target_date="2026-06-28")
+
+    assert result["g1"]["lineup_source_confidence"] == pytest.approx(0.8)
+    assert result["g1"]["home_lineup_source"] == "mlb_statsapi_general_lineup"
+
+
 def test_build_event_player_features_marks_stale_low_confidence():
     games = [{"event_id": "g1", "home_team": "Home", "away_team": "Away"}]
 

@@ -171,6 +171,23 @@ class WCMatchModel:
         game["tactical_elo_adjustment"] = round(tactical_elo, 2)
         return game
 
+    def predict_90_minute(self, game: dict) -> dict:
+        """
+        Run the 90-minute 1X2 market for any WC game, including knockouts.
+
+        Knockout matches have two distinct betting meanings:
+          * predict(): team advances, so draw is suppressed.
+          * predict_90_minute(): regulation-time W/D/L, so draw remains live.
+        """
+        original_stage = game.get("stage", "GROUP_STAGE")
+        g = dict(game)
+        g["stage"] = "GROUP_STAGE"
+        result = self.predict(g)
+        result["stage"] = original_stage
+        result["knockout"] = original_stage in KNOCKOUT_STAGES
+        result["market_type"] = "90_minute"
+        return result
+
     def evaluate_bet(self, game: dict) -> dict | None:
         """
         Return the enriched game dict if win_prob has positive EV vs market odds,

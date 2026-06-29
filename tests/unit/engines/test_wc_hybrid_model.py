@@ -79,6 +79,14 @@ def test_knockout_stage_no_draw(model: WCHybridModel) -> None:
     )
 
 
+def test_90_minute_knockout_stage_has_draw(model: WCHybridModel) -> None:
+    """Regulation-time knockout markets keep draw as a live outcome."""
+    ko_game = {**GAME, "stage": "LAST_32"}
+    result = model.predict_90_minute(ko_game)
+    assert result["draw_prob"] > 0.0
+    assert result["market_type"] == "90_minute"
+
+
 def test_win_prob_range(model: WCHybridModel) -> None:
     """win_prob must be in [0, 1]."""
     result = model.predict(dict(GAME))

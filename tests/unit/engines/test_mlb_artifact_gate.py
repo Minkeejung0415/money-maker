@@ -113,6 +113,85 @@ def test_valid_player_aware_artifact_scores_precomputed_features(tmp_path, monke
     assert model.runtime_report()["selective_report"]["brier_score"] == 0.22
 
 
+def test_starter_only_artifact_gets_capped_runtime_lineup_adjustment(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(
+        _valid_player_artifact(
+            feature_names=list(PLAYER_FEATURE_SETS["starter_only"]),
+            model=ConstantProbModel(0.50),
+        ),
+        path,
+    )
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -110,
+        "away_odds": -110,
+        "player_features": _player_features(
+            elo_diff=10.0,
+            lineup_strength_diff=0.30,
+            top_order_strength_diff=0.20,
+            bullpen_quality_diff=0.10,
+            absence_value_diff=0.0,
+        ),
+    })
+
+    assert pred["home_win_prob"] > 0.50
+    assert pred["feature_context"]["runtime_context_adjustment"] > 0.0
+
+
+def test_full_player_artifact_does_not_double_count_lineup_adjustment(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(_valid_player_artifact(model=ConstantProbModel(0.50)), path)
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -110,
+        "away_odds": -110,
+        "player_features": _player_features(
+            elo_diff=10.0,
+            lineup_strength_diff=0.30,
+            top_order_strength_diff=0.20,
+            bullpen_quality_diff=0.10,
+        ),
+    })
+
+    assert pred["home_win_prob"] == 0.50
+    assert "runtime_context_adjustment" not in pred["feature_context"]
+
+
+def test_v23_artifact_is_accepted_and_labeled(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(
+        _valid_player_artifact(
+            schema_version="mlb-player-v2.3",
+            model_version="mlb-player-v2.3",
+            candidate={"feature_set": "starter_lineup_bullpen", "model": "logistic"},
+            feature_names=list(PLAYER_FEATURE_SETS["starter_lineup_bullpen"]),
+        ),
+        path,
+    )
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -120,
+        "away_odds": 105,
+        "player_features": _player_features(elo_diff=10.0),
+    })
+
+    assert pred["model_label"] == "v2.3 player-aware lineup/bullpen"
+    assert model.runtime_report()["source"] == "v2.3 player-aware lineup/bullpen"
+
+
 def test_player_aware_uncertainty_suppresses_pick(tmp_path, monkeypatch):
     path = tmp_path / "mlb_player_moneyline.pkl"
     joblib.dump(_valid_player_artifact(), path)

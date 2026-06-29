@@ -1,0 +1,28 @@
+{
+  "accuracy": 0.5965048543689321,
+  "allowed_runtime": true,
+  "artifact_path": "wc_international_1x2.pkl",
+  "brier": 0.5164653057240389,
+  "calibration": "multinomial_logistic_intrinsic",
+  "created_at": "2026-06-29T18:48:09.947383+00:00",
+  "dataset_fingerprint": "11f20355ad263d4015e6d2c84318dae4c55f50760e55466eeb78f8e782c45d86",
+  "feature_schema_hash": "a599fefee6262829c41654dc8f321840e4e1add8373458805822722902c315c6",
+  "included_tournaments": [
+    "FIFA World Cup",
+    "FIFA World Cup qualification",
+    "Friendlies",
+    "major internationals"
+  ],
+  "league": "WC",
+  "log_loss": 0.8774940536013408,
+  "market": "moneyline",
+  "model_id": "wc_international_1x2_v1",
+  "n_test": 7725,
+  "n_train": 30900,
+  "promotion_passed": true,
+  "source_url": "https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
+  "training_window": [
+    "1872-11-30",
+    "2026-05-31"
+  ]
+}

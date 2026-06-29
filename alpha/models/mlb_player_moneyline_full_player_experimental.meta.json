@@ -3,7 +3,7 @@
   "schema_version": "mlb-player-v2.3",
   "model_version": "mlb-player-v2.3",
   "candidate": {
-    "feature_set": "starter_only",
+    "feature_set": "full_player_aware",
     "model": "logistic"
   },
   "feature_names": [
@@ -24,7 +24,34 @@
     "home_sp_rest_days",
     "away_sp_rest_days",
     "home_sp_missing",
-    "away_sp_missing"
+    "away_sp_missing",
+    "home_lineup_strength",
+    "away_lineup_strength",
+    "lineup_strength_diff",
+    "home_top_order_strength",
+    "away_top_order_strength",
+    "top_order_strength_diff",
+    "home_lineup_lefty_share",
+    "away_lineup_lefty_share",
+    "home_lineup_missing_count",
+    "away_lineup_missing_count",
+    "lineup_missing_count_total",
+    "home_lineup_confirmed_share",
+    "away_lineup_confirmed_share",
+    "home_bp_recent_pitches",
+    "away_bp_recent_pitches",
+    "bullpen_recent_pitches_diff",
+    "home_bp_quality",
+    "away_bp_quality",
+    "bullpen_quality_diff",
+    "home_bp_missing",
+    "away_bp_missing",
+    "home_absence_value",
+    "away_absence_value",
+    "absence_value_diff",
+    "home_absence_count",
+    "away_absence_count",
+    "player_feature_missing_flag"
   ],
   "split_dates": [
     {
@@ -1319,11 +1346,11 @@
     "rows": "14b1241ef82b57022a3bf3d7e5bf5d000ad986175c38bd25967061f9763efb63"
   },
   "metrics": {
-    "brier_score": 0.25657763243843074,
-    "log_loss": 0.707905575433144,
-    "accuracy": 0.5314685314685315,
-    "coverage": 0.6923076923076923,
-    "selective_win_rate": 0.5263251824929457,
+    "brier_score": 0.25683925994037693,
+    "log_loss": 0.7085497933682258,
+    "accuracy": 0.5318181818181819,
+    "coverage": 0.693006993006993,
+    "selective_win_rate": 0.5302406002580151,
     "n": 2860
   },
   "promotion_gates": {
@@ -1333,11 +1360,17 @@
     "has_feature_schema": true
   },
   "validated": true,
-  "created_at": "2026-06-29T17:06:32.071519+00:00",
-  "built_at": "2026-06-29T17:06:32.071535+00:00",
+  "created_at": "2026-06-29T16:48:36.218658+00:00",
+  "built_at": "2026-06-29T16:48:36.218670+00:00",
   "runtime_notes": {
     "lineup_training_source": "pregame team offensive state proxy",
     "bullpen_training_source": "pregame team run-prevention/workload proxy",
     "daily_runtime_source": "MLB Stats API general top-PA lineups when feature file exists"
+  },
+  "promotion_override": {
+    "forced": true,
+    "requested_feature_set": "full_player_aware",
+    "natural_feature_set": "starter_only",
+    "reason": "User requested a full batter/bullpen-trained artifact."
   }
 }

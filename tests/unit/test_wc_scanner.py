@@ -152,12 +152,24 @@ def test_parse_args_accepts_hybrid_model():
         assert _parse_args().model == "hybrid"
 
 
+def test_parse_args_accepts_trained_model():
+    from scripts.wc_scanner import _parse_args
+    with patch("sys.argv", ["wc_scanner.py", "--model", "trained"]):
+        assert _parse_args().model == "trained"
+
+
 def test_parse_args_accepts_runtime_truth_flags():
     from scripts.wc_scanner import _parse_args
     with patch("sys.argv", ["wc_scanner.py", "--model", "auto", "--shadow-model", "hybrid"]):
         args = _parse_args()
     assert args.model == "auto"
     assert args.shadow_model == "hybrid"
+
+
+def test_parse_args_accepts_include_draw_90():
+    from scripts.wc_scanner import _parse_args
+    with patch("sys.argv", ["wc_scanner.py", "--include-draw-90"]):
+        assert _parse_args().include_draw_90 is True
 
 
 def test_main_individual_only_skips_combo_building(capsys):
@@ -215,6 +227,52 @@ def test_main_fixtures_file_individual_only(capsys, tmp_path):
     assert "Loaded fixtures from" in output
     assert "Brazil vs Germany" in output
     assert "H/D/A 60.0%/0.0%/40.0%" in output
+
+
+def test_main_fixtures_file_individual_only_include_draw_90(capsys, tmp_path):
+    fixture_file = tmp_path / "fixtures.json"
+    fixture_file.write_text(
+        """
+        {
+          "games": [
+            {
+              "home_team": "Brazil",
+              "away_team": "Germany",
+              "league": "wc",
+              "event_id": "fixture-1",
+              "commence_time": "2026-06-29T17:00:00Z",
+              "stage": "LAST_32",
+              "group": "",
+              "home_odds": -110,
+              "away_odds": -110
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    from scripts.wc_scanner import main
+    with patch("sys.argv", [
+        "wc_scanner.py", "--fixtures-file", str(fixture_file),
+        "--individual-only", "--include-draw-90",
+    ]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict_90_minute", side_effect=lambda g: {
+             **g,
+             "win_prob": 0.5,
+             "draw_prob": 0.2,
+             "loss_prob": 0.3,
+             "model_name": "wc_elo_logistic",
+             "market_type": "90_minute",
+         }):
+        main()
+
+    output = capsys.readouterr().out
+    assert "market=90-minute W/D/L" in output
+    assert "Brazil vs Germany" in output
+    assert "H/D/A 50.0%/20.0%/30.0%" in output
+    assert "market=90_minute" in output
 
 
 def test_main_props_only_prints_game_props(capsys, tmp_path):
@@ -275,10 +333,14 @@ def test_main_hybrid_model_prints_model_label(capsys):
     assert "wc_hybrid_baseline" in output
 
 
-def test_main_auto_model_missing_artifact_errors(capsys):
+def test_main_auto_model_missing_artifact_errors(capsys, tmp_path):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main
-    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--model", "auto"]), \
+    missing_meta = tmp_path / "missing_wc_runtime_model.meta.json"
+    with patch("sys.argv", [
+            "wc_scanner.py", "--mode", "parlay", "--model", "auto",
+            "--artifact-meta", str(missing_meta),
+         ]), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]):
         with pytest.raises(SystemExit):
@@ -288,10 +350,15 @@ def test_main_auto_model_missing_artifact_errors(capsys):
     assert "no silent fallback" in output
 
 
-def test_main_auto_model_explicit_fallback_is_labeled(capsys):
+def test_main_auto_model_explicit_fallback_is_labeled(capsys, tmp_path):
     game = _make_enriched_game("Brazil", "Germany", event_id="101")
     from scripts.wc_scanner import main
-    with patch("sys.argv", ["wc_scanner.py", "--mode", "parlay", "--model", "auto", "--allow-fallback", "--min-edge", "0.99"]), \
+    missing_meta = tmp_path / "missing_wc_runtime_model.meta.json"
+    with patch("sys.argv", [
+            "wc_scanner.py", "--mode", "parlay", "--model", "auto",
+            "--artifact-meta", str(missing_meta),
+            "--allow-fallback", "--min-edge", "0.99",
+         ]), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.is_configured", return_value=True), \
          patch("alpha.data.ingestion.football_data_client.FootballDataClient.fetch_wc_games", return_value=[game]), \
          patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \

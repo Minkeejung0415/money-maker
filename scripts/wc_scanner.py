@@ -23,6 +23,7 @@ Usage:
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
   python scripts/wc_scanner.py --mode parlay --min-edge 0.02 --top 10
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only --include-draw-90
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --props-only
 """
 from __future__ import annotations
@@ -76,6 +77,7 @@ Examples:
   python scripts/wc_scanner.py --mode parlay
   python scripts/wc_scanner.py --mode parlay --date-from 2026-06-26 --date-to 2026-07-02
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only
+  python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --individual-only --include-draw-90
   python scripts/wc_scanner.py --fixtures-file data/wc_round32_remaining_2026-06-28.json --props-only
         """,
     )
@@ -87,9 +89,9 @@ Examples:
     )
     parser.add_argument(
         "--model",
-        choices=["elo", "hybrid", "player", "auto"],
+        choices=["elo", "hybrid", "trained", "player", "auto"],
         default="elo",
-        help="Match model: elo baseline, hybrid challenger, player/auto require promoted artifact",
+        help="Match model: elo baseline, hybrid challenger, trained artifact, player/auto require promoted artifact",
     )
     parser.add_argument(
         "--shadow-model",
@@ -111,6 +113,11 @@ Examples:
         "--individual-only",
         action="store_true",
         help="Print individual fixture probabilities only; skip SGP/parlay building",
+    )
+    parser.add_argument(
+        "--include-draw-90",
+        action="store_true",
+        help="Use 90-minute W/D/L probabilities for knockout fixtures instead of advance-only H/A",
     )
     parser.add_argument(
         "--props-only",
@@ -169,6 +176,7 @@ def main() -> None:
     from alpha.engines.model_registry import validate_runtime_artifact
     from alpha.engines.sports.wc_hybrid_model import WCHybridModel
     from alpha.engines.sports.wc_model import WCMatchModel
+    from alpha.engines.sports.wc_trained_model import WCTrainedInternationalModel
     from alpha.engines.sports.wc_goal_markets import WCScorelineModel
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
     from alpha.engines.sports.wc_tactical_matchup import compare_tactics
@@ -241,6 +249,8 @@ def main() -> None:
         "WCMatchModel / wc_elo_logistic"
         if model_choice == "elo"
         else "WCHybridModel / wc_hybrid_baseline"
+        if model_choice == "hybrid"
+        else "WCTrainedInternationalModel / wc_international_1x2_v1"
     )
     print(f"[2/4] Running {model_label}...")
     try:
@@ -248,6 +258,11 @@ def main() -> None:
             WCMatchModel(min_edge=args.min_edge)
             if model_choice == "elo"
             else WCHybridModel(min_edge=args.min_edge)
+            if model_choice == "hybrid"
+            else WCTrainedInternationalModel(
+                artifact_path=_resolve_artifact_file(args.artifact_meta, artifact_metadata),
+                min_edge=args.min_edge,
+            )
         )
         shadow_model = None
         if args.shadow_model != "none":
@@ -266,10 +281,13 @@ def main() -> None:
             print(f"  Model: wc_elo_logistic | Elo ratings: {len(wc_model._elo_ratings)} | "
                   f"Stats: {len(wc_model._wc_stats)} teams")
         else:
-            base_model = wc_model._base
-            ratings = wc_model._ratings
-            print(f"  Model: wc_hybrid_baseline | Base Elo ratings: "
-                  f"{len(base_model._elo_ratings)} | Hybrid teams: {len(ratings._elo)}")
+            if model_choice == "hybrid":
+                base_model = wc_model._base
+                ratings = wc_model._ratings
+                print(f"  Model: wc_hybrid_baseline | Base Elo ratings: "
+                      f"{len(base_model._elo_ratings)} | Hybrid teams: {len(ratings._elo)}")
+            else:
+                print(f"  Model: wc_international_1x2_v1 | Trained teams: {len(wc_model.ratings)}")
         print(f"  requested_model={requested_model} active_model={model_choice} "
               f"fallback_used={str(fallback_used).lower()} "
               f"fallback_reason={fallback_reason or 'none'}")
@@ -365,16 +383,24 @@ def main() -> None:
                 else:
                     game["tactical_artifact_status"] = artifact_status
                 game["tactical_market_gates"] = gates
+            predict_fn = wc_model.predict_90_minute if args.include_draw_90 else wc_model.predict
+            shadow_predict_fn = None
             if shadow_model is not None:
-                shadow_pred = shadow_model.predict(dict(game))
+                shadow_predict_fn = (
+                    shadow_model.predict_90_minute if args.include_draw_90 else shadow_model.predict
+                )
+                shadow_pred = shadow_predict_fn(dict(game))
                 shadow_rows.append(
                     _shadow_row(game, shadow_pred, requested_model, model_choice, args.shadow_model)
                 )
-            game = wc_model.predict(game)
+            game = predict_fn(game)
             game["requested_model"] = requested_model
             game["active_model"] = model_choice
             game["fallback_used"] = fallback_used
             game["fallback_reason"] = fallback_reason
+            game["market_type"] = "90_minute" if args.include_draw_90 else (
+                "advance" if game.get("knockout") else "90_minute"
+            )
             if recent_client:
                 baseline_distribution = WCScorelineModel().build(baseline_game)
                 adjusted_distribution = WCScorelineModel().build(game)
@@ -405,7 +431,9 @@ def main() -> None:
         print(f"  Recent form ready for {len(enriched)} game(s)")
 
     if args.individual_only:
+        market_label = "90-minute W/D/L" if args.include_draw_90 else "scanner default"
         print(f"\nWC individual probabilities ({args.date_from} to {args.date_to})")
+        print(f"market={market_label}")
         print(f"requested_model={requested_model} active_model={model_choice} "
               f"fallback_used={str(fallback_used).lower()} "
               f"fallback_reason={fallback_reason or 'none'}")
@@ -415,6 +443,7 @@ def main() -> None:
             print(
                 f"  {game['home_team']} vs {game['away_team']} | "
                 f"H/D/A {game['win_prob']:.1%}/{game['draw_prob']:.1%}/{game['loss_prob']:.1%} | "
+                f"market={game.get('market_type', market_label)} | "
                 f"model={game.get('model_name', model_choice)}"
             )
         print("\nIndividual-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
@@ -546,12 +575,24 @@ def _resolve_runtime_model(args: argparse.Namespace, validator) -> tuple[str, ob
     """Resolve requested model to an active model with no silent fallback."""
     if args.model in ("elo", "hybrid"):
         return args.model, None
+    if args.model == "trained":
+        check = validator(
+            args.artifact_meta,
+            league="WC",
+            market="moneyline",
+            supported_model_ids={"wc_international_1x2_v1"},
+        )
+        if not check.ok:
+            if args.allow_fallback:
+                return "elo", check
+            raise RuntimeError(f"promoted trained model unavailable ({check.reason}); no silent fallback")
+        return "trained", check
 
     check = validator(
         args.artifact_meta,
         league="WC",
         market="moneyline",
-        supported_model_ids={"wc_hybrid_baseline", "wc_player_v1"},
+        supported_model_ids={"wc_hybrid_baseline", "wc_player_v1", "wc_international_1x2_v1"},
     )
     if not check.ok:
         if args.allow_fallback:
@@ -565,6 +606,8 @@ def _resolve_runtime_model(args: argparse.Namespace, validator) -> tuple[str, ob
         raise RuntimeError(f"promoted player model unavailable (artifact model_id={model_id!r})")
     if model_id == "wc_hybrid_baseline":
         return "hybrid", check
+    if model_id == "wc_international_1x2_v1":
+        return "trained", check
     if model_id == "wc_player_v1":
         raise RuntimeError("promoted player artifact is valid but player runtime is not implemented")
     raise RuntimeError(f"unsupported promoted model_id={model_id!r}")
@@ -579,6 +622,19 @@ def _load_fixture_file(path_str: str) -> list[dict]:
     if not isinstance(games, list):
         raise ValueError("fixture file must contain a list or {'games': [...]}")
     return games
+
+
+def _resolve_artifact_file(meta_path_str: str, metadata: dict) -> str:
+    artifact_file = metadata.get("artifact_path") if metadata else None
+    if not artifact_file:
+        return str(ROOT / "alpha" / "models" / "wc_international_1x2.pkl")
+    artifact_path = Path(str(artifact_file))
+    if artifact_path.is_absolute():
+        return str(artifact_path)
+    meta_path = Path(meta_path_str)
+    if not meta_path.is_absolute():
+        meta_path = ROOT / meta_path
+    return str(meta_path.parent / artifact_path)
 
 
 def _print_game_props(

@@ -94,8 +94,8 @@ def build_event_player_features(
             "player_component_coverage": coverage,
             "player_source_confidence": max(0.0, min(1.0, coverage - (0.25 if stale else 0.0))),
             "lineup_source_confidence": min(
-                float(features["home_lineup_confirmed_share"]),
-                float(features["away_lineup_confirmed_share"]),
+                float(features["home_lineup_source_confidence"]),
+                float(features["away_lineup_source_confidence"]),
             ),
             "player_data_stale_flag": float(stale),
             "player_data_source": "local_player_database",
@@ -175,6 +175,7 @@ def _lineup_features(event_id: str, team: str, lineup_rows: list[dict], season_b
     missing = 0
     confirmed = 0
     lefties = 0
+    sources: set[str] = set()
     for row in rows:
         name = str(row.get("player_name") or "")
         stats = _lookup_player_stats(name, rolling_batters) or _lookup_player_stats(name, season_batters)
@@ -188,15 +189,22 @@ def _lineup_features(event_id: str, team: str, lineup_rows: list[dict], season_b
             top_values.append(value)
         if str(row.get("confirmed")).lower() in {"true", "1", "yes"}:
             confirmed += 1
+        source = str(row.get("source") or "")
+        if source:
+            sources.add(source)
         if str(row.get("bats") or "").upper().startswith("L"):
             lefties += 1
     total = len(rows)
+    confirmed_share = confirmed / total if total else 0.0
+    lineup_source_confidence = confirmed_share or 0.80
     return {
         "lineup_strength": _mean(values),
         "top_order_strength": _mean(top_values),
         "lineup_lefty_share": lefties / total if total else 0.0,
         "lineup_missing_count": float(missing),
-        "lineup_confirmed_share": confirmed / total if total else 0.0,
+        "lineup_confirmed_share": confirmed_share,
+        "lineup_source_confidence": lineup_source_confidence,
+        "lineup_source": ",".join(sorted(sources)) or "general_lineup",
     }, True
 
 

@@ -80,3 +80,23 @@ class WCHybridModel:
         # Override model_name for traceability
         result["model_name"] = "wc_hybrid_baseline"
         return result
+
+    def predict_90_minute(self, game: dict) -> dict:
+        """
+        Inject composite Elo overrides, then delegate to the base 90-minute model.
+
+        This keeps knockout regulation-time W/D/L separate from advance
+        probabilities while preserving the hybrid model trace label.
+        """
+        feats = self._ratings.get_features(
+            game.get("home_team", ""),
+            game.get("away_team", ""),
+        )
+
+        g = dict(game)
+        g["home_elo_override"] = int(round(feats["composite_home_elo"]))
+        g["away_elo_override"] = int(round(feats["composite_away_elo"]))
+
+        result = self._base.predict_90_minute(g)
+        result["model_name"] = "wc_hybrid_baseline"
+        return result

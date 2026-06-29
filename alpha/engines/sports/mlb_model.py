@@ -13,6 +13,7 @@ Key differences from NBAModel:
 from __future__ import annotations
 
 import logging
+import math
 from pathlib import Path
 from datetime import date
 from typing import Any
@@ -26,6 +27,7 @@ MAX_XGB_CONF = 0.72
 PLAYER_AWARE_KIND = "mlb_player_moneyline_artifact"
 BASELINE_KIND = "mlb_win_probability_bundle"
 PLAYER_AWARE_VERSION = "mlb-player-v1.8"
+PLAYER_AWARE_VERSIONS = frozenset({"mlb-player-v1.8", "mlb-player-v2.3"})
 
 _MLB_OUTCOMES_DIR = Path("mlb_outcomes")
 _MODEL_SEARCH_DIRS = [
@@ -88,7 +90,7 @@ class MLBModel:
                 if self._player_bundle:
                     probs = self._predict_player_bundle(game)
                     source = "player_aware"
-                    model_label = "v1.8 player-aware"
+                    model_label = self._player_model_label(self._player_bundle)
                 if probs is None and self._player_bundle:
                     self._last_fallback_reason = self._last_fallback_reason or "player_features_unavailable"
                 if probs is None and self._model_bundle:
@@ -169,7 +171,7 @@ class MLBModel:
     def runtime_report(self) -> dict:
         bundle = self._player_bundle or self._model_bundle or {}
         if self._player_bundle:
-            source = "v1.8 player-aware"
+            source = self._player_model_label(self._player_bundle)
         elif self._model_bundle:
             source = "v1.3 baseline fallback"
         else:
@@ -344,7 +346,7 @@ class MLBModel:
         gates = bundle.get("promotion_gates") or {}
         feature_names = tuple(bundle.get("feature_names") or ())
         known_feature_sets = {tuple(features) for features in PLAYER_FEATURE_SETS.values()}
-        if version != PLAYER_AWARE_VERSION:
+        if version not in PLAYER_AWARE_VERSIONS:
             return "player_schema_version_failed"
         if not bundle.get("validated"):
             return "player_validation_failed"
@@ -355,6 +357,19 @@ class MLBModel:
         if bundle.get("model") is None or bundle.get("calibrator") is None:
             return "player_model_or_calibrator_missing"
         return None
+
+    def _player_model_label(self, bundle: dict) -> str:
+        version = str(bundle.get("model_version") or bundle.get("schema_version") or PLAYER_AWARE_VERSION)
+        feature_set = str((bundle.get("candidate") or {}).get("feature_set") or "")
+        if version == "mlb-player-v2.3":
+            if feature_set == "starter_lineup_bullpen":
+                return "v2.3 player-aware lineup/bullpen"
+            if feature_set == "full_player_aware":
+                return "v2.3 full player-aware"
+            if feature_set == "starter_lineup":
+                return "v2.3 player-aware lineup"
+            return "v2.3 player-aware"
+        return "v1.8 player-aware"
 
     # ------------------------------------------------------------------
     # Internal: XGBoost prediction
@@ -397,12 +412,54 @@ class MLBModel:
             return None
         raw = bundle["model"].predict_proba(np.asarray([values], dtype=float))[:, 1]
         home = float(self._calibrated_player_probability(bundle["calibrator"], raw)[0])
+        home, context_adjustment = self._apply_runtime_player_context_adjustment(
+            home,
+            game,
+            trained_features=set(feature_names),
+        )
         uncertainty_flags = self._player_uncertainty_flags(game)
+        feature_context = self._player_feature_context(game)
+        if context_adjustment:
+            feature_context["runtime_context_adjustment"] = round(context_adjustment, 4)
         return home, 1.0 - home, {
             "uncertainty_flags": uncertainty_flags,
-            "feature_context": self._player_feature_context(game),
+            "feature_context": feature_context,
             "metrics": bundle.get("metrics") or {},
         }
+
+    def _apply_runtime_player_context_adjustment(
+        self,
+        home_prob: float,
+        game: dict,
+        *,
+        trained_features: set[str],
+    ) -> tuple[float, float]:
+        """
+        Apply a small labeled context adjustment for features not in the active artifact.
+
+        The v1.8 promoted artifact is starter-only. General lineup, bullpen, and
+        absence features can arrive from the local player database before a
+        retrained artifact exists, so we use a capped logit shift instead of
+        pretending those columns were learned by the artifact.
+        """
+        features = game.get("player_features") or {}
+        shift = 0.0
+        if "lineup_strength_diff" not in trained_features:
+            shift += 0.35 * float(features.get("lineup_strength_diff") or 0.0)
+            shift += 0.20 * float(features.get("top_order_strength_diff") or 0.0)
+        if "bullpen_quality_diff" not in trained_features:
+            shift += 0.15 * float(features.get("bullpen_quality_diff") or 0.0)
+        if "absence_value_diff" not in trained_features:
+            shift -= 0.20 * float(features.get("absence_value_diff") or 0.0)
+
+        shift = max(-0.10, min(0.10, shift))
+        if abs(shift) < 1e-9:
+            return home_prob, 0.0
+
+        clipped = min(max(home_prob, 1e-6), 1.0 - 1e-6)
+        adjusted = 1.0 / (1.0 + math.exp(-(math.log(clipped / (1.0 - clipped)) + shift)))
+        probability_delta = max(-0.025, min(0.025, adjusted - home_prob))
+        return min(max(home_prob + probability_delta, 1e-6), 1.0 - 1e-6), probability_delta
 
     def _predict_bundle(self, game: dict) -> tuple[float, float, dict] | None:
         """Predict with the validated v1.3 bundle and its saved team state."""
@@ -484,6 +541,8 @@ class MLBModel:
             "player_feature_missing_flag",
             "player_source_confidence",
             "lineup_source_confidence",
+            "home_lineup_source",
+            "away_lineup_source",
             "player_data_stale_flag",
             "player_data_source",
             "player_data_last_updated",
