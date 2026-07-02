@@ -437,3 +437,17 @@ class TestNBAStatsCache:
         cache = NBAStatsCache(cache_path=tmp_path / "test_cache.sqlite")
         deleted = cache.clear_stale()
         assert isinstance(deleted, int)
+
+
+class TestNoEligiblePicksReturnsNothing:
+    """Regression: recommend_bet_types used to fall back to the top-5 picks by
+    EV when nothing cleared min_edge, recommending zero/negative-edge bets."""
+
+    def test_all_picks_below_min_edge_returns_empty(self, ctor):
+        picks = [
+            {"player": "A", "market": "player_points", "model_prob": 0.52,
+             "adjusted_prob": 0.52, "over_odds": -110, "ev": -0.01, "edge": -0.005},
+            {"player": "B", "market": "player_rebounds", "model_prob": 0.50,
+             "adjusted_prob": 0.50, "over_odds": -110, "ev": -0.05, "edge": -0.02},
+        ]
+        assert ctor.recommend_bet_types(picks) == []

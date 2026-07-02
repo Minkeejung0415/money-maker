@@ -214,6 +214,7 @@ def main() -> None:
                 a = prices.prices["away_win"]
                 game["home_odds"] = round(-100 / (h - 1)) if h < 2 else round((h - 1) * 100)
                 game["away_odds"] = round(-100 / (a - 1)) if a < 2 else round((a - 1) * 100)
+                game["has_market_odds"] = True
                 patched += 1
         print(f"  Odds override applied to {patched}/{len(all_games)} game(s) from {_odds_path.name}")
 
@@ -434,7 +435,15 @@ def main() -> None:
     if args.mode == "sgp":
         results = builder.build_probability_same_game(enriched)
     else:
-        results = builder.build(enriched, top_n=args.top)
+        # Edge/EV math requires real market prices. Games whose odds are the
+        # ingestion placeholder (-110/-110, has_market_odds=False) would show
+        # a fabricated edge, so they are excluded from parlay building.
+        parlay_games = [g for g in enriched if g.get("has_market_odds", True)]
+        skipped_no_odds = len(enriched) - len(parlay_games)
+        if skipped_no_odds:
+            print(f"  {skipped_no_odds} game(s) excluded from parlays: no real market odds "
+                  f"(add prices to data/wc_odds_override.json)")
+        results = builder.build(parlay_games, top_n=args.top)
 
     # ── Step 4: Output ───────────────────────────────────────────────────
     print("[4/4] Ranking complete.")

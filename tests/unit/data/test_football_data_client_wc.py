@@ -284,6 +284,7 @@ def test_fetch_today_games_epl_regression():
     assert len(games) == 1
     expected_keys = {
         "home_team", "away_team", "home_odds", "away_odds",
+        "has_market_odds",
         "league", "event_id", "commence_time",
         "home_team_id", "away_team_id",
     }

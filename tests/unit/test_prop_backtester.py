@@ -95,3 +95,24 @@ def test_backtest_returns_results_with_sufficient_data(bt):
 def test_recommendation_marginal_boundary(bt):
     """brier=0.23 (< 0.25 but >= 0.22) with low hc hit rate → MARGINAL."""
     assert bt._recommend(0.23, 0.50) == "MARGINAL"
+
+
+def test_predictions_are_not_constant_half(bt):
+    """Regression: pred_prob once used loc == the synthetic line, so every
+    prediction was exactly 0.50 and the validation was inert.  With a real
+    decay-weighted projection, varying game logs must produce varying
+    probabilities."""
+    # Strong upward recent trend (logs are newest-first): recent games well
+    # above the older ones the flat line is computed from.
+    trending = [40.0, 38.0, 36.0, 34.0, 32.0] * 4 + [15.0, 14.0, 16.0, 15.0, 14.0] * 4
+    logs = _make_logs(trending)
+    with _patch_logs(logs):
+        results = bt.backtest(["LeBron James"], ["player_points"])
+    assert len(results) == 1
+    preds = []
+    for bucket in results[0]["calibration"].values():
+        if bucket["n"] > 0:
+            preds.append(bucket["predicted"])
+    assert any(abs(p - 0.5) > 0.02 for p in preds), (
+        f"all predictions ~0.5 — backtester projection is inert: {preds}"
+    )

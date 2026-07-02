@@ -115,7 +115,10 @@ def test_elo_edge_preserved_in_leg():
 
 
 def test_combo_probs_multiply():
-    g1 = _make_game("Brazil", "Germany", win_prob=0.60, home_odds=-150)
+    # home_odds=-140 implies 58.3% < model 60% so the leg has positive EV
+    # (at -150 the implied prob is exactly 0.60 — zero edge — and the builder
+    # now rejects legs that do not beat the market).
+    g1 = _make_game("Brazil", "Germany", win_prob=0.60, home_odds=-140)
     g2 = _make_game("France", "Argentina", win_prob=0.55, home_odds=-120)
     result = WCSGPBuilder(min_edge=0.0).build([g1, g2])
     two_leg = next((c for c in result if len(c.legs) == 2), None)
@@ -302,3 +305,11 @@ def test_probability_sgp_knockout_is_goal_markets_only():
         }
         for combo in results
     )
+
+
+def test_best_wc_leg_rejects_negative_ev_sides():
+    """Regression: a game where neither side beats the market must not anchor
+    a parlay (mirrors the NBA _best_ml_leg fix)."""
+    # Model 55% home at -150 (implied 60%) -> negative EV; away side is worse.
+    game = _make_game("Brazil", "Germany", win_prob=0.55, home_odds=-150)
+    assert WCSGPBuilder(min_edge=0.0)._best_wc_leg(game) is None

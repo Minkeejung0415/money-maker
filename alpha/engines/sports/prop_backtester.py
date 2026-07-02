@@ -7,8 +7,10 @@ are unvalidated.  The scanner warns the user unless --validate is passed.
 Approach (calibration-based):
   For each game i (using game i-1 as the outcome to predict):
     synthetic_line = rolling avg of last 10 games (games[i:i+10])
+    projection     = exponential-decay weighted avg of last 20 games
+                     (games[i:i+20], newest-first — mirrors PropModel)
     actual         = logs[i-1][col]
-    pred_prob      = model's P(actual > synthetic_line)
+    pred_prob      = P(actual > synthetic_line) = 1 - Φ(line; projection, std)
     actual_hit     = 1 if actual > synthetic_line else 0
     → bucket pred_prob into deciles and compare to actual hit rate
 
@@ -136,10 +138,17 @@ class PropBacktester:
                 continue
 
             synthetic_line = mean(history_slice)
-            std = max(1.0, stdev(history_slice))
+
+            # Projection = decay-weighted avg over the longer history window,
+            # mirroring PropModel's recency weighting.  It must NOT be the same
+            # quantity as the line: 1 - Φ(line; loc=line) is 0.5 for every row,
+            # which makes the whole validation inert.
+            model_window = values[i: i + _HISTORY_WINDOW]
+            projection = self._decay_weighted_avg(model_window)
+            std = max(1.0, stdev(model_window)) if len(model_window) >= 2 else 1.0
 
             actual = values[i - 1]
-            pred_prob = float(1 - norm.cdf(synthetic_line, loc=mean(history_slice), scale=std))
+            pred_prob = float(1 - norm.cdf(synthetic_line, loc=projection, scale=std))
             pred_prob = float(np.clip(pred_prob, 0.01, 0.99))
             actual_hit = 1 if actual > synthetic_line else 0
 
@@ -171,6 +180,18 @@ class PropBacktester:
     # ------------------------------------------------------------------
     # Internal: metrics
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _decay_weighted_avg(values: list[float]) -> float:
+        """Exponential-decay weighted average (newest-first), as in PropModel."""
+        from alpha.engines.sports.prop_model import DECAY_LAMBDA
+        total_w = 0.0
+        total_v = 0.0
+        for i, v in enumerate(values):
+            w = DECAY_LAMBDA ** i
+            total_w += w
+            total_v += v * w
+        return total_v / total_w if total_w > 0 else 0.0
 
     @staticmethod
     def _brier_score(preds: list[float], hits: list[int]) -> float:

@@ -273,6 +273,11 @@ class WCSGPBuilder:
         home_ev = _EV_CALC.expected_value(win_prob, home_dec)
         away_ev = _EV_CALC.expected_value(loss_prob, away_dec)
 
+        # Never anchor a parlay on a negative-EV side (mirrors the NBA
+        # _best_ml_leg fix): if neither side beats the market, skip the game.
+        if max(home_ev, away_ev) <= 0:
+            return None
+
         if home_ev >= away_ev:
             return {
                 "type": "wc_ml",

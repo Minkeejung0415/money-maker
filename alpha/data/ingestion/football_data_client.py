@@ -115,6 +115,7 @@ class FootballDataClient:
                     "away_team": away,
                     "home_odds": -110,   # no odds on free tier
                     "away_odds": -110,
+                    "has_market_odds": False,  # -110/-110 is a placeholder, not a price
                     "league": league_key,
                     "event_id": match_id,
                     "commence_time": commence,
@@ -173,6 +174,7 @@ class FootballDataClient:
                     "away_team": away,
                     "home_odds": -110,
                     "away_odds": -110,
+                    "has_market_odds": False,  # -110/-110 is a placeholder, not a price
                     "league": "wc",
                     "event_id": str(match.get("id", "")),
                     "commence_time": match.get("utcDate", ""),

@@ -210,7 +210,10 @@ class ParlayConstructor:
 
         eligible = [p for p in scored_picks if p.get("edge", 0) >= self._min_edge]
         if not eligible:
-            eligible = sorted(scored_picks, key=lambda p: p.get("ev", 0), reverse=True)[:5]
+            # No pick clears the minimum edge — recommend nothing rather than
+            # falling back to the "best of a bad batch" (that fallback produced
+            # zero/negative-edge recommendations).
+            return []
 
         # 1. Best single bet
         best_single = max(eligible, key=lambda p: p.get("ev", 0))
