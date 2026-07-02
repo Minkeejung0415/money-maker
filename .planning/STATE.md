@@ -54,6 +54,7 @@ Last activity: 2026-06-28 - MLB runtime no longer requires Fangraphs scraping an
 
 - Populate real daily MLB CSV/stat inputs under the local database workflow.
 - Run a full historical retrain once richer local player database coverage exists.
+- Ship the MLB retrain package as one unit (see docs/ACCURACY-AUDIT-2026-07.md, "Deferred: MLB retrain package"): season-boundary state regression in mlb_training.py + tests, artifact/team-state age surfaced in mlb_scanner.py, pick_eligible staleness gate, then retrain + walk-forward re-validation. Do NOT ship the feature-semantics change without the retrain.
 - Re-save MLB artifacts under the current sklearn version to remove model-persistence warnings.
 - Implement real WC player-aware runtime before allowing `--model player` to produce picks.
 - Score WC shadow logs after results settle.

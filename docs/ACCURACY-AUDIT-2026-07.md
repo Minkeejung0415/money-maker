@@ -284,6 +284,27 @@ Revised priority order without odds:
    by reading, not by a test. A thin extraction of the leg-scoring loop
    into a testable function is the cheapest way to lock it in.
 
+## Deferred: MLB retrain package (agreed 2026-07-02)
+
+Decision: risk #10 stays documented-but-unpatched until it can ship as one
+atomic package, because changing season-boundary feature semantics without
+retraining would create a code/artifact mismatch — worse than the known
+drift. MLB remains the most defensible pipeline in the repo until then.
+
+The package (do together, in order):
+
+1. Season-boundary state regression in `mlb_training.py`
+   (regress Elo toward 1500, reset win/run counters between seasons).
+2. Unit tests around that regression behavior.
+3. Surface artifact `training_end` / team-state snapshot age in
+   `mlb_scanner.py` output.
+4. Gate or suppress `pick_eligible` when runtime team state is stale
+   (older than N days).
+5. Retrain via `train_mlb_moneyline.py` and re-validate via
+   `evaluate_moneyline_walkforward.py` against local historical data
+   (operator machine — training data lives in gitignored `data/`),
+   then re-save artifacts under the current sklearn version.
+
 ## What was NOT changed and why
 
 - Confidence-tier inversion (#4) and prop calibration (#5): the right fix
@@ -291,8 +312,9 @@ Revised priority order without odds:
   tier logic blind would just move the miscalibration around. The evidence
   missing: a graded sample (≥ several hundred picks) from
   `data/predictions/` via `grade_predictions.py`.
-- Correlation rebuild (#6): needs date-joined game logs; changing it without
-  the alignment data risks replacing one wrong matrix with another. The
-  copula chaining should be rewritten together with it.
+- Correlation rebuild (#6): DONE in the probability-only addendum above
+  (date-joined vectors, trailing-average binarization, min shared games).
+  The copula chaining in adjust_multi_leg_prob remains the first-order
+  approximation — still treat 4+ leg joint probabilities as bounds.
 - Kelly math itself was checked and is correct (quarter-Kelly, 5% cap,
   display cap noted separately); EV formula `p(d−1)−(1−p)` is correct.
