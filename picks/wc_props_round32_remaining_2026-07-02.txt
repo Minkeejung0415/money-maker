@@ -1,0 +1,70 @@
+[1/4] Fetching WC fixtures (2026-07-02 to 2026-07-04)...
+  Loaded fixtures from data/wc_round32_remaining_2026-07-02.json
+  Found 6 WC fixture(s)
+[2/4] Running WCMatchModel / wc_elo_logistic...
+  Model: wc_elo_logistic | Elo ratings: 48 | Stats: 0 teams
+  requested_model=elo active_model=elo fallback_used=false fallback_reason=none
+  shadow_model=hybrid shadow_affects_picks=false
+  Shadow predictions logged: 6 -> reports/shadow_predictions/wc_2026-07-02.jsonl
+  Enriched 6 game(s) with elo predictions
+
+WC game prop probabilities (2026-07-02 to 2026-07-04)
+Player props unavailable: no WC player-prop lines/source configured.
+requested_model=elo active_model=elo fallback_used=false fallback_reason=none
+shadow_model=hybrid shadow_affects_picks=false
+
+Spain vs Austria | stage=LAST_32
+  Spain advance: 85.5%
+  Austria advance: 14.5%
+  Over 2.5 goals: 47.2%
+  Under 2.5 goals: 52.8%
+  BTTS Yes: 50.0%
+  BTTS No: 50.0%
+  xG mean: Spain 1.56 | Austria 1.00
+
+Portugal vs Croatia | stage=LAST_32
+  Portugal advance: 62.0%
+  Croatia advance: 38.0%
+  Over 2.5 goals: 45.7%
+  Under 2.5 goals: 54.3%
+  BTTS Yes: 50.8%
+  BTTS No: 49.2%
+  xG mean: Portugal 1.33 | Croatia 1.18
+
+Switzerland vs Algeria | stage=LAST_32
+  Switzerland advance: 67.8%
+  Algeria advance: 32.2%
+  Over 2.5 goals: 45.9%
+  Under 2.5 goals: 54.1%
+  BTTS Yes: 50.7%
+  BTTS No: 49.3%
+  xG mean: Switzerland 1.37 | Algeria 1.14
+
+Australia vs Egypt | stage=LAST_32
+  Australia advance: 58.3%
+  Egypt advance: 41.7%
+  Over 2.5 goals: 45.7%
+  Under 2.5 goals: 54.3%
+  BTTS Yes: 50.9%
+  BTTS No: 49.1%
+  xG mean: Australia 1.30 | Egypt 1.20
+
+Argentina vs Cape Verde Islands | stage=LAST_32
+  Argentina advance: 95.4%
+  Cape Verde Islands advance: 4.6%
+  Over 2.5 goals: 50.2%
+  Under 2.5 goals: 49.8%
+  BTTS Yes: 48.2%
+  BTTS No: 51.8%
+  xG mean: Argentina 1.83 | Cape Verde Islands 0.86
+
+Colombia vs Ghana | stage=LAST_32
+  Colombia advance: 92.2%
+  Ghana advance: 7.8%
+  Over 2.5 goals: 48.7%
+  Under 2.5 goals: 51.3%
+  BTTS Yes: 49.1%
+  BTTS No: 50.9%
+  xG mean: Colombia 1.70 | Ghana 0.92
+
+Props-only mode: skipped SGP/parlay building, edge, EV, and staking output.

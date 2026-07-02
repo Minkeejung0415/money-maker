@@ -1,0 +1,21 @@
+[1/4] Fetching WC fixtures (2026-07-02 to 2026-07-04)...
+  Loaded fixtures from data/wc_round32_remaining_2026-07-02.json
+  Found 6 WC fixture(s)
+[2/4] Running WCMatchModel / wc_elo_logistic...
+  Model: wc_elo_logistic | Elo ratings: 48 | Stats: 0 teams
+  requested_model=elo active_model=elo fallback_used=false fallback_reason=none
+  shadow_model=hybrid shadow_affects_picks=false
+  Shadow predictions logged: 6 -> reports/shadow_predictions/wc_2026-07-02.jsonl
+  Enriched 6 game(s) with elo predictions
+
+WC individual probabilities (2026-07-02 to 2026-07-04)
+requested_model=elo active_model=elo fallback_used=false fallback_reason=none
+shadow_model=hybrid shadow_affects_picks=false
+  Spain vs Austria | H/D/A 85.5%/0.0%/14.5% | model=wc_elo_logistic
+  Portugal vs Croatia | H/D/A 62.0%/0.0%/38.0% | model=wc_elo_logistic
+  Switzerland vs Algeria | H/D/A 67.8%/0.0%/32.2% | model=wc_elo_logistic
+  Australia vs Egypt | H/D/A 58.3%/0.0%/41.7% | model=wc_elo_logistic
+  Argentina vs Cape Verde Islands | H/D/A 95.4%/0.0%/4.6% | model=wc_elo_logistic
+  Colombia vs Ghana | H/D/A 92.2%/0.0%/7.8% | model=wc_elo_logistic
+
+Individual-only mode: skipped SGP/parlay building, edge, EV, and staking output.

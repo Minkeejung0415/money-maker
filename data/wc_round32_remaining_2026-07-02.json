@@ -1,0 +1,73 @@
+{
+  "source": "Sports Illustrated confirmed Round of 32 schedule, model team names normalized to wc_priors.json",
+  "as_of": "2026-07-02",
+  "stage": "LAST_32",
+  "games": [
+    {
+      "home_team": "Spain",
+      "away_team": "Austria",
+      "league": "wc",
+      "event_id": "wc-r32-11",
+      "commence_time": "2026-07-02T19:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Portugal",
+      "away_team": "Croatia",
+      "league": "wc",
+      "event_id": "wc-r32-12",
+      "commence_time": "2026-07-02T23:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Switzerland",
+      "away_team": "Algeria",
+      "league": "wc",
+      "event_id": "wc-r32-13",
+      "commence_time": "2026-07-03T03:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Australia",
+      "away_team": "Egypt",
+      "league": "wc",
+      "event_id": "wc-r32-14",
+      "commence_time": "2026-07-03T18:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Argentina",
+      "away_team": "Cape Verde Islands",
+      "league": "wc",
+      "event_id": "wc-r32-15",
+      "commence_time": "2026-07-03T22:00:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    },
+    {
+      "home_team": "Colombia",
+      "away_team": "Ghana",
+      "league": "wc",
+      "event_id": "wc-r32-16",
+      "commence_time": "2026-07-04T01:30:00Z",
+      "stage": "LAST_32",
+      "group": "",
+      "home_odds": -110,
+      "away_odds": -110
+    }
+  ]
+}
