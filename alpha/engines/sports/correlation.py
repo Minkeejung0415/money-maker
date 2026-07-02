@@ -2,7 +2,16 @@
 CorrelationEngine — empirical correlation matrix for SGP leg pairs.
 
 For each pair of (playerA_stat, playerB_stat), computes Pearson r between
-their binary "did they exceed their rolling average?" vectors across shared games.
+their binary "did they exceed their trailing average?" vectors across games
+they BOTH played, matched by game date.
+
+Leakage/alignment guarantees:
+  - Vectors are joined on GAME_DATE — never by array index.  Two players'
+    entries are only paired when they refer to the same calendar game date;
+    pairs with fewer than _MIN_SHARED_GAMES shared dates return r = 0.0.
+  - Each game is binarized against the average of up to _ROLLING_WINDOW
+    strictly EARLIER games (trailing average).  No future game ever
+    influences the flag of a past game.
 
 Key concept:
   Positive r (> 0.25):  true joint prob is HIGHER than naive product
@@ -16,7 +25,8 @@ NOTE on adjust_multi_leg_prob:
   This is a first-order bivariate copula approximation.  Accuracy degrades
   for N > 3 legs.  For 4+ legs, treat combined_model_prob as a lower bound.
 
-Cache: pickled to data/.corr_cache.pkl with 24-hour TTL.
+Cache: pickled to data/.corr_cache_v2.pkl with 24-hour TTL.  (v2: the v1
+cache stored index-aligned matrices and must not be reused.)
 """
 from __future__ import annotations
 
@@ -36,10 +46,14 @@ from scipy.stats import pearsonr
 
 logger = logging.getLogger(__name__)
 
-_CACHE_PATH = Path("data/.corr_cache.pkl")
+_CACHE_PATH = Path("data/.corr_cache_v2.pkl")
 _CACHE_TTL_HOURS = 24
 _NBA_API_SLEEP: float = 0.6
 _ROLLING_WINDOW: int = 20
+# Minimum strictly-earlier games required before a game gets a binary flag.
+_MIN_PRIOR_GAMES: int = 10
+# Minimum shared game dates required to estimate r for a pair.
+_MIN_SHARED_GAMES: int = 10
 
 _MARKET_COL: dict[str, str] = {
     "player_points":   "PTS",
@@ -168,27 +182,31 @@ class CorrelationEngine:
 
     def _compute_r(
         self,
-        game_vectors: dict[str, dict[str, list[float]]],
+        game_vectors: dict[str, dict[str, dict[str, float]]],
         player_a: str,
         market_a: str,
         player_b: str,
         market_b: str,
     ) -> float:
-        """Compute Pearson r between two binary over/under vectors."""
+        """
+        Compute Pearson r between two binary over/under vectors, paired by
+        shared game date.  Pairs with insufficient shared games return 0.0
+        (assume independence) rather than correlating unrelated games.
+        """
         col_a = _MARKET_COL.get(market_a)
         col_b = _MARKET_COL.get(market_b)
         if col_a is None or col_b is None:
             return 0.0
 
-        vec_a = game_vectors.get(player_a, {}).get(col_a, [])
-        vec_b = game_vectors.get(player_b, {}).get(col_b, [])
+        vec_a = game_vectors.get(player_a, {}).get(col_a, {})
+        vec_b = game_vectors.get(player_b, {}).get(col_b, {})
 
-        if len(vec_a) < 10 or len(vec_b) < 10:
+        shared_dates = sorted(set(vec_a) & set(vec_b))
+        if len(shared_dates) < _MIN_SHARED_GAMES:
             return 0.0
 
-        shared_len = min(len(vec_a), len(vec_b))
-        va = np.array(vec_a[:shared_len])
-        vb = np.array(vec_b[:shared_len])
+        va = np.array([vec_a[d] for d in shared_dates])
+        vb = np.array([vec_b[d] for d in shared_dates])
 
         if va.std() == 0 or vb.std() == 0:
             return 0.0 if player_a != player_b or market_a != market_b else 1.0
@@ -201,22 +219,44 @@ class CorrelationEngine:
 
     def _fetch_all_vectors(
         self, player_names: list[str], season: str
-    ) -> dict[str, dict[str, list[float]]]:
+    ) -> dict[str, dict[str, dict[str, float]]]:
         """
-        Returns {player: {col: [binary over/under values, ...]}}.
-        Binary encoding: 1 if value > rolling avg, else 0.
+        Returns {player: {col: {game_date: binary over/under flag}}}.
+        Binary encoding: 1 if value > trailing avg of prior games, else 0.
         """
-        result: dict[str, dict[str, list[float]]] = {}
+        result: dict[str, dict[str, dict[str, float]]] = {}
         for name in player_names:
             vectors = self._fetch_player_vectors(name, season)
             if vectors:
                 result[name] = vectors
         return result
 
+    @staticmethod
+    def _binarize_trailing(dated_values: list[tuple[str, float]]) -> dict[str, float]:
+        """
+        Binarize a chronological (oldest-first) series of (game_date, value)
+        against the trailing average of up to _ROLLING_WINDOW strictly
+        earlier games.
+
+        The first _MIN_PRIOR_GAMES games emit no flag (not enough history).
+        Using only prior games means no future value can influence the flag
+        of an earlier game (the v1 implementation binarized the whole season
+        against the mean of the most RECENT 20 games — future leakage).
+        """
+        out: dict[str, float] = {}
+        prior: list[float] = []
+        for date_str, v in dated_values:
+            if len(prior) >= _MIN_PRIOR_GAMES:
+                window = prior[-_ROLLING_WINDOW:]
+                trailing_avg = mean(window)
+                out[date_str] = 1.0 if v > trailing_avg else 0.0
+            prior.append(v)
+        return out
+
     def _fetch_player_vectors(
         self, player_name: str, season: str
-    ) -> dict[str, list[float]] | None:
-        """Fetch game logs and encode as binary over/under vectors."""
+    ) -> dict[str, dict[str, float]] | None:
+        """Fetch game logs and encode as date-keyed binary over/under vectors."""
         try:
             from nba_api.stats.static import players as nba_players  # noqa: PLC0415
             from nba_api.stats.endpoints.playergamelogs import PlayerGameLogs  # noqa: PLC0415
@@ -234,19 +274,23 @@ class CorrelationEngine:
                 last_n_games_nullable="0",
             )
             df = gl.get_data_frames()[0]
-            if df.empty:
+            if df.empty or "GAME_DATE" not in df.columns:
                 return None
 
-            vectors: dict[str, list[float]] = {}
+            vectors: dict[str, dict[str, float]] = {}
             for col in _MARKET_COL.values():
                 if col not in df.columns:
                     continue
-                vals = df[col].astype(float).tolist()
-                if len(vals) < _ROLLING_WINDOW:
+                # nba_api returns newest-first; reverse to chronological.
+                dated = [
+                    (str(d)[:10], float(v))
+                    for d, v in zip(df["GAME_DATE"], df[col].astype(float))
+                ][::-1]
+                if len(dated) < _ROLLING_WINDOW:
                     continue
-                rolling_avg = mean(vals[:_ROLLING_WINDOW])
-                binary = [1.0 if v > rolling_avg else 0.0 for v in vals]
-                vectors[col] = binary
+                binary = self._binarize_trailing(dated)
+                if binary:
+                    vectors[col] = binary
 
             return vectors if vectors else None
         except Exception as exc:

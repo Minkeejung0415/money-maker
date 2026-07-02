@@ -18,30 +18,98 @@ def engine():
 # ---------------------------------------------------------------------------
 
 
+def _dated(flags: list[float], start_day: int = 1) -> dict[str, float]:
+    """Build a {game_date: flag} vector from a list of binary flags."""
+    return {f"2026-01-{start_day + i:02d}": v for i, v in enumerate(flags)}
+
+
 def test_perfect_positive_correlation(engine):
-    """Identical binary vectors → r ≈ 1.0."""
-    vec = [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-           1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+    """Identical binary vectors on the same game dates → r ≈ 1.0."""
+    flags = [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+             1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
     game_vectors = {
-        "PlayerA": {"PTS": vec},
-        "PlayerB": {"PTS": vec},
+        "PlayerA": {"PTS": _dated(flags)},
+        "PlayerB": {"PTS": _dated(flags)},
     }
     r = engine._compute_r(game_vectors, "PlayerA", "player_points", "PlayerB", "player_points")
     assert r == pytest.approx(1.0, abs=1e-6)
 
 
 def test_perfect_negative_correlation(engine):
-    """Perfectly opposite binary vectors → r ≈ -1.0."""
-    vec_a = [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
-             1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]
-    vec_b = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-             0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]
+    """Perfectly opposite binary vectors on the same dates → r ≈ -1.0."""
+    flags_a = [1.0, 0.0] * 10
+    flags_b = [0.0, 1.0] * 10
     game_vectors = {
-        "PlayerA": {"PTS": vec_a},
-        "PlayerB": {"PTS": vec_b},
+        "PlayerA": {"PTS": _dated(flags_a)},
+        "PlayerB": {"PTS": _dated(flags_b)},
     }
     r = engine._compute_r(game_vectors, "PlayerA", "player_points", "PlayerB", "player_points")
     assert r == pytest.approx(-1.0, abs=1e-6)
+
+
+def test_disjoint_schedules_return_zero(engine):
+    """Regression: players who share no game dates must get r = 0.0.
+    The v1 engine paired vectors by array index, so two players on
+    different teams with unrelated schedules could show strong fake
+    correlation."""
+    flags = [1.0, 0.0] * 10
+    game_vectors = {
+        "PlayerA": {"PTS": _dated(flags, start_day=1)},
+        # Same flag pattern but on entirely different dates (Feb, not Jan)
+        "PlayerB": {"PTS": {f"2026-02-{i + 1:02d}": v for i, v in enumerate(flags)}},
+    }
+    r = engine._compute_r(game_vectors, "PlayerA", "player_points", "PlayerB", "player_points")
+    assert r == 0.0
+
+
+def test_insufficient_shared_games_return_zero(engine):
+    """Fewer than the minimum shared dates → r = 0.0 (assume independence)."""
+    flags = [1.0, 0.0] * 10
+    game_vectors = {
+        "PlayerA": {"PTS": _dated(flags, start_day=1)},
+        # Only 5 overlapping dates (days 16-20)
+        "PlayerB": {"PTS": _dated(flags, start_day=16)},
+    }
+    r = engine._compute_r(game_vectors, "PlayerA", "player_points", "PlayerB", "player_points")
+    assert r == 0.0
+
+
+def test_shared_dates_align_even_with_offset_schedules(engine):
+    """Correlation is computed on the intersection of dates, not on
+    index-aligned prefixes: identical flags on the shared dates → r ≈ 1.0
+    even when one player has extra earlier games."""
+    shared = _dated([1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                    start_day=10)
+    extra_early = {f"2026-01-{i:02d}": 0.0 for i in range(1, 10)}
+    game_vectors = {
+        "PlayerA": {"PTS": {**extra_early, **shared}},
+        "PlayerB": {"PTS": dict(shared)},
+    }
+    r = engine._compute_r(game_vectors, "PlayerA", "player_points", "PlayerB", "player_points")
+    assert r == pytest.approx(1.0, abs=1e-6)
+
+
+def test_binarize_trailing_no_future_leakage():
+    """Regression: v1 binarized every game against the mean of the 20 most
+    RECENT games, so future performance changed the flags of past games.
+    For a strictly increasing series, every flagged game beats the average
+    of its prior games, so all flags must be 1.0 (v1 flagged early games 0)."""
+    from alpha.engines.sports.correlation import CorrelationEngine
+
+    dated = [(f"2026-01-{i:02d}", float(i)) for i in range(1, 31)]  # 1..30 rising
+    flags = CorrelationEngine._binarize_trailing(dated)
+    assert flags, "expected flags after the minimum-history warmup"
+    assert all(v == 1.0 for v in flags.values())
+    # The warmup games themselves must not be flagged at all
+    assert "2026-01-01" not in flags
+
+
+def test_binarize_trailing_requires_min_history():
+    """Games before the minimum prior-game count emit no flag."""
+    from alpha.engines.sports.correlation import CorrelationEngine
+
+    dated = [(f"2026-01-{i:02d}", 10.0) for i in range(1, 9)]  # only 8 games
+    assert CorrelationEngine._binarize_trailing(dated) == {}
 
 
 def test_adjust_joint_positive_r_increases_above_product(engine):

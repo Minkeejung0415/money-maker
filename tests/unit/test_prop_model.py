@@ -244,3 +244,23 @@ def test_zip_used_for_sf_not_pg(model):
     assert result_pg is not None
     # SF uses ZIP with pi_zero>0 → lower P(over 1.5) than PG using plain Poisson
     assert result_sf["model_prob"] < result_pg["model_prob"]
+
+
+def test_model_prob_never_exceeds_confidence_cap(model):
+    """Regression: raw CDF tails produced 97-98% probabilities that graded
+    out near coin-flip.  Emitted probability is hard-capped at _MAX_PROP_CONF
+    in both tails until graded data justifies more."""
+    from alpha.engines.sports.prop_model import _MAX_PROP_CONF
+
+    # 40-point-per-game player against an 8.5 line -> raw p_over ~ 0.99+
+    rows = _make_log_rows([40.0, 42.0, 38.0, 41.0, 39.0] * 4)
+    with _patch_logs(rows), _patch_def_ratings():
+        over = model.predict_prop("Test Player", "player_points", 8.5, "Boston Celtics")
+    assert over is not None
+    assert over["model_prob"] <= _MAX_PROP_CONF
+
+    # Mirror case: same player against an absurdly high line -> capped floor
+    with _patch_logs(rows), _patch_def_ratings():
+        under = model.predict_prop("Test Player", "player_points", 75.5, "Boston Celtics")
+    assert under is not None
+    assert under["model_prob"] >= 1.0 - _MAX_PROP_CONF

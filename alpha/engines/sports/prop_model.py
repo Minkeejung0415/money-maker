@@ -62,6 +62,14 @@ _MARKET_COL: dict[str, str] = {
 
 _MIN_MINUTES: int = 20
 _MIN_GAMES: int = 5
+
+# Hard cap on emitted probability (both tails).  The Poisson/neg-binomial
+# CDFs around a point projection understate real game variance (minutes
+# volatility, blowout benching, role changes), so raw tail probabilities of
+# 95%+ are not trustworthy.  Mirrors the MLB model's MAX_XGB_CONF guardrail.
+# Raise only when graded prediction-log data shows >0.90 buckets are
+# actually calibrated (see scripts/grade_predictions.py).
+_MAX_PROP_CONF: float = 0.90
 _NBA_API_SLEEP: float = 0.3          # reduced from 0.6 — nba_api handles this fine
 _LEAGUE_AVG_DEF_RTG: float = 112.0
 _CACHE_DIR: Path = Path("data/.prop_cache")
@@ -268,6 +276,11 @@ class PropModel:
 
         # Temperature calibration: reduces overconfidence (T=0.75 per research)
         p_over = self._apply_temperature_scaling(p_over)
+
+        # Confidence cap: never emit a probability more extreme than the
+        # calibration evidence supports (symmetric so UNDER legs derived as
+        # 1 - p_over are capped identically).
+        p_over = float(np.clip(p_over, 1.0 - _MAX_PROP_CONF, _MAX_PROP_CONF))
 
         market_implied = self._american_to_novig(over_odds, under_odds)
         confidence = self._classify_confidence(p_over, market_implied)

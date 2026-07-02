@@ -376,6 +376,7 @@ def main() -> None:
         player_team_map = _stats_cache_step3.fetch_player_team_map()
 
         model = PropModel(stats_cache=_stats_cache_step3)
+        games_by_event = {g.get("event_id", ""): g for g in games}
         seen_players: set[str] = set()
         done = 0
         traded_warnings: list[str] = []
@@ -387,7 +388,31 @@ def main() -> None:
                 seen_players.add(player)
                 done += 1
                 print(f"\r    Fetching: {done}/{unique_players} players ({player[:30]})    ", end="", flush=True)
-            opponent = raw.get("away_team", "")
+
+            # Resolve the player's real opponent: away players face the HOME
+            # team.  (This previously always used away_team, so every away
+            # player's projection was adjusted against their own defense.)
+            home_team = raw.get("home_team", "")
+            away_team = raw.get("away_team", "")
+            player_team = player_team_map.get(player.lower(), "")
+            if player_team and player_team == home_team:
+                opponent, is_home = away_team, True
+            elif player_team and player_team == away_team:
+                opponent, is_home = home_team, False
+            else:
+                # Unknown team — keep the legacy home-player assumption but
+                # leave is_home unset so venue-dependent paths fail closed.
+                opponent, is_home = away_team, None
+
+            # Player's team win prob feeds the blowout confidence gate.
+            game_rec = games_by_event.get(raw.get("event_id", ""), {})
+            if is_home is True:
+                team_win_prob = float(game_rec.get("home_model_prob") or 0.5)
+            elif is_home is False:
+                team_win_prob = float(game_rec.get("away_model_prob") or 0.5)
+            else:
+                team_win_prob = 0.5
+
             result = model.predict_prop(
                 player_name=raw["player"],
                 market=raw["market"],
@@ -395,6 +420,9 @@ def main() -> None:
                 opponent_team=opponent,
                 over_odds=raw.get("over_odds", -110),
                 under_odds=raw.get("under_odds"),
+                team_win_prob=team_win_prob,
+                player_team=player_team,
+                is_home=is_home,
             )
             if result is None:
                 skipped_insufficient += 1
@@ -409,7 +437,7 @@ def main() -> None:
                 continue
 
             # Resolve player's actual current team (fall back to home_team if unknown)
-            actual_team = player_team_map.get(player.lower(), raw.get("home_team", ""))
+            actual_team = player_team or raw.get("home_team", "")
 
             if result.get("recent_trade"):
                 traded_warnings.append(
@@ -544,17 +572,21 @@ def main() -> None:
             pre_count = len(scored_legs)
             prop_dicts = []
             for leg in scored_legs:
+                # Away players face the home team, not their own.
+                opponent = (leg.home_team if leg.player_team == leg.away_team
+                            else leg.away_team)
                 prop_dicts.append({
                     "player": leg.player,
                     "market": leg.market,
                     "line": leg.line,
                     "model_prob": leg.model_prob,
                     "over_odds": leg.over_odds,
-                    "opponent_team": leg.away_team,
+                    "opponent_team": opponent,
                     "event_id": leg.event_id,
                     "home_team": leg.home_team,
                     "away_team": leg.away_team,
                     "confidence": leg.confidence,
+                    "player_team": leg.player_team,
                 })
 
             result_box: list = []
@@ -592,7 +624,7 @@ def main() -> None:
                             home_team=cs["home_team"],
                             away_team=cs["away_team"],
                             confidence=cs["confidence"],
-                            player_team=cs.get("home_team", ""),
+                            player_team=cs.get("player_team", ""),
                         ))
 
                 filtered_count = pre_count - len(adjusted_legs)

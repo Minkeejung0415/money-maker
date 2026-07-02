@@ -239,6 +239,51 @@ one "validation" hook was inert (#1).
 5. Live odds feed for soccer/WC (paid tier or alternate book API) to retire
    the manual override file.
 
+## Addendum 2026-07-02 — probability-only operation (no odds feed)
+
+Operator direction: there is no sportsbook odds source, so edge/EV/Kelly
+output is secondary; the system's job is emitting CORRECT probabilities.
+Under that framing the following pure-probability fixes were implemented:
+
+- **#6 Correlation engine — FIXED.** Vectors are now keyed and joined by
+  game date (never array index); pairs with < 10 shared dates return r=0;
+  each game is binarized against the trailing average of up to 20 strictly
+  earlier games (no future leakage). Cache moved to `.corr_cache_v2.pkl` so
+  stale v1 matrices cannot be reused. Regression tests: disjoint schedules
+  → r=0, offset schedules align on shared dates, rising series proves no
+  future leakage.
+- **Probability cap — ADDED.** `PropModel` now clips emitted probability to
+  [0.10, 0.90] (`_MAX_PROP_CONF`), symmetric so derived UNDER probabilities
+  are capped identically. Raise only when graded prediction-log buckets
+  above 0.90 prove calibrated.
+- **#9 + primary-path opponent bug — FIXED.** The scanner passed
+  `away_team` as every player's opponent, so away players' projections were
+  adjusted against their own team's defense. The player's team is now
+  resolved from the team map; opponent, `is_home`, `player_team`, and
+  `team_win_prob` are passed through. Side effects: the trained XGBoost
+  projection path (which requires explicit `is_home`) and the blowout
+  confidence gate (which requires `team_win_prob`) now actually engage at
+  runtime — previously both silently never fired from the scanner. The
+  context-evaluator path got the same opponent fix and no longer overwrites
+  `player_team` with `home_team`.
+
+Revised priority order without odds:
+
+1. Run the grading loop (`log_predictions.py` already logs every scanner
+   pick; run `scripts/grade_predictions.py` after each slate). Nothing else
+   can be calibrated until graded outcomes exist.
+2. Once ≥ several hundred graded picks exist: publish the reliability table
+   (`evaluation.py`), fit isotonic/temperature per market, and replace the
+   hard-coded T=0.75 and the 0.90 cap with fitted values.
+3. Rebase confidence tiers on calibrated probability + sample quality
+   (games used, recency, variance), not on gap vs a market prob that is a
+   constant 0.5 when odds are absent. Today, with no odds, every leg above
+   the 0.60 floor grades HIGH — the label carries no information.
+4. Known remaining gap: `scripts/sgp_scanner.py`'s prediction loop has no
+   pipeline-level test harness, so the opponent-resolution fix is covered
+   by reading, not by a test. A thin extraction of the leg-scoring loop
+   into a testable function is the cheapest way to lock it in.
+
 ## What was NOT changed and why
 
 - Confidence-tier inversion (#4) and prop calibration (#5): the right fix
