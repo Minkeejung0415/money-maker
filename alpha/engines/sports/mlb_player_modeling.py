@@ -62,9 +62,25 @@ ABSENCE_FEATURES = (
     "player_feature_missing_flag",
 )
 
+RUN_IMPACT_FEATURES = (
+    "starter_run_value_diff",
+    "lineup_run_value_diff",
+    "bullpen_run_value_diff",
+    "absence_run_value_diff",
+    "player_feature_missing_flag",
+)
+
+RUN_AGGREGATE_FEATURES = (
+    "player_run_value_diff",
+    "player_feature_missing_flag",
+)
+
 PLAYER_FEATURE_SETS: dict[str, tuple[str, ...]] = {
     "baseline_v1_3": BASELINE_FEATURES,
     "starter_only": BASELINE_FEATURES + STARTER_FEATURES,
+    "starter_run_offset": BASELINE_FEATURES + STARTER_FEATURES,
+    "run_components": BASELINE_FEATURES + RUN_IMPACT_FEATURES,
+    "run_aggregate": BASELINE_FEATURES + RUN_AGGREGATE_FEATURES,
     "starter_lineup": BASELINE_FEATURES + STARTER_FEATURES + LINEUP_FEATURES,
     "starter_lineup_bullpen": (
         BASELINE_FEATURES + STARTER_FEATURES + LINEUP_FEATURES + BULLPEN_FEATURES

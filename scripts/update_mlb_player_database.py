@@ -43,6 +43,11 @@ def _parse_args() -> argparse.Namespace:
         help="Fetch season player stats and general lineups from MLB Stats API",
     )
     parser.add_argument(
+        "--online-advanced",
+        action="store_true",
+        help="Fetch advanced player inputs from Baseball Savant, Baseball-Reference WAR, and MLB Stats API",
+    )
+    parser.add_argument(
         "--season",
         type=int,
         default=None,
@@ -64,14 +69,22 @@ def main() -> None:
         database_path = ROOT / database_path
 
     snapshot = load_database_snapshot(database_path)
-    online = _fetch_online_statsapi(args.date, args.season, args.lineup_size) if args.online_statsapi else {
-        "batters": [],
-        "pitchers": [],
-        "bullpen": [],
-        "lineups": [],
-        "absences": [],
-    }
-    source = "mlb_statsapi_general_lineup" if args.online_statsapi else args.source
+    if args.online_advanced:
+        online = _fetch_online_advanced(args.date, args.season, args.lineup_size)
+        snapshot = _drop_online_rows_for_date(snapshot, args.date)
+        source = "mlb_online_advanced"
+    elif args.online_statsapi:
+        online = _fetch_online_statsapi(args.date, args.season, args.lineup_size)
+        source = "mlb_statsapi_general_lineup"
+    else:
+        online = {
+            "batters": [],
+            "pitchers": [],
+            "bullpen": [],
+            "lineups": [],
+            "absences": [],
+        }
+        source = args.source
 
     updated = update_database_snapshot(
         snapshot,
@@ -118,6 +131,22 @@ def _read_optional(path: str | None) -> list[dict]:
     return read_rows_csv(input_path)
 
 
+def _drop_online_rows_for_date(snapshot: dict, target_date: str) -> dict:
+    online_sources = {"mlb_statsapi_general_lineup", "mlb_online_advanced"}
+    result = dict(snapshot)
+    result["components"] = dict(result.get("components") or {})
+    for name, rows in list(result["components"].items()):
+        kept = []
+        for row in rows or []:
+            row_source = str(row.get("source") or "")
+            row_date = str(row.get("game_date") or row.get("date") or row.get("as_of") or "")
+            if row_source in online_sources and row_date[:10] == target_date:
+                continue
+            kept.append(row)
+        result["components"][name] = kept
+    return result
+
+
 def _fetch_online_statsapi(target_date: str, season: int | None, lineup_size: int) -> dict[str, list[dict]]:
     import requests  # noqa: PLC0415
 
@@ -134,6 +163,30 @@ def _fetch_online_statsapi(target_date: str, season: int | None, lineup_size: in
     return {
         "batters": [row for row in batters if row],
         "pitchers": [row for row in pitchers if row],
+        "bullpen": bullpen,
+        "lineups": lineups,
+        "absences": [],
+    }
+
+
+def _fetch_online_advanced(target_date: str, season: int | None, lineup_size: int) -> dict[str, list[dict]]:
+    import requests  # noqa: PLC0415
+
+    from alpha.data.ingestion.mlb_stats import (  # noqa: PLC0415
+        get_advanced_batter_stats,
+        get_advanced_bullpen_stats,
+        get_advanced_pitcher_stats,
+    )
+
+    selected_season = season or date.fromisoformat(target_date).year
+    games = _statsapi_schedule_games(requests, target_date)
+    batters = get_advanced_batter_stats(selected_season)
+    pitchers = get_advanced_pitcher_stats(selected_season)
+    bullpen = get_advanced_bullpen_stats(selected_season)
+    lineups = _general_lineup_rows_from_players(batters, games, target_date, lineup_size)
+    return {
+        "batters": batters,
+        "pitchers": pitchers,
         "bullpen": bullpen,
         "lineups": lineups,
         "absences": [],
@@ -291,6 +344,44 @@ def _general_lineup_rows(
             "player": _player_name(split),
             "team": team,
             "pa": _num(stat, "plateAppearances"),
+        })
+
+    rows: list[dict] = []
+    for game in games:
+        game_id = str(game.get("gamePk") or "")
+        teams = game.get("teams") or {}
+        for side in ("home", "away"):
+            team = ((teams.get(side) or {}).get("team") or {}).get("name") or ""
+            for slot, player in enumerate(_top_lineup(by_team.get(team, []), lineup_size), start=1):
+                rows.append({
+                    "game_id": game_id,
+                    "player_id": player.get("player_id", ""),
+                    "player": player.get("player", ""),
+                    "team": team,
+                    "side": side,
+                    "date": target_date,
+                    "order": slot,
+                    "confirmed": "false",
+                })
+    return rows
+
+
+def _general_lineup_rows_from_players(
+    players: list[dict],
+    games: list[dict],
+    target_date: str,
+    lineup_size: int,
+) -> list[dict]:
+    by_team: dict[str, list[dict]] = defaultdict(list)
+    for player in players:
+        team = str(player.get("team") or "").strip()
+        if not team:
+            continue
+        by_team[team].append({
+            "player_id": player.get("player_id", ""),
+            "player": player.get("player", ""),
+            "team": team,
+            "pa": _num(player, "pa"),
         })
 
     rows: list[dict] = []

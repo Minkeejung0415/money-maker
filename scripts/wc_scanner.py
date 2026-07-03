@@ -440,11 +440,14 @@ def main() -> None:
         if args.shadow_model != "none":
             print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
         for game in enriched:
+            recommendation = _wc_90m_recommendation(game) if args.include_draw_90 else None
+            rec_text = f" | rec={recommendation['label']}" if recommendation else ""
             print(
                 f"  {game['home_team']} vs {game['away_team']} | "
                 f"H/D/A {game['win_prob']:.1%}/{game['draw_prob']:.1%}/{game['loss_prob']:.1%} | "
                 f"market={game.get('market_type', market_label)} | "
                 f"model={game.get('model_name', model_choice)}"
+                f"{rec_text}"
             )
         print("\nIndividual-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
         return
@@ -635,6 +638,48 @@ def _resolve_artifact_file(meta_path_str: str, metadata: dict) -> str:
     if not meta_path.is_absolute():
         meta_path = ROOT / meta_path
     return str(meta_path.parent / artifact_path)
+
+
+def _wc_90m_recommendation(game: dict) -> dict:
+    """Return a conservative 90-minute recommendation from WC bucket tests."""
+    home = game["home_team"]
+    away = game["away_team"]
+    p_home = float(game.get("win_prob", 0.0))
+    p_draw = float(game.get("draw_prob", 0.0))
+    p_away = float(game.get("loss_prob", 0.0))
+
+    if p_home >= p_away:
+        team = home
+        win_prob = p_home
+        dc_prob = p_home + p_draw
+        dc_label = f"{home} or Draw"
+    else:
+        team = away
+        win_prob = p_away
+        dc_prob = p_away + p_draw
+        dc_label = f"{away} or Draw"
+
+    if win_prob >= 0.70:
+        return {
+            "type": "WIN",
+            "label": f"WIN {team} model={win_prob:.1%} fair={_american_odds(win_prob)}",
+        }
+    if win_prob >= 0.35 and dc_prob >= 0.60:
+        return {
+            "type": "DOUBLE_CHANCE",
+            "label": f"DOUBLE_CHANCE {dc_label} model={dc_prob:.1%} fair={_american_odds(dc_prob)}",
+        }
+    return {
+        "type": "PASS",
+        "label": f"PASS best_win={win_prob:.1%} best_dc={dc_prob:.1%}",
+    }
+
+
+def _american_odds(probability: float) -> str:
+    p = max(1e-6, min(1.0 - 1e-6, float(probability)))
+    if p >= 0.5:
+        return f"{int(round(-100.0 * p / (1.0 - p)))}"
+    return f"+{int(round(100.0 * (1.0 - p) / p))}"
 
 
 def _print_game_props(

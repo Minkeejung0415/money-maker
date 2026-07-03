@@ -362,6 +362,10 @@ class MLBModel:
         version = str(bundle.get("model_version") or bundle.get("schema_version") or PLAYER_AWARE_VERSION)
         feature_set = str((bundle.get("candidate") or {}).get("feature_set") or "")
         if version == "mlb-player-v2.3":
+            if feature_set == "starter_run_offset":
+                return "v2.3 starter-run offset"
+            if feature_set == "run_impact":
+                return "v2.3 run-impact player-aware"
             if feature_set == "starter_lineup_bullpen":
                 return "v2.3 player-aware lineup/bullpen"
             if feature_set == "full_player_aware":
@@ -437,21 +441,26 @@ class MLBModel:
         """
         Apply a small labeled context adjustment for features not in the active artifact.
 
-        The v1.8 promoted artifact is starter-only. General lineup, bullpen, and
-        absence features can arrive from the local player database before a
-        retrained artifact exists, so we use a capped logit shift instead of
-        pretending those columns were learned by the artifact.
+        General player run-impact features can arrive from the local player
+        database before a retrained artifact exists, so we use a capped logit
+        shift instead of pretending those columns were learned by the artifact.
+        Current walk-forward diagnostics support starter run impact as a small
+        residual adjustment; lineup and bullpen remain disabled until absences
+        and workload/rest are real.
         """
         features = game.get("player_features") or {}
+        offset_config = self._player_bundle.get("offset_config") if self._player_bundle else None
+        if not offset_config:
+            return home_prob, 0.0
         shift = 0.0
-        if "lineup_strength_diff" not in trained_features:
-            shift += 0.35 * float(features.get("lineup_strength_diff") or 0.0)
-            shift += 0.20 * float(features.get("top_order_strength_diff") or 0.0)
-        if "bullpen_quality_diff" not in trained_features:
-            shift += 0.15 * float(features.get("bullpen_quality_diff") or 0.0)
-        if "absence_value_diff" not in trained_features:
-            shift -= 0.20 * float(features.get("absence_value_diff") or 0.0)
-
+        feature = str(offset_config.get("feature") or "")
+        beta = float(offset_config.get("beta") or 0.0)
+        cap = float(offset_config.get("cap") or 0.0)
+        if feature and beta and feature not in trained_features:
+            value = float(features.get(feature) or 0.0)
+            if cap > 0.0:
+                value = max(-cap, min(cap, value))
+            shift += beta * value
         shift = max(-0.10, min(0.10, shift))
         if abs(shift) < 1e-9:
             return home_prob, 0.0
@@ -534,9 +543,15 @@ class MLBModel:
         features = game.get("player_features") or game
         keys = (
             "sp_quality_diff",
+            "starter_run_value_diff",
             "lineup_strength_diff",
+            "lineup_run_value_diff",
+            "top_order_run_value_diff",
             "bullpen_quality_diff",
+            "bullpen_run_value_diff",
             "absence_value_diff",
+            "absence_run_value_diff",
+            "player_run_value_diff",
             "lineup_missing_count_total",
             "player_feature_missing_flag",
             "player_source_confidence",

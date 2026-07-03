@@ -42,6 +42,9 @@ def _rows(n: int = 36) -> list[dict]:
                 "sp_workload_diff": -signal * 4.0,
                 "home_sp_rest_days": 5.0 + signal,
                 "away_sp_rest_days": 5.0 - signal,
+                "home_starter_run_value": signal * 0.4,
+                "away_starter_run_value": -signal * 0.4,
+                "starter_run_value_diff": signal * 0.8,
                 "home_sp_missing": 0.0,
                 "away_sp_missing": 0.0,
                 "home_lineup_strength": 0.330 + signal * 0.020,
@@ -50,6 +53,12 @@ def _rows(n: int = 36) -> list[dict]:
                 "home_top_order_strength": 0.360 + signal * 0.020,
                 "away_top_order_strength": 0.360 - signal * 0.020,
                 "top_order_strength_diff": signal * 0.040,
+                "home_lineup_run_value": signal * 0.2,
+                "away_lineup_run_value": -signal * 0.2,
+                "lineup_run_value_diff": signal * 0.4,
+                "home_top_order_run_value": signal * 0.12,
+                "away_top_order_run_value": -signal * 0.12,
+                "top_order_run_value_diff": signal * 0.24,
                 "home_lineup_lefty_share": 0.44,
                 "away_lineup_lefty_share": 0.33,
                 "home_lineup_missing_count": 0.0,
@@ -63,13 +72,20 @@ def _rows(n: int = 36) -> list[dict]:
                 "home_bp_quality": 2.0 + signal,
                 "away_bp_quality": 2.0 - signal,
                 "bullpen_quality_diff": signal * 2.0,
+                "home_bullpen_run_value": signal * 0.05,
+                "away_bullpen_run_value": -signal * 0.05,
+                "bullpen_run_value_diff": signal * 0.1,
                 "home_bp_missing": 0.0,
                 "away_bp_missing": 0.0,
                 "home_absence_value": 0.0 if home_win else 0.2,
                 "away_absence_value": 0.2 if home_win else 0.0,
                 "absence_value_diff": -signal * 0.2,
+                "home_absence_run_value": 0.0 if home_win else 0.1,
+                "away_absence_run_value": 0.1 if home_win else 0.0,
+                "absence_run_value_diff": -signal * 0.1,
                 "home_absence_count": 0.0 if home_win else 1.0,
                 "away_absence_count": 1.0 if home_win else 0.0,
+                "player_run_value_diff": signal * 1.2,
                 "player_feature_missing_flag": 0.0,
             }
         )
@@ -81,12 +97,18 @@ def test_feature_sets_include_expected_ablations_and_baseline_schema():
     assert list(PLAYER_FEATURE_SETS) == [
         "baseline_v1_3",
         "starter_only",
+        "starter_run_offset",
+        "run_components",
+        "run_aggregate",
         "starter_lineup",
         "starter_lineup_bullpen",
         "full_player_aware",
     ]
     assert PLAYER_FEATURE_SETS["baseline_v1_3"] == FEATURE_NAMES
     assert "home_sp_quality" in PLAYER_FEATURE_SETS["starter_only"]
+    assert PLAYER_FEATURE_SETS["starter_run_offset"] == PLAYER_FEATURE_SETS["starter_only"]
+    assert "starter_run_value_diff" in PLAYER_FEATURE_SETS["run_components"]
+    assert "player_run_value_diff" in PLAYER_FEATURE_SETS["run_aggregate"]
     assert "lineup_strength_diff" in PLAYER_FEATURE_SETS["starter_lineup"]
     assert "bullpen_quality_diff" in PLAYER_FEATURE_SETS["starter_lineup_bullpen"]
     assert "absence_value_diff" in PLAYER_FEATURE_SETS["full_player_aware"]

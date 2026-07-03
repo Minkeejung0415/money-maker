@@ -113,7 +113,45 @@ def test_valid_player_aware_artifact_scores_precomputed_features(tmp_path, monke
     assert model.runtime_report()["selective_report"]["brier_score"] == 0.22
 
 
-def test_starter_only_artifact_gets_capped_runtime_lineup_adjustment(tmp_path, monkeypatch):
+def test_starter_only_artifact_gets_capped_runtime_starter_run_adjustment(tmp_path, monkeypatch):
+    path = tmp_path / "mlb_player_moneyline.pkl"
+    joblib.dump(
+        _valid_player_artifact(
+            schema_version="mlb-player-v2.3",
+            model_version="mlb-player-v2.3",
+            candidate={"feature_set": "starter_run_offset", "model": "starter_only_logit_offset"},
+            feature_names=list(PLAYER_FEATURE_SETS["starter_only"]),
+            model=ConstantProbModel(0.50),
+            offset_config={
+                "model_id": "mlb_starter_offset_v23",
+                "base_model": "starter_only_logistic",
+                "feature": "starter_run_value_diff",
+                "beta": 0.08,
+                "cap": 0.75,
+            },
+        ),
+        path,
+    )
+    monkeypatch.setattr(MLBModel, "_find_model_paths", lambda self: [path])
+
+    model = MLBModel()
+    pred = model.predict({
+        "home_team": "NYY",
+        "away_team": "BOS",
+        "home_odds": -110,
+        "away_odds": -110,
+        "player_features": _player_features(
+            elo_diff=10.0,
+            starter_run_value_diff=0.50,
+            absence_value_diff=0.0,
+        ),
+    })
+
+    assert pred["home_win_prob"] > 0.50
+    assert pred["feature_context"]["runtime_context_adjustment"] > 0.0
+
+
+def test_starter_only_artifact_without_offset_config_does_not_adjust(tmp_path, monkeypatch):
     path = tmp_path / "mlb_player_moneyline.pkl"
     joblib.dump(
         _valid_player_artifact(
@@ -132,15 +170,12 @@ def test_starter_only_artifact_gets_capped_runtime_lineup_adjustment(tmp_path, m
         "away_odds": -110,
         "player_features": _player_features(
             elo_diff=10.0,
-            lineup_strength_diff=0.30,
-            top_order_strength_diff=0.20,
-            bullpen_quality_diff=0.10,
-            absence_value_diff=0.0,
+            starter_run_value_diff=0.50,
         ),
     })
 
-    assert pred["home_win_prob"] > 0.50
-    assert pred["feature_context"]["runtime_context_adjustment"] > 0.0
+    assert pred["home_win_prob"] == 0.50
+    assert "runtime_context_adjustment" not in pred["feature_context"]
 
 
 def test_full_player_artifact_does_not_double_count_lineup_adjustment(tmp_path, monkeypatch):

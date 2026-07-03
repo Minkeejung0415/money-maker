@@ -22,16 +22,16 @@ def _snapshot(updated_at: str = "2026-06-28T10:00:00+00:00") -> dict:
         "updated_at": updated_at,
         "components": {
             "batters": normalize_batter_rows([
-                {"player": "Home Bat", "team": "Home", "date": "2026-06-27", "h": 2, "ab": 4, "bb": 1, "tb": 5, "pa": 5},
-                {"player": "Away Bat", "team": "Away", "date": "2026-06-27", "h": 1, "ab": 4, "bb": 0, "tb": 1, "pa": 4},
+                {"player": "Home Bat", "team": "Home", "date": "2026-06-27", "war": 4.0, "xwoba": 0.390, "wrc_plus": 160, "lineup_spot": 1},
+                {"player": "Away Bat", "team": "Away", "date": "2026-06-27", "war": 2.0, "xwoba": 0.310, "wrc_plus": 95, "lineup_spot": 1},
             ]),
             "pitchers": normalize_pitcher_rows([
-                {"player": "Home Starter", "team": "Home", "date": "2026-06-27", "er": 1, "ip": "6.0", "h": 3, "bb": 1, "so": 7, "pit": 92},
-                {"player": "Away Starter", "team": "Away", "date": "2026-06-27", "er": 4, "ip": "5.0", "h": 7, "bb": 2, "so": 4, "pit": 88},
+                {"player": "Home Starter", "team": "Home", "date": "2026-06-27", "role": "SP", "war": 4.0, "xera": 2.80, "fip": 3.00, "k_bb_pct": 0.24, "rest_days": 5, "pitch_count_workload": 92},
+                {"player": "Away Starter", "team": "Away", "date": "2026-06-27", "role": "SP", "war": 1.0, "xera": 4.80, "fip": 4.90, "k_bb_pct": 0.10, "rest_days": 5, "pitch_count_workload": 88},
             ]),
             "bullpen": normalize_bullpen_rows([
-                {"team": "Home", "date": "2026-06-27", "er": 1, "ip": "3.0", "pit": 40},
-                {"team": "Away", "date": "2026-06-27", "er": 3, "ip": "3.0", "pit": 61},
+                {"team": "Home", "date": "2026-06-27", "xera": 3.00, "fip": 3.20, "k_bb_pct": 0.22, "pitch_count_workload": 40},
+                {"team": "Away", "date": "2026-06-27", "xera": 4.90, "fip": 5.10, "k_bb_pct": 0.10, "pitch_count_workload": 61},
             ]),
             "lineups": normalize_lineup_rows([
                 {"game_id": "g1", "player": "Home Bat", "team": "Home", "date": "2026-06-28", "order": 1, "confirmed": "true", "bats": "L"},

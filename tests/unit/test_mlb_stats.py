@@ -10,6 +10,9 @@ import pandas as pd
 import pytest
 
 from alpha.data.ingestion.mlb_stats import (
+    get_advanced_batter_stats,
+    get_advanced_bullpen_stats,
+    get_advanced_pitcher_stats,
     get_batter_stats,
     get_pitcher_stats,
     get_probable_pitchers,
@@ -127,6 +130,125 @@ def test_pitcher_stats_parses_dataframe(monkeypatch, tmp_path):
     assert result[0]["player"] == "Gerrit Cole"
     assert result[0]["era"] == pytest.approx(2.80)
     assert result[0]["k_per9"] == pytest.approx(200 / 200 * 9)
+
+
+def test_advanced_batter_stats_combines_savant_xwoba_and_war(monkeypatch, tmp_path):
+    monkeypatch.setattr("alpha.data.ingestion.mlb_stats._CACHE_DIR", tmp_path)
+    savant = pd.DataFrame([{
+        "last_name, first_name": "Judge, Aaron",
+        "player_id": 592450,
+        "pa": 100,
+        "est_woba": 0.430,
+    }])
+    bwar = pd.DataFrame([{
+        "name_common": "Aaron Judge",
+        "mlb_ID": 592450,
+        "year_ID": 2026,
+        "team_ID": "NYY",
+        "PA": 100,
+        "WAR": 5.4,
+    }])
+    with patch("pybaseball.statcast_batter_expected_stats", return_value=savant), \
+         patch("pybaseball.bwar_bat", return_value=bwar):
+        result = get_advanced_batter_stats(2026, min_pa=20)
+    assert result[0]["player"] == "Aaron Judge"
+    assert result[0]["team"] == "New York Yankees"
+    assert result[0]["xwoba"] == pytest.approx(0.430)
+    assert result[0]["war"] == pytest.approx(5.4)
+    assert result[0]["wrc_plus"] == 0.0
+
+
+def test_advanced_pitcher_stats_combines_xera_war_and_derived_components(monkeypatch, tmp_path):
+    monkeypatch.setattr("alpha.data.ingestion.mlb_stats._CACHE_DIR", tmp_path)
+    savant = pd.DataFrame([{
+        "last_name, first_name": "Cole, Gerrit",
+        "player_id": 543037,
+        "pa": 120,
+        "xera": 3.10,
+    }])
+    bwar = pd.DataFrame([{
+        "name_common": "Gerrit Cole",
+        "mlb_ID": 543037,
+        "year_ID": 2026,
+        "team_ID": "NYY",
+        "GS": 4,
+        "WAR": 1.2,
+    }])
+    stats_response = MagicMock()
+    stats_response.raise_for_status.return_value = None
+    stats_response.json.return_value = {
+        "stats": [{
+            "splits": [{
+                "player": {"id": 543037, "fullName": "Gerrit Cole"},
+                "team": {"name": "New York Yankees"},
+                "stat": {
+                    "inningsPitched": "20.0",
+                    "baseOnBalls": 5,
+                    "hitByPitch": 1,
+                    "strikeOuts": 30,
+                    "homeRuns": 2,
+                    "battersFaced": 80,
+                    "gamesStarted": 4,
+                    "games": 4,
+                },
+            }],
+        }],
+    }
+    with patch("pybaseball.statcast_pitcher_expected_stats", return_value=savant), \
+         patch("pybaseball.bwar_pitch", return_value=bwar), \
+         patch("requests.get", return_value=stats_response):
+        result = get_advanced_pitcher_stats(2026, min_bf=20)
+    assert result[0]["player"] == "Gerrit Cole"
+    assert result[0]["team"] == "New York Yankees"
+    assert result[0]["xera"] == pytest.approx(3.10)
+    assert result[0]["war"] == pytest.approx(1.2)
+    assert result[0]["k_bb_pct"] == pytest.approx((30 - 5) / 80)
+    assert result[0]["projected_innings"] == pytest.approx(5.0)
+
+
+def test_advanced_bullpen_stats_groups_relievers(monkeypatch, tmp_path):
+    monkeypatch.setattr("alpha.data.ingestion.mlb_stats._CACHE_DIR", tmp_path)
+    stats_response = MagicMock()
+    stats_response.raise_for_status.return_value = None
+    stats_response.json.return_value = {
+        "stats": [{
+            "splits": [
+                {
+                    "player": {"id": 1, "fullName": "Reliever One"},
+                    "team": {"name": "New York Yankees"},
+                    "stat": {
+                        "inningsPitched": "10.0",
+                        "baseOnBalls": 2,
+                        "hitByPitch": 0,
+                        "strikeOuts": 15,
+                        "homeRuns": 1,
+                        "battersFaced": 40,
+                        "gamesStarted": 0,
+                        "games": 10,
+                    },
+                },
+                {
+                    "player": {"id": 2, "fullName": "Starter One"},
+                    "team": {"name": "New York Yankees"},
+                    "stat": {
+                        "inningsPitched": "20.0",
+                        "baseOnBalls": 4,
+                        "hitByPitch": 0,
+                        "strikeOuts": 20,
+                        "homeRuns": 2,
+                        "battersFaced": 80,
+                        "gamesStarted": 4,
+                        "games": 4,
+                    },
+                },
+            ],
+        }],
+    }
+    with patch("requests.get", return_value=stats_response):
+        result = get_advanced_bullpen_stats(2026)
+    assert len(result) == 1
+    assert result[0]["team"] == "New York Yankees"
+    assert result[0]["k_bb_pct"] == pytest.approx((15 - 2) / 40)
 
 
 # ---------------------------------------------------------------------------

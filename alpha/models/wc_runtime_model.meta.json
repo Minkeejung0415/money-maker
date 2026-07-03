@@ -4,8 +4,8 @@
   "artifact_path": "wc_international_1x2.pkl",
   "brier": 0.5164653057240389,
   "calibration": "multinomial_logistic_intrinsic",
-  "created_at": "2026-06-29T18:48:09.947383+00:00",
-  "dataset_fingerprint": "11f20355ad263d4015e6d2c84318dae4c55f50760e55466eeb78f8e782c45d86",
+  "created_at": "2026-07-02T17:50:17.485760+00:00",
+  "dataset_fingerprint": "37eb15545809e68a1d3a2eb08d46793b371b20a2f72a9c19fa706ea094a22f5f",
   "feature_schema_hash": "a599fefee6262829c41654dc8f321840e4e1add8373458805822722902c315c6",
   "included_tournaments": [
     "FIFA World Cup",
