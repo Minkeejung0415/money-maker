@@ -100,6 +100,17 @@ Examples:
         help="Log a challenger model beside active picks without affecting rankings",
     )
     parser.add_argument(
+        "--route-offset-mode",
+        choices=["off", "shadow", "promoted"],
+        default="shadow",
+        help="Route-xG offset mode: off, shadow diagnostics, or promoted/apply if eligible",
+    )
+    parser.add_argument(
+        "--route-offset-file",
+        default=str(ROOT / "data" / "wc_route_offsets.json"),
+        help="Projected-XI route-offset snapshot JSON",
+    )
+    parser.add_argument(
         "--allow-fallback",
         action="store_true",
         help="Allow auto/player artifact failures to fall back to Elo with explicit labels",
@@ -178,6 +189,7 @@ def main() -> None:
     from alpha.engines.sports.wc_model import WCMatchModel
     from alpha.engines.sports.wc_trained_model import WCTrainedInternationalModel
     from alpha.engines.sports.wc_goal_markets import WCScorelineModel
+    from alpha.engines.sports.wc_route_offsets import WCRouteOffsetEngine
     from alpha.engines.sports.wc_sgp_builder import WCSGPBuilder
     from alpha.engines.sports.wc_tactical_matchup import compare_tactics
     from alpha.engines.sports.wc_tactical_calibration import load_artifact
@@ -296,6 +308,8 @@ def main() -> None:
                   f"artifact_path={args.artifact_meta}")
         if args.shadow_model != "none":
             print(f"  shadow_model={args.shadow_model} shadow_affects_picks=false")
+        print(f"  route_offset_mode={args.route_offset_mode} "
+              f"route_offset_file={args.route_offset_file}")
 
     recent_client = WCRecentFormClient() if args.mode == "sgp" else None
     tactics_client = WCTacticsClient() if args.mode == "sgp" else None
@@ -305,6 +319,12 @@ def main() -> None:
     if recent_client:
         print("  Loading recent last-10 international form and Elo for every team...")
         print(f"  Tactical calibration: {artifact_status['status']} ({artifact_status['reason']})")
+    route_engine = (
+        None
+        if args.route_offset_mode == "off"
+        else WCRouteOffsetEngine.from_file(args.route_offset_file)
+    )
+    scoreline_model = WCScorelineModel(getattr(wc_model, "_wc_stats", {}))
 
     enriched: list[dict] = []
     shadow_rows: list[dict] = []
@@ -398,6 +418,8 @@ def main() -> None:
             game["active_model"] = model_choice
             game["fallback_used"] = fallback_used
             game["fallback_reason"] = fallback_reason
+            if route_engine is not None:
+                _attach_route_offset(game, route_engine, scoreline_model, args.route_offset_mode)
             game["market_type"] = "90_minute" if args.include_draw_90 else (
                 "advance" if game.get("knockout") else "90_minute"
             )
@@ -439,6 +461,9 @@ def main() -> None:
               f"fallback_reason={fallback_reason or 'none'}")
         if args.shadow_model != "none":
             print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
+        if args.route_offset_mode != "off":
+            print(f"route_offset_mode={args.route_offset_mode} "
+                  f"route_offset_affects_picks={str(args.route_offset_mode == 'promoted').lower()}")
         for game in enriched:
             recommendation = _wc_90m_recommendation(game) if args.include_draw_90 else None
             rec_text = f" | rec={recommendation['label']}" if recommendation else ""
@@ -449,6 +474,7 @@ def main() -> None:
                 f"model={game.get('model_name', model_choice)}"
                 f"{rec_text}"
             )
+            _print_route_offset_line(game)
         print("\nIndividual-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
         return
 
@@ -490,6 +516,9 @@ def main() -> None:
           f"fallback_reason={fallback_reason or 'none'}")
     if args.shadow_model != "none":
         print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
+    if args.route_offset_mode != "off":
+        print(f"route_offset_mode={args.route_offset_mode} "
+              f"route_offset_affects_picks={str(args.route_offset_mode == 'promoted').lower()}")
     print(f"{'='*65}")
 
     if args.mode == "sgp" and results:
@@ -640,6 +669,95 @@ def _resolve_artifact_file(meta_path_str: str, metadata: dict) -> str:
     return str(meta_path.parent / artifact_path)
 
 
+def _attach_route_offset(game: dict, route_engine, scoreline_model, mode: str) -> None:
+    """Attach route-offset shadow diagnostics and optionally apply to scorelines."""
+    as_of = None
+    commence = str(game.get("commence_time", ""))
+    if commence:
+        try:
+            as_of = datetime.fromisoformat(commence.replace("Z", "+00:00"))
+        except ValueError:
+            as_of = None
+    result = route_engine.evaluate(game, as_of=as_of)
+    payload = result.as_dict()
+    apply_to_scoreline = mode == "promoted" and result.pick_eligible
+
+    baseline_distribution = scoreline_model.build({
+        **game,
+        "route_offset_apply": False,
+        "route_offset_recompute_wdl": False,
+    })
+    adjusted_distribution = scoreline_model.build({
+        **game,
+        "route_offset": payload,
+        "route_offset_apply": True,
+        "route_offset_recompute_wdl": True,
+    })
+    payload["baseline_lambdas"] = {
+        "home": round(baseline_distribution.home_lambda, 4),
+        "away": round(baseline_distribution.away_lambda, 4),
+    }
+    payload["adjusted_lambdas"] = {
+        "home": round(adjusted_distribution.home_lambda, 4),
+        "away": round(adjusted_distribution.away_lambda, 4),
+    }
+    payload["shadow_probabilities"] = {
+        "home_win": round(adjusted_distribution.probability("home_win"), 4)
+        if adjusted_distribution.outcome_available else None,
+        "draw": round(adjusted_distribution.probability("draw"), 4)
+        if adjusted_distribution.outcome_available else None,
+        "away_win": round(adjusted_distribution.probability("away_win"), 4)
+        if adjusted_distribution.outcome_available else None,
+        "over_2_5": round(adjusted_distribution.probability("over_2_5"), 4),
+        "under_2_5": round(adjusted_distribution.probability("under_2_5"), 4),
+        "btts_yes": round(adjusted_distribution.probability("btts_yes"), 4),
+        "btts_no": round(adjusted_distribution.probability("btts_no"), 4),
+    }
+    payload["baseline_probabilities"] = {
+        "home_win": round(baseline_distribution.probability("home_win"), 4)
+        if baseline_distribution.outcome_available else None,
+        "draw": round(baseline_distribution.probability("draw"), 4)
+        if baseline_distribution.outcome_available else None,
+        "away_win": round(baseline_distribution.probability("away_win"), 4)
+        if baseline_distribution.outcome_available else None,
+        "over_2_5": round(baseline_distribution.probability("over_2_5"), 4),
+        "under_2_5": round(baseline_distribution.probability("under_2_5"), 4),
+        "btts_yes": round(baseline_distribution.probability("btts_yes"), 4),
+        "btts_no": round(baseline_distribution.probability("btts_no"), 4),
+    }
+    payload["mode"] = mode
+    payload["applied_to_picks"] = apply_to_scoreline
+
+    game["route_offset"] = payload
+    game["route_offset_apply"] = apply_to_scoreline
+    game["route_offset_recompute_wdl"] = apply_to_scoreline
+    game["route_offset_pick_eligible"] = result.pick_eligible
+    if apply_to_scoreline and adjusted_distribution.outcome_available:
+        game["win_prob"] = round(adjusted_distribution.probability("home_win"), 4)
+        game["draw_prob"] = round(adjusted_distribution.probability("draw"), 4)
+        game["loss_prob"] = round(adjusted_distribution.probability("away_win"), 4)
+        game["model_name"] = f"{game.get('model_name', 'wc_model')}+route_offset"
+
+
+def _print_route_offset_line(game: dict) -> None:
+    payload = game.get("route_offset")
+    if not isinstance(payload, dict):
+        return
+    baseline = payload.get("baseline_lambdas", {})
+    adjusted = payload.get("adjusted_lambdas", {})
+    probs = payload.get("shadow_probabilities", {})
+    print(
+        "    route_offset "
+        f"status={payload.get('status')} reason={payload.get('reason')} "
+        f"eligible={str(payload.get('pick_eligible')).lower()} "
+        f"applied={str(payload.get('applied_to_picks')).lower()} "
+        f"xG {baseline.get('home', 0):.2f}/{baseline.get('away', 0):.2f}"
+        f" -> {adjusted.get('home', 0):.2f}/{adjusted.get('away', 0):.2f} "
+        f"O2.5={float(probs.get('over_2_5') or 0):.1%} "
+        f"BTTS={float(probs.get('btts_yes') or 0):.1%}"
+    )
+
+
 def _wc_90m_recommendation(game: dict) -> dict:
     """Return a conservative 90-minute recommendation from WC bucket tests."""
     home = game["home_team"]
@@ -701,6 +819,9 @@ def _print_game_props(
           f"fallback_reason={fallback_reason or 'none'}")
     if args.shadow_model != "none":
         print(f"shadow_model={args.shadow_model} shadow_affects_picks=false")
+    if args.route_offset_mode != "off":
+        print(f"route_offset_mode={args.route_offset_mode} "
+              f"route_offset_affects_picks={str(args.route_offset_mode == 'promoted').lower()}")
 
     for game in games:
         distribution = scoreline_model.build(game)
@@ -713,6 +834,7 @@ def _print_game_props(
         print(f"  BTTS No: {distribution.probability('btts_no'):.1%}")
         print(f"  xG mean: {game['home_team']} {distribution.home_lambda:.2f} | "
               f"{game['away_team']} {distribution.away_lambda:.2f}")
+        _print_route_offset_line(game)
 
     print("\nProps-only mode: skipped SGP/parlay building, edge, EV, and staking output.")
 

@@ -6,6 +6,7 @@ import math
 from typing import Mapping, Sequence
 
 from alpha.engines.sports.wc_model import KNOCKOUT_STAGES
+from alpha.engines.sports.wc_route_offsets import allocate_route_lambdas, apply_route_offsets
 
 _NEUTRAL_GOALS = 1.25
 _MIN_GOALS = 0.25
@@ -53,6 +54,10 @@ class WCScorelineDistribution:
     home_lambda: float
     away_lambda: float
     outcome_available: bool
+    baseline_home_lambda: float | None = None
+    baseline_away_lambda: float | None = None
+    route_lambdas: Mapping[str, Mapping[str, float]] | None = None
+    route_offset: Mapping[str, object] | None = None
 
     def probability(self, market: str) -> float:
         if market not in _MARKETS:
@@ -164,6 +169,15 @@ class WCScorelineModel:
             team_stats,
             float(game.get("elo_diff", 0.0)),
         )
+        baseline_home_lambda = home_lambda
+        baseline_away_lambda = away_lambda
+        route_offset = game.get("route_offset")
+        if game.get("route_offset_apply") is True and isinstance(route_offset, Mapping):
+            home_lambda, away_lambda = apply_route_offsets(
+                home_lambda,
+                away_lambda,
+                route_offset,
+            )
         cells = {
             (home_goals, away_goals): _poisson_probability(home_goals, home_lambda)
             * _poisson_probability(away_goals, away_lambda)
@@ -172,11 +186,15 @@ class WCScorelineModel:
         }
         cells = self._normalize(cells)
         outcome_available = str(game.get("stage", "GROUP_STAGE")) not in KNOCKOUT_STAGES
-        if outcome_available:
+        if outcome_available and game.get("route_offset_recompute_wdl") is not True:
             cells = self._calibrate_outcomes(cells, game)
         return WCScorelineDistribution(
             cells=cells,
             home_lambda=home_lambda,
             away_lambda=away_lambda,
             outcome_available=outcome_available,
+            baseline_home_lambda=baseline_home_lambda,
+            baseline_away_lambda=baseline_away_lambda,
+            route_lambdas=allocate_route_lambdas(home_lambda, away_lambda),
+            route_offset=route_offset if isinstance(route_offset, Mapping) else None,
         )

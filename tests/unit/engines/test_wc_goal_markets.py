@@ -61,6 +61,26 @@ def test_tactical_multipliers_adjust_both_goal_rates():
     assert adjusted.away_lambda < baseline.away_lambda
 
 
+def test_route_offset_can_recompute_scoreline_markets_without_recalibration():
+    baseline = WCScorelineModel(TEAM_STATS).build(_game())
+    adjusted = WCScorelineModel(TEAM_STATS).build(_game(
+        route_offset={
+            "total_delta": {"home": 0.18, "away": -0.10},
+            "route_deltas": {
+                "home": {"center": 0.0, "wing": 0.18, "set_piece": 0.0, "counterattack": 0.0},
+                "away": {"center": 0.0, "wing": -0.10, "set_piece": 0.0, "counterattack": 0.0},
+            },
+        },
+        route_offset_apply=True,
+        route_offset_recompute_wdl=True,
+    ))
+
+    assert adjusted.home_lambda > baseline.home_lambda
+    assert adjusted.away_lambda < baseline.away_lambda
+    assert adjusted.probability("home_win") != pytest.approx(0.55, abs=1e-3)
+    assert adjusted.probability("over_2_5") != pytest.approx(baseline.probability("over_2_5"))
+
+
 def test_missing_stats_use_neutral_bounded_fallback():
     distribution = WCScorelineModel({}).build(_game())
     assert 0.25 <= distribution.home_lambda <= 3.5

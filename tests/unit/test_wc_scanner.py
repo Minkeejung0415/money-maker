@@ -166,6 +166,18 @@ def test_parse_args_accepts_runtime_truth_flags():
     assert args.shadow_model == "hybrid"
 
 
+def test_parse_args_accepts_route_offset_flags():
+    from scripts.wc_scanner import _parse_args
+    with patch("sys.argv", [
+        "wc_scanner.py",
+        "--route-offset-mode", "promoted",
+        "--route-offset-file", "data/custom_route_offsets.json",
+    ]):
+        args = _parse_args()
+    assert args.route_offset_mode == "promoted"
+    assert args.route_offset_file == "data/custom_route_offsets.json"
+
+
 def test_parse_args_accepts_include_draw_90():
     from scripts.wc_scanner import _parse_args
     with patch("sys.argv", ["wc_scanner.py", "--include-draw-90"]):
@@ -317,6 +329,97 @@ def test_main_props_only_prints_game_props(capsys, tmp_path):
     assert "Over 2.5 goals" in output
     assert "BTTS Yes" in output
     assert "Building WC" not in output
+
+
+def test_main_route_offset_shadow_prints_diagnostics(capsys, tmp_path):
+    fixture_file = tmp_path / "fixtures.json"
+    fixture_file.write_text(
+        """
+        {"games": [{
+          "home_team": "Brazil",
+          "away_team": "Germany",
+          "league": "wc",
+          "event_id": "fixture-1",
+          "commence_time": "2026-07-03T12:00:00Z",
+          "stage": "GROUP_STAGE",
+          "home_odds": -110,
+          "away_odds": -110
+        }]}
+        """,
+        encoding="utf-8",
+    )
+    route_file = tmp_path / "route_offsets.json"
+    route_file.write_text(_route_offset_json("fixture-1"), encoding="utf-8")
+
+    from scripts.wc_scanner import main
+    with patch("sys.argv", [
+        "wc_scanner.py",
+        "--fixtures-file", str(fixture_file),
+        "--props-only",
+        "--route-offset-file", str(route_file),
+    ]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: {
+             **g,
+             "win_prob": 0.55,
+             "draw_prob": 0.25,
+             "loss_prob": 0.20,
+             "model_name": "wc_elo_logistic",
+             "elo_diff": 120.0,
+         }):
+        main()
+
+    output = capsys.readouterr().out
+    assert "route_offset_mode=shadow route_offset_affects_picks=false" in output
+    assert "route_offset status=shadow_ready" in output
+    assert "eligible=true applied=false" in output
+    assert "O2.5=" in output
+    assert "BTTS=" in output
+
+
+def test_main_route_offset_promoted_updates_model_label(capsys, tmp_path):
+    fixture_file = tmp_path / "fixtures.json"
+    fixture_file.write_text(
+        """
+        {"games": [{
+          "home_team": "Brazil",
+          "away_team": "Germany",
+          "league": "wc",
+          "event_id": "fixture-1",
+          "commence_time": "2026-07-03T12:00:00Z",
+          "stage": "GROUP_STAGE",
+          "home_odds": -110,
+          "away_odds": -110
+        }]}
+        """,
+        encoding="utf-8",
+    )
+    route_file = tmp_path / "route_offsets.json"
+    route_file.write_text(_route_offset_json("fixture-1"), encoding="utf-8")
+
+    from scripts.wc_scanner import main
+    with patch("sys.argv", [
+        "wc_scanner.py",
+        "--fixtures-file", str(fixture_file),
+        "--individual-only",
+        "--route-offset-mode", "promoted",
+        "--route-offset-file", str(route_file),
+    ]), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.__init__", return_value=None), \
+         patch("alpha.engines.sports.wc_model.WCMatchModel.predict", side_effect=lambda g: {
+             **g,
+             "win_prob": 0.55,
+             "draw_prob": 0.25,
+             "loss_prob": 0.20,
+             "model_name": "wc_elo_logistic",
+             "elo_diff": 120.0,
+         }):
+        main()
+
+    output = capsys.readouterr().out
+    assert "route_offset_mode=promoted route_offset_affects_picks=true" in output
+    assert "model=wc_elo_logistic+route_offset" in output
+    assert "eligible=true applied=true" in output
 
 
 def test_main_hybrid_model_prints_model_label(capsys):
@@ -473,3 +576,37 @@ def _make_tactical_profile(team: str) -> WCTacticalProfile:
         shot_on_target_rate=0.34, corners_for=5.0, corners_allowed=4.0,
         pressing_proxy=3.8, clearances=14.0,
     )
+
+
+def _route_offset_json(event_id: str) -> str:
+    return f"""
+    {{
+      "fixtures": {{
+        "{event_id}": {{
+          "schema_version": "wc_route_offsets_v1",
+          "source": "unit_fixture",
+          "updated_at": "2026-07-03T11:00:00Z",
+          "home": {{
+            "roles": {{
+              "GK": {{"cross_claiming": 0.2, "shot_stopping": 0.2}},
+              "CB": {{"aerial_defense": 0.2, "box_defense": 0.2, "buildup_security": 0.1}},
+              "FB": {{"defensive_isolation": 0.1, "recovery": 0.1}},
+              "DM": {{"press_resistance": 0.2, "ball_recovery": 0.3}},
+              "W": {{"isolation": 0.9, "crossing": 0.8, "pressing": 0.7, "transition": 0.5}},
+              "ST": {{"aerial": 0.7, "box_presence": 0.8, "pressing": 0.6}}
+            }}
+          }},
+          "away": {{
+            "roles": {{
+              "GK": {{"cross_claiming": -0.2, "shot_stopping": -0.1}},
+              "CB": {{"aerial_defense": -0.3, "box_defense": -0.2, "buildup_security": -0.2}},
+              "FB": {{"defensive_isolation": -0.5, "recovery": -0.3}},
+              "DM": {{"press_resistance": -0.2, "ball_recovery": -0.1}},
+              "W": {{"isolation": 0.1, "crossing": 0.1, "pressing": 0.0, "transition": 0.1}},
+              "ST": {{"aerial": 0.0, "box_presence": 0.1, "pressing": 0.0}}
+            }}
+          }}
+        }}
+      }}
+    }}
+    """

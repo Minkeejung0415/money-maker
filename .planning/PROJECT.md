@@ -16,7 +16,7 @@ A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UC
 - Paired validation against the current WC hybrid baseline using Brier, log loss, calibration, route diagnostics, BTTS, and over/under 2.5 behavior
 - Explicit artifact identity and fail-closed promotion gates before any route-offset model can affect production picks
 
-**Current state:** v2.4 planning. The design direction is to treat player and tactical data as bounded, role-aware, route-specific offsets over the validated WC hybrid baseline rather than raw extra WDL inputs.
+**Current state:** v2.4 complete. WC route-offset runtime, projected-XI role snapshots, capped tactical duels, shadow scanner diagnostics, and paired validation gates are implemented. Production remains shadow-first until real graded route-offset rows pass validation.
 
 ## Previous Milestone: v2.3 - Automated MLB Player Data and Accuracy Upgrade (Complete)
 
@@ -170,13 +170,19 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 - [x] MLB walk-forward modeling reports include Brier, log loss, accuracy, coverage, and selective win rate
 - [x] MLB scanner auto-loads local player feature files while preserving manual override
 
+### Validated (v2.4)
+
+- [x] WC route-offset runtime keeps hybrid as the production prior and defaults to shadow mode
+- [x] Projected-XI role-strength snapshots support GK, CB, FB, DM, winger, and striker with coverage labels
+- [x] Tactical duel rules convert wing isolation, aerial/set-piece, and press-vs-build matchups into capped route-xG deltas
+- [x] Scoreline integration regenerates adjusted WDL, BTTS, and O/U2.5 probabilities from adjusted lambdas when explicitly applied
+- [x] Scanner output reports baseline/adjusted lambdas, route status, eligibility, cap/shrink context, O/U2.5, and BTTS
+- [x] Paired validation script blocks route-offset promotion unless baseline-vs-route metrics pass documented gates
+
 ### Active
 
-- [ ] Define a route-offset architecture that keeps the current WC hybrid model as the production prior
-- [ ] Build role-strength inputs from projected XI data with coverage and uncertainty labels
-- [ ] Convert high-leverage tactical duels into capped route-level xG offsets
-- [ ] Run route-offset behavior in shadow mode before it can affect picks
-- [ ] Validate route-offset candidates against the hybrid baseline with paired probability-quality gates
+- [ ] Collect real projected-XI route-offset snapshots and grade shadow output after results settle
+- [ ] Promote route-offset mode only after paired validation passes on enough real fixtures
 
 ### Out of Scope
 
@@ -252,4 +258,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-03 after starting v2.4 WC Hybrid Route Offset*
+*Last updated: 2026-07-03 after completing v2.4 WC Hybrid Route Offset*

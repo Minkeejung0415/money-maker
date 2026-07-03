@@ -2,7 +2,7 @@
 
 **Milestone:** v2.4
 **Phases:** 5 (Phase 43 -> Phase 47)
-**Requirements:** 21 total | All mapped
+**Requirements:** 21 total | All mapped and complete
 **Phase numbering:** Continues from Phase 42
 
 ---
@@ -11,11 +11,11 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|-----------------|
-| 43 | Route Offset Contracts and Baseline Harness | Establish the runtime contract that keeps hybrid as the prior and route-offset as shadow-only by default. | BASE-01..04 | Contract, fallback, identity, and baseline comparison harness exist. |
-| 44 | Role Strength Snapshot and Projected XI Inputs | Build event-level projected-XI role-strength inputs with coverage and uncertainty labels. | ROLE-01..04 | GK/CB/FB/DM/winger/striker strengths load with source, schema, coverage, shrinkage, and suppression reasons. |
-| 45 | Tactical Duel Engine and Capped Route Deltas | Convert a narrow set of football-native tactical duels into bounded route-level xG offsets. | DUEL-01..04 | Wing, aerial/set-piece, and press-vs-build rules emit explainable capped deltas. |
-| 46 | Route xG Integration and Shadow Scanner Output | Recompose adjusted lambdas and regenerate scoreline-derived markets from one coherent distribution. | ROUTE-01..04 | Scanner shows baseline vs adjusted lambdas, route deltas, cap hits, BTTS, O/U2.5, WDL, and fallback labels. |
-| 47 | Paired Validation and Promotion Gates | Validate route-offset shadow output against the hybrid baseline and prepare UAT evidence. | VAL-01..05 | Paired metrics, promotion gates, artifact labels, and UAT examples prove whether route-offset can affect picks. |
+| 43 | Route Offset Contracts and Baseline Harness | Establish the runtime contract that keeps hybrid as the prior and route-offset as shadow-only by default. | BASE-01..04 | Complete |
+| 44 | Role Strength Snapshot and Projected XI Inputs | Build event-level projected-XI role-strength inputs with coverage and uncertainty labels. | ROLE-01..04 | Complete |
+| 45 | Tactical Duel Engine and Capped Route Deltas | Convert a narrow set of football-native tactical duels into bounded route-level xG offsets. | DUEL-01..04 | Complete |
+| 46 | Route xG Integration and Shadow Scanner Output | Recompose adjusted lambdas and regenerate scoreline-derived markets from one coherent distribution. | ROUTE-01..04 | Complete |
+| 47 | Paired Validation and Promotion Gates | Validate route-offset shadow output against the hybrid baseline and prepare UAT evidence. | VAL-01..05 | Complete |
 
 ---
 
@@ -106,3 +106,4 @@ Phase 43 defines the contract and safety rails. Phase 44 supplies projected-XI r
 
 ---
 *Roadmap defined: 2026-07-03*
+*Last updated: 2026-07-03 after phases 43-47 completed*
