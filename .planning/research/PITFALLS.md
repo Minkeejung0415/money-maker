@@ -1,12 +1,30 @@
-# Pitfalls Research: MLB Win Probability Model
+# Research: Pitfalls for WC Hybrid Route Offset
 
-## Critical Risks
+## Main Risks
 
-1. **Target leakage:** season aggregates or rolling statistics that include the target game inflate results. Shift all histories before rolling and test train/live parity.
-2. **Pitcher leakage:** using a starter announced after the historical prediction cutoff creates unavailable information. Record availability and use explicit fallbacks.
-3. **Team-name mismatch:** MLB StatsAPI full names and pybaseball abbreviations can silently produce default features. Establish one canonical team ID map.
-4. **Random train/test split:** baseball changes by season and time. Use expanding-window chronological validation only.
-5. **Accuracy-only selection:** a 55% classifier can still emit bad probabilities. Select on Brier/log loss and calibration, then report accuracy.
-6. **Legacy artifact mismatch:** the existing model loader accepts any recent pickle/json. Require metadata and exact feature-schema compatibility.
-7. **Fake market edge:** current games carry `-110/-110` placeholders. Never calculate or display sportsbook edge unless real manual odds are present.
-8. **Small-sample confidence:** cap or shrink extreme probabilities until out-of-time evidence supports them.
+- Double counting: Elo, FIFA/SUM, xG strength, and player ratings can encode overlapping quality.
+- Overfitting tactics: handcrafted duel rules can look smart on a few matchups and fail broadly.
+- False precision: projected XI uncertainty can make small offsets appear more reliable than they are.
+- Scoreline distortion: shifting lambdas can improve WDL while degrading BTTS or totals.
+- Artifact mismatch: runtime code and promoted artifacts/config can disagree unless schema identity is checked.
+- Stale inputs: projected XI and tactical assumptions can become wrong close to kickoff.
+
+## Guardrails
+
+- Treat hybrid as the prior and route offsets as small bounded deltas.
+- Cap route and total xG movement.
+- Shrink offsets when role coverage is weak.
+- Require shadow-mode logs before promotion.
+- Validate paired fixture-by-fixture, not as separate model runs on different samples.
+- Track BTTS and O/U2.5 explicitly, because this milestone changes goal distribution surfaces.
+
+## Anti-Goals
+
+- Do not add player features directly into WDL classification.
+- Do not promote because explanations sound plausible.
+- Do not hide fallback to baseline under `player` or `auto`.
+- Do not make route-offset picks eligible when projected XI source, age, or coverage is unknown.
+
+## Decision
+
+The most dangerous failure mode is plausible but unvalidated confidence. v2.4 should bias toward transparent shadow output and strict promotion gates.

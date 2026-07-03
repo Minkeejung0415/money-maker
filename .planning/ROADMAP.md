@@ -1,9 +1,9 @@
-# Roadmap: v2.3 - Automated MLB Player Data and Accuracy Upgrade
+# Roadmap: v2.4 - WC Hybrid Route Offset
 
-**Milestone:** v2.3
-**Phases:** 5 (Phase 38 -> Phase 42)
-**Requirements:** 22 total | All mapped and complete
-**Phase numbering:** Continues from Phase 37
+**Milestone:** v2.4
+**Phases:** 5 (Phase 43 -> Phase 47)
+**Requirements:** 21 total | All mapped
+**Phase numbering:** Continues from Phase 42
 
 ---
 
@@ -11,116 +11,98 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|-----------------|
-| 38 | MLB Data Source Resilience | Remove Fangraphs scraping as a required runtime dependency and formalize source/fallback labels. | DATA-01..04 | Complete |
-| 39 | Automated Player Database Updates | Add repeatable daily/date-range MLB player database update commands. | DB-01..04 | Complete |
-| 40 | Player Feature Interpretation Layer | Turn raw player/team stats into event-level starter, lineup, bullpen, absence, and uncertainty features. | FEAT-01..05 | Complete |
-| 41 | MLB Accuracy Retraining and Promotion | Retrain and gate richer player-aware MLB moneyline artifacts using walk-forward evaluation. | MODEL-01..05 | Complete |
-| 42 | MLB Scanner Auto-Load Runtime | Auto-load local player features in scanner output with truthful source/freshness/confidence labeling. | SCAN-01..04 | Complete |
+| 43 | Route Offset Contracts and Baseline Harness | Establish the runtime contract that keeps hybrid as the prior and route-offset as shadow-only by default. | BASE-01..04 | Contract, fallback, identity, and baseline comparison harness exist. |
+| 44 | Role Strength Snapshot and Projected XI Inputs | Build event-level projected-XI role-strength inputs with coverage and uncertainty labels. | ROLE-01..04 | GK/CB/FB/DM/winger/striker strengths load with source, schema, coverage, shrinkage, and suppression reasons. |
+| 45 | Tactical Duel Engine and Capped Route Deltas | Convert a narrow set of football-native tactical duels into bounded route-level xG offsets. | DUEL-01..04 | Wing, aerial/set-piece, and press-vs-build rules emit explainable capped deltas. |
+| 46 | Route xG Integration and Shadow Scanner Output | Recompose adjusted lambdas and regenerate scoreline-derived markets from one coherent distribution. | ROUTE-01..04 | Scanner shows baseline vs adjusted lambdas, route deltas, cap hits, BTTS, O/U2.5, WDL, and fallback labels. |
+| 47 | Paired Validation and Promotion Gates | Validate route-offset shadow output against the hybrid baseline and prepare UAT evidence. | VAL-01..05 | Paired metrics, promotion gates, artifact labels, and UAT examples prove whether route-offset can affect picks. |
 
 ---
 
 ## Phase Details
 
-### Phase 38: MLB Data Source Resilience
+### Phase 43: Route Offset Contracts and Baseline Harness
 
-**Goal:** Ensure MLB runtime probabilities do not depend on live Fangraphs/pybaseball scraping and every data-source fallback is visible.
-
-**Requirements:**
-- DATA-01 through DATA-04
-
-**Success criteria:**
-1. MLB scanner can run when Fangraphs/pybaseball calls fail or are disabled.
-2. Official MLB game ids and probable-pitcher fields are preferred for runtime identity.
-3. Runtime feature context reports source, fallback reason, freshness, and confidence.
-4. Tests simulate external-source failures and prove scanner output remains labeled and usable.
-5. Documentation names which sources are runtime-required versus optional enrichment.
-
-### Phase 39: Automated Player Database Updates
-
-**Goal:** Add one-command local MLB player database updates for requested dates/date ranges.
+**Goal:** Ensure route-offset behavior is an auditable adapter around the existing WC hybrid model, not a silent model replacement.
 
 **Requirements:**
-- DB-01 through DB-04
+- BASE-01 through BASE-04
 
 **Success criteria:**
-1. A script such as `scripts/update_mlb_player_database.py --date YYYY-MM-DD` writes normalized local data.
-2. Batter, starter, bullpen, lineup, and absence inputs share deterministic schema/version metadata.
-3. Re-running the same date is idempotent and does not duplicate rows.
-4. Snapshots preserve raw stat components, source names, import time, game date, and game id links.
-5. Unit tests use local fixtures only and require no internet access.
+1. Route-offset runtime has an explicit schema/config identity.
+2. Hybrid baseline probabilities and lambdas remain available for every route-offset run.
+3. Shadow mode can run without changing production pick eligibility.
+4. Missing/stale/schema-mismatched route-offset inputs fail closed to hybrid baseline.
+5. Tests cover baseline fallback and identity mismatch.
 
-### Phase 40: Player Feature Interpretation Layer
+### Phase 44: Role Strength Snapshot and Projected XI Inputs
 
-**Goal:** Convert local player database rows into stronger event-level features that reflect baseball context rather than raw stat dumps.
+**Goal:** Create runtime projected-XI role-strength payloads with honest coverage and uncertainty labels.
 
 **Requirements:**
-- FEAT-01 through FEAT-05
+- ROLE-01 through ROLE-04
 
 **Success criteria:**
-1. Date-specific feature files are emitted with event ids matching scanner games.
-2. Starter features include rolling quality, workload, rest, and uncertainty.
-3. Lineup features include batter strength, confirmation coverage, missing starters, and absence value.
-4. Bullpen features include recent workload, fatigue, availability, quality, and missing-data risk.
-5. Feature files include source confidence, stale flags, coverage, and last-updated metadata.
-6. Tests prove same-series games can diverge through starter/lineup/bullpen context.
+1. Event-level payloads represent GK, CB, FB, DM, winger, and striker strength.
+2. Payload metadata records source, update time, schema version, role coverage, and missing roles.
+3. Missing-role coverage shrinks offsets toward zero.
+4. Critical missing roles suppress route-offset pick eligibility but still return research probabilities.
+5. Tests cover complete, partial, stale, and missing projected-XI snapshots.
 
-### Phase 41: MLB Accuracy Retraining and Promotion
+### Phase 45: Tactical Duel Engine and Capped Route Deltas
 
-**Goal:** Train, calibrate, and promote a richer MLB player-aware model only if the new feature interpretation improves probability quality.
+**Goal:** Translate high-leverage tactical matchups into capped route-level xG movements.
 
 **Requirements:**
-- MODEL-01 through MODEL-05
+- DUEL-01 through DUEL-04
 
 **Success criteria:**
-1. Training rows consume richer event-level features without target-game leakage.
-2. Walk-forward evaluation compares baseline, starter-only, lineup, bullpen, absence, and full-player feature sets.
-3. Metrics include Brier score, log loss, accuracy, selective win rate, and coverage.
-4. Promotion gates reject candidates that fail to beat the current runtime baseline.
-5. Promoted artifact metadata includes schema hash, dataset fingerprint, training window, calibration, metrics, and runtime allowance.
-6. Tests cover artifact rejection, promotion metadata, and feature schema mismatch.
+1. Wing isolation, aerial/set-piece mismatch, and press-vs-build rules are implemented.
+2. Each active duel emits rule id, involved roles, direction, magnitude, and missing-data adjustment.
+3. Route and match-level caps prevent implausible xG movement.
+4. Rule/config identity is versioned and included in diagnostics.
+5. Tests cover rule activation, cap hits, and uncertainty shrinkage.
 
-### Phase 42: MLB Scanner Auto-Load Runtime
+### Phase 46: Route xG Integration and Shadow Scanner Output
 
-**Goal:** Make the MLB scanner automatically use local date-specific player features when available, while labeling all fallbacks and suppressions.
+**Goal:** Feed adjusted lambdas through the existing scoreline surface so BTTS, totals, WDL, and advance probabilities remain coherent.
 
 **Requirements:**
-- SCAN-01 through SCAN-04
+- ROUTE-01 through ROUTE-04
 
 **Success criteria:**
-1. `scripts/mlb_scanner.py --date YYYY-MM-DD` auto-loads the matching local feature file when present.
-2. Manual `--player-features-file` override still works and is clearly labeled.
-3. Individual output shows active data source, freshness, fallback reason, confidence, and suppression reason.
-4. Weak/stale/missing player data suppresses betting picks while retaining research probabilities.
-5. Smoke tests cover runs with local features present, absent, stale, and manually overridden.
+1. Baseline lambdas are allocated into center, wing, set-piece, and counterattack buckets.
+2. Route deltas recompose into adjusted home/away lambdas before scoreline generation.
+3. BTTS, over/under 2.5, WDL, and advance probabilities come from one adjusted distribution.
+4. Scanner output shows baseline vs adjusted values, cap hits, shrinkage, and active duel explanations.
+5. Tests prove the adjusted distribution remains normalized and fallback-safe.
+
+### Phase 47: Paired Validation and Promotion Gates
+
+**Goal:** Decide with evidence whether route-offset improves the hybrid model enough to affect production picks.
+
+**Requirements:**
+- VAL-01 through VAL-05
+
+**Success criteria:**
+1. Validation compares baseline and route-offset on identical fixtures.
+2. Reports include Brier, log loss, calibration, coverage, BTTS, and O/U2.5 behavior.
+3. Promotion is blocked unless documented gates are met.
+4. Scanner/artifact metadata exposes promotion status and runtime allowance.
+5. UAT examples explain active duels, missing-data handling, and pass/fail evidence.
 
 ---
 
-## Coverage Audit
+## Dependency Flow
 
-| Category | Requirements | Phase |
-|----------|--------------|-------|
-| Data Source Resilience | DATA-01 through DATA-04 (4) | Phase 38 |
-| Player Database Automation | DB-01 through DB-04 (4) | Phase 39 |
-| Feature Interpretation | FEAT-01 through FEAT-05 (5) | Phase 40 |
-| Model Accuracy and Promotion | MODEL-01 through MODEL-05 (5) | Phase 41 |
-| Scanner Runtime | SCAN-01 through SCAN-04 (4) | Phase 42 |
+Phase 43 defines the contract and safety rails. Phase 44 supplies projected-XI role data. Phase 45 converts role/tactical matchups into capped route deltas. Phase 46 integrates those deltas into scoreline-derived probabilities. Phase 47 validates and decides whether promotion is allowed.
 
-**Total: 22 / 22 requirements mapped**
+## Verification Plan
 
----
-
-## Risk Register
-
-| Risk | Mitigation |
-|------|------------|
-| Free baseball sources change or block requests | Runtime uses local cached data and explicit source/fallback labels. |
-| Raw stats improve labels but not probabilities | Phase 41 requires walk-forward ablations and promotion gates before runtime trust. |
-| Feature files drift from artifact schema | Store schema hashes and reject mismatches at runtime. |
-| Same-day lineup data causes leakage in training | Training rows must enforce pregame availability and date-based leakage checks. |
-| Scanner appears confident on stale data | Stale flags and low source confidence suppress betting picks. |
+- Unit tests for contracts, role snapshots, duel rules, caps, fallback behavior, and scoreline normalization.
+- Scanner smoke tests for shadow output and fallback labels.
+- Paired validation report comparing route-offset to hybrid baseline.
+- UAT examples for at least three fixtures with different duel/missing-data profiles.
 
 ---
-
-*Roadmap created: 2026-06-28*
-*Last updated: 2026-06-28 after autonomous execution*
-*Milestone: v2.3 | Phases 38-42 | 22 requirements complete | 5 phases complete*
+*Roadmap defined: 2026-07-03*

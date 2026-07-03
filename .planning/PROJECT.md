@@ -4,7 +4,21 @@
 
 A unified multi-asset trading and prediction engine covering NBA, soccer (EPL/UCL/World Cup), and MLB sports betting alongside stocks and crypto. The sports layer predicts prop outcomes and constructs SGP parlays with positive expected value, using a combination of statistical models, opponent adjustments, and odds-implied signals.
 
-## Current Milestone: v2.3 - Automated MLB Player Data and Accuracy Upgrade
+## Current Milestone: v2.4 - WC Hybrid Route Offset
+
+**Goal:** Improve the World Cup hybrid model by adding projected-XI role strengths and capped tactical duel offsets that adjust route-level expected goals before scoreline, BTTS, totals, and WDL probabilities are produced.
+
+**Target features:**
+- Runtime projected-XI and role-strength inputs for high-leverage roles: GK, CB, FB, DM, winger, and striker
+- Capped duel rules for wing isolation, aerial/set-piece mismatch, and press-vs-build interactions
+- Route-level xG offsets for center, wing, set-piece, and counterattack components layered over the existing hybrid baseline
+- Shadow-mode scanner output that logs baseline lambdas, adjusted lambdas, active duel rules, cap hits, missing-role coverage, and uncertainty shrinkage
+- Paired validation against the current WC hybrid baseline using Brier, log loss, calibration, route diagnostics, BTTS, and over/under 2.5 behavior
+- Explicit artifact identity and fail-closed promotion gates before any route-offset model can affect production picks
+
+**Current state:** v2.4 planning. The design direction is to treat player and tactical data as bounded, role-aware, route-specific offsets over the validated WC hybrid baseline rather than raw extra WDL inputs.
+
+## Previous Milestone: v2.3 - Automated MLB Player Data and Accuracy Upgrade (Complete)
 
 **Goal:** Replace fragile live MLB stat scraping with an automated local player-data pipeline, then improve and promote a richer MLB player-aware algorithm whose stats meaningfully change win probabilities.
 
@@ -158,7 +172,11 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 
 ### Active
 
-(None - v2.3 scope complete; next likely work is populating real MLB data and running a full retrain.)
+- [ ] Define a route-offset architecture that keeps the current WC hybrid model as the production prior
+- [ ] Build role-strength inputs from projected XI data with coverage and uncertainty labels
+- [ ] Convert high-leverage tactical duels into capped route-level xG offsets
+- [ ] Run route-offset behavior in shadow mode before it can affect picks
+- [ ] Validate route-offset candidates against the hybrid baseline with paired probability-quality gates
 
 ### Out of Scope
 
@@ -210,6 +228,7 @@ Every prop line the scanner outputs must have a >55% historical hit rate — if 
 | Research algorithm options before building | User wants to see options before committing | — Pending |
 | Treat the v1.3 MLB model as the baseline for v1.8 | The current artifact is validated but team-only, so it is the comparison point rather than the target design | — Pending |
 | Optimize MLB moneyline for accuracy and selective win rate before EV | The report prioritizes hit rate and confidence gating over odds-driven betting expansion | — Pending |
+| Model WC player and tactical data as route-xG offsets, not raw WDL inputs | Keeps the calibrated hybrid prior stable while making player and tactical effects football-native and explainable | — Pending |
 
 ## Previous Milestone: v1.0 — NBA Prop Model Algorithm Upgrade (Complete)
 
@@ -233,4 +252,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 after v2.3 Automated MLB Player Data and Accuracy Upgrade*
+*Last updated: 2026-07-03 after starting v2.4 WC Hybrid Route Offset*

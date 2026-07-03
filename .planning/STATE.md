@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.3
-milestone_name: Automated MLB Player Data and Accuracy Upgrade
-status: Complete
-stopped_at: Phase 42 complete - v2.3 autonomous execution delivered
-last_updated: "2026-06-28T00:00:00.000-07:00"
-last_activity: 2026-06-28 - v2.3 MLB player data runtime and accuracy pipeline delivered
+milestone: v2.4
+milestone_name: WC Hybrid Route Offset
+status: planning
+last_updated: "2026-07-03T20:50:19.953Z"
+last_activity: 2026-07-03 - v2.4 requirements and roadmap drafted
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,51 +20,58 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** Every prop line the scanner outputs must have a >55% historical hit rate; if the model cannot beat a coin flip, it is not worth betting.
-**Current focus:** v2.3 - COMPLETE
+**Current focus:** v2.4 - WC Hybrid Route Offset
 
 ## Current Position
 
-Phase: 42 (MLB Scanner Auto-Load Runtime) - COMPLETE
-Status: Milestone v2.3 COMPLETE
-Last activity: 2026-06-28 - MLB runtime no longer requires Fangraphs scraping and local player-data feature pipeline is in place
+Phase: 43 (Route Offset Contracts and Baseline Harness) - planned
+Plan: Not started
+Status: Requirements and roadmap drafted; awaiting operator approval before implementation
+Last activity: 2026-07-03 - v2.4 milestone started from the WC route-offset brief
 
-## Milestone v2.3 Summary
+## Milestone v2.4 Summary
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 38 | MLB Data Source Resilience | Complete |
-| 39 | Automated Player Database Updates | Complete |
-| 40 | Player Feature Interpretation Layer | Complete |
-| 41 | MLB Accuracy Retraining and Promotion | Complete |
-| 42 | MLB Scanner Auto-Load Runtime | Complete |
+| 43 | Route Offset Contracts and Baseline Harness | Planned |
+| 44 | Role Strength Snapshot and Projected XI Inputs | Planned |
+| 45 | Tactical Duel Engine and Capped Route Deltas | Planned |
+| 46 | Route xG Integration and Shadow Scanner Output | Planned |
+| 47 | Paired Validation and Promotion Gates | Planned |
 
 ## Accumulated Context
 
 ### Decisions
 
-- No unlabelled predictions: every scanner run must expose source/fallback context where applicable.
-- Runtime MLB probabilities no longer depend on live Fangraphs scraping by default.
-- `pybaseball` and Fangraphs-derived data are optional enrichment behind `--allow-external-player-stats`.
-- Local player database snapshots and date-specific event feature files are the runtime player-data path.
-- Player stats should improve probability quality through walk-forward evidence before artifact promotion.
-- Weak, stale, or missing player-data confidence suppresses betting picks while still returning research probabilities.
+- Keep the current WC hybrid model as the production prior.
+- Model projected-XI player data and tactical matchups as route-level xG offsets, not raw WDL inputs.
+- Run route-offset behavior in shadow mode before it can affect picks.
+- Require paired validation against the hybrid baseline on identical fixtures.
+- Fail closed to hybrid baseline on missing, stale, or schema-mismatched route-offset inputs.
+- Preserve MLB retrain package sequencing separately; do not mix MLB feature-semantics changes into this milestone.
 
 ### Pending Todos
 
+- Create Phase 43 plan after operator approval.
+- Implement route-offset runtime contract and baseline harness.
+- Build projected-XI role-strength snapshot support.
+- Implement capped tactical duel rules.
+- Integrate route-level xG deltas into scoreline-derived markets.
+- Validate route-offset shadow logs against the hybrid baseline before promotion.
 - Populate real daily MLB CSV/stat inputs under the local database workflow.
-- Run a full historical retrain once richer local player database coverage exists.
-- Ship the MLB retrain package as one unit (see docs/ACCURACY-AUDIT-2026-07.md, "Deferred: MLB retrain package"): season-boundary state regression in mlb_training.py + tests, artifact/team-state age surfaced in mlb_scanner.py, pick_eligible staleness gate, then retrain + walk-forward re-validation. Do NOT ship the feature-semantics change without the retrain.
+- Run a full historical MLB retrain once richer local player database coverage exists.
+- Ship the MLB retrain package as one unit (see docs/ACCURACY-AUDIT-2026-07.md, "Deferred: MLB retrain package").
 - Re-save MLB artifacts under the current sklearn version to remove model-persistence warnings.
-- Implement real WC player-aware runtime before allowing `--model player` to produce picks.
-- Score WC shadow logs after results settle.
 
 ### Blockers/Concerns
 
-- The new MLB pipeline is code-complete, but probability improvement still depends on feeding it enough real historical/local player rows for a full retrain.
-- Existing promoted MLB artifact loads with sklearn version mismatch warnings; scanner still runs, but artifact maintenance is needed.
-- No real sportsbook MLB odds feed is connected, so edge/EV output still requires manual odds overrides.
+- WC route-offset quality depends on projected-XI coverage and trustworthy role-strength inputs.
+- Route offsets can double count team quality already present in Elo/xG/FIFA/SUM priors unless caps and shrinkage are strict.
+- Promotion should remain blocked until paired validation shows no probability-quality regression.
+- MLB artifact sklearn warnings remain outside this milestone.
 
 ## Operator Next Steps
 
-- Add or download real MLB player CSVs into the local database pipeline.
-- Run `scripts/update_mlb_player_database.py`, then `scripts/build_mlb_player_features.py`, then `scripts/mlb_scanner.py --date YYYY-MM-DD --individual-only`.
+- Review .planning/REQUIREMENTS.md and .planning/ROADMAP.md.
+- Approve Phase 43 planning/execution when ready.
+- Continue grading WC shadow output as results settle.

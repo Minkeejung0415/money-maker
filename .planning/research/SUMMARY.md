@@ -1,35 +1,40 @@
-# Research Summary: v2.3 Automated MLB Player Data and Accuracy Upgrade
+# Research Summary: v2.4 WC Hybrid Route Offset
 
-**Date:** 2026-06-28
+## Recommendation
 
-## Stack Additions
+Build route-offset as a bounded adapter over the current WC hybrid baseline. The hybrid model remains the production prior; projected-XI and tactical-duel data may only move route-level expected goals, then scoreline-derived markets are regenerated from the adjusted lambdas.
 
-- Keep MLB StatsAPI as the runtime identity source for schedules, game ids, and probable pitchers where available.
-- Treat pybaseball/Fangraphs as optional enrichment only. The scanner must remain usable if Fangraphs returns 403.
-- Use local CSV/API imports and cached database snapshots as the runtime player-stat source.
-- Emit event-id keyed feature JSON files so scanner inference is deterministic for a requested date.
+## Architecture
 
-## Feature Table Stakes
+- Keep baseline hybrid lambdas and probabilities visible.
+- Add role-strength snapshots for GK, CB, FB, DM, winger, and striker.
+- Evaluate a small set of tactical duel rules: wing isolation, aerial/set-piece mismatch, press-vs-build.
+- Convert duel outputs into capped route deltas for center, wing, set-piece, and counterattack xG.
+- Recompute scoreline, BTTS, O/U2.5, WDL, and advance probabilities from adjusted lambdas.
+- Log all deltas, cap hits, missing roles, and shrinkage in scanner output.
 
-- One-command daily/date-range update for local MLB player data.
-- Deterministic schemas for batter, starter, bullpen, lineup, and absence rows.
-- Rolling feature interpretation, not raw stat dumping: starter quality/rest/workload, lineup strength/coverage, bullpen fatigue/availability, absence impact, and uncertainty.
-- Walk-forward ablations that prove which feature groups improve Brier score, log loss, selective win rate, and coverage.
-- Runtime source/freshness/confidence labels for every game.
+## Validation Standard
 
-## Watch Outs
+Promotion requires paired validation versus the current hybrid baseline on the same fixtures:
 
-- Live web scrapes are fragile and should not be required by scanner runtime.
-- Same-day data can leak target-game outcomes into training unless feature builders enforce pregame availability.
-- Richer features can improve explanations without improving probabilities unless the model artifact is retrained and promoted with those fields.
-- Missing or stale player data must suppress betting picks, not silently fall back to confident recommendations.
+- Brier score
+- Log loss
+- Calibration
+- Selective hit rate where relevant
+- BTTS probability quality
+- O/U2.5 probability quality
+- Coverage and missing-data diagnostics
 
-## Planning Implication
+## Key Decision
 
-The milestone should proceed in this order:
+Do not model player and tactical data as raw WDL inputs. Model them as explainable route-xG offsets so the scoreline engine stays coherent and the existing hybrid calibration is not casually discarded.
 
-1. Make MLB runtime resilient to blocked sources.
-2. Automate local player database updates.
-3. Build an interpretation layer that turns raw stats into event-level features.
-4. Retrain/evaluate/promote only if probability metrics improve.
-5. Auto-load the resulting feature files in scanner runtime with truthful labels.
+## Roadmap Implication
+
+The milestone should be split into five phases:
+
+1. Contracts and baseline harness
+2. Role-strength/projected-XI runtime inputs
+3. Tactical duel engine
+4. Route xG integration and shadow scanner output
+5. Paired validation, promotion gates, and UAT readiness

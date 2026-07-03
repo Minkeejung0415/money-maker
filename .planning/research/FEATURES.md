@@ -1,25 +1,50 @@
-# Feature Research: MLB Win Probability Model
+# Research: Feature Contract for WC Hybrid Route Offset
 
-## Table Stakes
+## Projected XI Inputs
 
-- Historical game outcomes with stable team identifiers and dates
-- Pregame-only rolling team offense and run-prevention features
-- Starting pitcher quality and rest when known, with explicit missingness indicators
-- Home-field indicator, team rest, recent form, and season context
-- Time-ordered train/validation/test partitions
-- Calibrated home/away probabilities summing to 1.0
-- Daily output for every game with model source, fair decimal odds, and validation status
+Each team should expose role-strength features for high-leverage football roles:
 
-## Differentiators
+- GK: shot-stopping, cross claim/sweeper behavior, continuity risk
+- CB: aerial defense, box defense, buildup security
+- FB: defensive isolation, crossing, overlap/underlap support
+- DM: press resistance, ball recovery, central protection
+- Winger: isolation threat, crossing/cutback creation, transition threat
+- Striker: box presence, aerial threat, finishing pressure
 
-- Reliability table and Brier/log-loss report beside headline accuracy
-- Baselines: 50/50, historical home-win rate, and sportsbook no-vig probability when manual odds are supplied
-- Model metadata gate that prevents stale or schema-incompatible artifacts from loading silently
-- Prediction logging for later grading and recalibration
+## Coverage and Uncertainty
 
-## Deferred
+Every event-level feature payload should include:
 
-- Player props
-- Parlays and Kelly sizing
-- Paid live odds
-- In-game predictions
+- `projected_xi_source`
+- `projected_xi_updated_at`
+- `role_coverage`
+- `missing_roles`
+- `uncertainty_band`
+- `role_strength_schema`
+- `player_runtime_allowed`
+
+Missing roles should shrink offsets toward zero rather than invent confidence. If critical roles are absent, the scanner should show research probabilities but suppress pick eligibility for the route-offset model.
+
+## Tactical Duel Inputs
+
+The first milestone should support only a narrow rule set:
+
+- Wing isolation: winger strength versus opposing fullback/CB side support
+- Aerial/set-piece mismatch: striker/CB aerial threat versus opponent aerial defense and GK claiming
+- Press-vs-build: forward/wing/DM press pressure versus CB/DM buildup security
+
+## Output Features
+
+For each team:
+
+- Baseline lambda
+- Adjusted lambda
+- Route deltas for center, wing, set-piece, counterattack
+- Active duel IDs
+- Cap-hit flags
+- Missing-role reasons
+- Uncertainty shrink factor
+
+## Decision
+
+Features should explain why xG moved, not just that win probability moved. The contract should make the route-offset layer auditable slate by slate.

@@ -1,21 +1,45 @@
-# Architecture Research: MLB Win Probability Model
+# Research: Architecture for WC Hybrid Route Offset
 
-## Data Flow
+## Target Flow
 
-1. Historical collector downloads completed games and pregame-available statistics.
-2. Dataset builder sorts chronologically and shifts/rolls every statistic so the target game never contributes to its own features.
-3. Trainer compares logistic and boosted-tree candidates, calibrates on a separate validation window, and evaluates on untouched future games.
-4. Artifact writer stores the estimator and metadata atomically under `mlb_outcomes/models/`.
-5. `MLBModel` loads only artifacts whose feature schema and validation metadata pass checks.
-6. `mlb_scanner.py` shows every matchup, home/away probability, fair odds, model version, and validation status.
+1. Build baseline WC hybrid probabilities and lambdas.
+2. Load projected-XI role-strength snapshot for the fixture.
+3. Evaluate tactical duel rules with missing-data shrinkage.
+4. Convert duel outputs into capped route-level xG deltas.
+5. Recompose adjusted home/away lambdas.
+6. Regenerate scoreline, BTTS, O/U2.5, WDL, and advance probabilities.
+7. Emit baseline-vs-adjusted diagnostics in shadow mode.
 
-## Integration Points
+## Route Model
 
-- Extend `alpha/data/ingestion/mlb_stats.py` for historical game retrieval and team-name normalization.
-- Add a shared pregame feature builder used by both trainer and live inference.
-- Keep `MLBModel.predict()` as the public runtime contract.
-- Reuse `alpha/engines/sports/evaluation.py` for Brier score, log loss, reliability, and walk-forward splits.
+Use four route buckets:
 
-## Build Order
+- Center
+- Wing
+- Set-piece
+- Counterattack
 
-Data contract and leakage tests, then trainer/evaluation, then artifact gate, then scanner presentation.
+Each duel rule may affect one or more buckets, but total team delta should be capped. A simple first implementation can use deterministic caps and weights, then later promote learned weights only after enough graded data exists.
+
+## Promotion Gates
+
+Route-offset output may affect production picks only when:
+
+- Artifact/config identity is explicit.
+- Role-strength schema matches runtime expectations.
+- Shadow coverage is sufficient.
+- Paired Brier/log loss does not regress.
+- Calibration remains acceptable.
+- Market-specific behavior for BTTS and O/U2.5 is not worse than baseline.
+- Scanner can explain every non-zero offset.
+
+## Failure Behavior
+
+- If artifact/config missing: use hybrid baseline.
+- If role snapshot missing: use hybrid baseline and label fallback.
+- If coverage partial: shrink offsets and label missing roles.
+- If caps hit too often: keep shadow-only and flag for tuning.
+
+## Decision
+
+The route-offset layer should be built as an explainable, fail-closed adapter around the existing hybrid model, not as a second model competing silently with it.
